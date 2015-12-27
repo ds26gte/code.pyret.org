@@ -64,14 +64,14 @@ $(function() {
 });
 
 $(function() {
-  define("repl-main", ["js/repl-lib", "/js/repl-ui.js", "js/runtime-anf",
+  define("repl-main", ["/js/repl-ui.js", "js/runtime-anf",
   "/js/guess-gas.js",
   "/js/http-imports.js", "compiler/compile-lib.arr", "trove/repl",
   "trove/runtime-lib", "compiler/repl-support.arr",
-  "compiler/locators/builtin.arr", "/js/gdrive-locators.js",
+  "compiler/locators/builtin.arr", "/js/cpo-builtins.js", "/js/gdrive-locators.js",
   "compiler/compile-structs.arr"],
-  function(replLib, replUI, rtLib, guessGas, http, compileLib,
-  pyRepl, runtimeLib, replSupport, builtin, gdriveLocators, compileStructs) {
+  function(replUI, rtLib, guessGas, http, compileLib,
+  pyRepl, runtimeLib, replSupport, builtin, cpoBuiltin, gdriveLocators, compileStructs) {
     makeHoverMenu($("#menu"), $("#menuContents"), false, function() {});
     var replContainer = $("<div>").addClass("repl");
     $("#REPL").append(replContainer);
@@ -105,7 +105,11 @@ $(function() {
         "srcloc",
         "format",
         "equality",
-        "valueskeleton"
+        "valueskeleton",
+        "plot",
+        "graph",
+        "particle",
+        "json"
     ];
 
     runtime.loadModulesNew(runtime.namespace,
@@ -119,13 +123,17 @@ $(function() {
             return runtime.ffi.cases(gmf(compileStructs, "is-Dependency"), "Dependency", dependency, 
               {
                 builtin: function(name) {
-                  if(okImports.indexOf(name) === -1) {
-                    throw runtime.throwMessageException("Unknown module: " + name);
+                  if (cpoBuiltin.knownCpoModule(name)) {
+                    return cpoBuiltin.cpoBuiltinLocator(runtime, compileLib, compileStructs, name);
                   }
-                  return gmf(compileLib, "located").app(
-                    gmf(builtin, "make-builtin-locator").app(name),
-                    runtime.nothing
+                  else if(okImports.indexOf(name) === -1) {
+                    throw runtime.throwMessageException("Unknown module: " + name);
+                  } else {
+                    return gmf(compileLib, "located").app(
+                      gmf(builtin, "make-builtin-locator").app(name),
+                      runtime.nothing
                     );
+                  }
                 },
                 dependency: function(protocol, args) {
                   var arr = runtime.ffi.toArray(args);
@@ -134,6 +142,10 @@ $(function() {
                   }
                   else if (protocol === "shared-gdrive") {
                     return constructors.makeSharedGDriveLocator(arr[0], arr[1]);
+                  }
+                  else if (protocol === "js-http") {
+                    // TODO: THIS IS WRONG with the new locator system
+                    return http.getHttpImport(runtime, args[0]);
                   }
                   else if (protocol === "gdrive-js") {
                     return constructors.makeGDriveJSLocator(arr[0], arr[1]);
@@ -171,11 +183,11 @@ $(function() {
         }, function(repl) {
           var jsRepl = {
             runtime: runtime.getField(pyRuntime, "runtime").val,
-            restartInteractions: function(ignoredStr) {
+            restartInteractions: function(ignoredStr, typeCheck) {
               var ret = Q.defer();
               setTimeout(function() {
                 runtime.runThunk(function() {
-                  return gf(repl, "restart-interactions").app();
+                  return gf(repl, "restart-interactions").app(typeCheck);
                 }, function(result) {
                   ret.resolve(result);
                 });
@@ -250,8 +262,29 @@ $(function() {
             });
           // NOTE(joe): assigned on window for debuggability
           window.RUN_CODE = function(src, uiOpts, replOpts) {
-            replWidget.runCode(src, uiOpts, replOpts);
+            doRunAction(src);
           };
+
+          $("#runDropdown").click(function() {
+            $("#run-dropdown-content").toggle();
+          });
+
+          var currentAction = "run";
+
+          $("#select-run").click(function() {
+            runButton.text("Run");
+            currentAction = "run";
+            doRunAction(editor.cm.getValue());
+            $("#run-dropdown-content").hide();
+          });
+
+          $("#select-tc-run").click(function() {
+            runButton.text("Type-check and Run");
+            currentAction = "tc-and-run";
+            doRunAction(editor.cm.getValue());
+            $("#run-dropdown-content").hide();
+          });
+
           editor = replUI.makeEditor(codeContainer, runtime, {
               runButton: $("#runButton"),
               simpleEditor: false,
@@ -259,6 +292,20 @@ $(function() {
               run: RUN_CODE,
               initialGas: 100
             });
+
+          function doRunAction(src) {
+            switch (currentAction) {
+              case "run":
+                replWidget.runCode(src, {check: true, cm: editor.cm});
+                break;
+              case "tc-and-run":
+                replWidget.runCode(src, {check: true, cm: editor.cm, "type-check": true});
+                break;
+            }
+          }
+
+          runButton.on("click", function() { doRunAction(editor.cm.getValue()); });
+
           $(window).on("keyup", function(e) {
             if(e.keyCode === 27) { // "ESC"
               $("#help-keys").fadeOut(500);
@@ -387,6 +434,9 @@ $(function() {
 
           $( "#REPL" ).on( "resizestop", toPercent);
 
+          var rightResizePct = 50;
+          var leftResizePct = 50;
+
           function toPercent(event, ui) {
             rightResizePct = (ui.size.width / window.innerWidth) * 100
             leftResizePct = 100 - rightResizePct
@@ -428,7 +478,7 @@ $(function() {
                 e.preventDefault();
               }
               else if(e.keyCode === 13) { // "Ctrl-Enter"
-                editor.run();
+                doRunAction(editor.cm.getValue());
                 autoSave();
                 e.stopImmediatePropagation();
                 e.preventDefault();

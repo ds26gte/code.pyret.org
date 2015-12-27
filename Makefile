@@ -1,7 +1,6 @@
 # NOTE: Needs TWO blank lines here, dunno why
 define \n
 
-
 endef
 ifneq ($(findstring .exe,$(SHELL)),)
 	override SHELL:=$(COMSPEC)$(ComSpec)
@@ -19,7 +18,6 @@ CM=node_modules/codemirror
 build/web/js/pyret.js.gz:
 	gzip -9 node_modules/pyret-lang/build/phase0/pyret.js -c > build/web/js/pyret.js.gz
 
-
 .PHONY : post-install
 post-install: compress-pyret
 
@@ -28,12 +26,11 @@ install-link:
 
 .PHONY : selenium-test-local
 selenium-test-local:
-	TEST_LOC="local" node node_modules/jasmine-node/lib/jasmine-node/cli.js test/browser/
+	TEST_LOC="local" node test/test.js test/browser
 
 .PHONY : selenium-test-sauce
 selenium-test-sauce:
-	TEST_LOC="sauce" node node_modules/jasmine-node/lib/jasmine-node/cli.js test/browser/
-
+	TEST_LOC="sauce" node test/test.js test/browser/pyret
 
 OUT_HTML := $(patsubst src/web/%.template.html,build/web/views/%.html,$(wildcard src/web/*.template.html))
 
@@ -98,6 +95,9 @@ build/web/js/require.js: node_modules/requirejs/require.js
 build/web/js/codemirror.js: $(CM)/lib/codemirror.js
 	cp $< $@
 
+build/web/js/runmode.js: $(CM)/addon/runmode/runmode.js
+	cp $< $@
+
 build/web/js/matchbrackets.js: $(CM)/addon/edit/matchbrackets.js
 	cp $< $@
 
@@ -107,13 +107,12 @@ build/web/js/pyret-mode.js: $(CM)/mode/pyret/pyret.js
 build/web/js/emacs.js: $(CM)/keymap/emacs.js
 	cp $< $@
 
-MISC_JS = build/web/js/q.js build/web/js/url.js build/web/js/require.js build/web/js/codemirror.js build/web/js/matchbrackets.js build/web/js/pyret-mode.js build/web/js/s-expression-lib.js build/web/js/seedrandom.js build/web/js/emacs.js
+MISC_JS = build/web/js/q.js build/web/js/url.js build/web/js/require.js build/web/js/codemirror.js build/web/js/runmode.js build/web/js/matchbrackets.js build/web/js/pyret-mode.js build/web/js/s-expression-lib.js build/web/js/seedrandom.js build/web/js/emacs.js
 
 MISC_IMG = build/web/img/pyret-icon.png build/web/img/pyret-logo.png build/web/img/pyret-spin.gif build/web/img/up-arrow.png build/web/img/down-arrow.png
 
 build/web/img/%: node_modules/pyret-lang/img/%
 	cp $< $@
-
 
 WEB = build/web
 WEBV = build/web/views
@@ -144,4 +143,6 @@ $(NEWCSS):
 $(NEWJS):
 	@$(call MKDIR,$(NEWJS))
 
-web: $(WEB) $(WEBV) $(WEBJS) $(WEBCSS) $(WEBIMG) $(NEWCSS) $(NEWJS) $(OUT_HTML) $(COPY_HTML) $(OUT_CSS) $(COPY_CSS) $(COPY_JS) $(COPY_GIF)  build/web/js/pyret.js.gz $(MISC_JS) $(MISC_CSS) $(MISC_IMG) $(COPY_NEW_CSS) $(COPY_NEW_JS)
+web-local: $(WEB) $(WEBV) $(WEBJS) $(WEBCSS) $(WEBIMG) $(NEWCSS) $(NEWJS) $(OUT_HTML) $(COPY_HTML) $(OUT_CSS) $(COPY_CSS) $(COPY_JS) $(COPY_GIF) build/web/js/pyret.js.gz $(MISC_JS) $(MISC_CSS) $(MISC_IMG) $(COPY_NEW_CSS) $(COPY_NEW_JS)
+
+web: $(WEB) $(WEBV) $(WEBJS) $(WEBCSS) $(WEBIMG) $(NEWCSS) $(NEWJS) $(OUT_HTML) $(COPY_HTML) $(OUT_CSS) $(COPY_CSS) $(COPY_JS) $(COPY_GIF) build/web/js/pyret.js.gz $(MISC_JS) $(MISC_CSS) $(MISC_IMG) $(COPY_NEW_CSS) $(COPY_NEW_JS)

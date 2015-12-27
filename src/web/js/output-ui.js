@@ -3,7 +3,9 @@ define(["js/js-numbers","/js/share.js","trove/srcloc", "trove/error-display"], f
   // TODO(joe Aug 18 2014) versioning on shared modules?  Use this file's
   // version or something else?
   var shareAPI = makeShareAPI("");
-  
+  Math.LN10 = Math.LN10 || Math.log(10);
+  Math.log10 = Math.log10 || function log10(n) { return Math.log(n) / Math.LN10; };
+
   function mapK(inList, f, k, outList) {
     if (inList.length === 0) { k(outList || []); }
     else {
@@ -37,7 +39,7 @@ define(["js/js-numbers","/js/share.js","trove/srcloc", "trove/error-display"], f
     var userLocs = srclocStack.filter(function(l) {
       if(!(l && isSrcloc(l))) { return false; }
       var source = runtime.getField(l, "source");
-      return (source === "definitions" 
+      return (source === "definitions"
               || source.indexOf("interactions") !== -1
               || source.indexOf("gdrive") !== -1);
     });
@@ -139,24 +141,28 @@ define(["js/js-numbers","/js/share.js","trove/srcloc", "trove/error-display"], f
       var curLoc = locs[locIndex];
       var editor = editors[get(curLoc, "source")];
       if(!editor) { return; }
-      var view = editor.getScrollInfo();
-      cases(get(srcloc, "Srcloc"), "Srcloc", curLoc, {
-        "builtin": function(_) { },
-        "srcloc": function(source, startL, startC, startCh, endL, endC, endCh) {
-          var charCh = editor.charCoords(cmPosFromSrcloc(curLoc).start, "local");
-          if (view.top > charCh.top) {
-            warnDesired = fadeAmt;
-            // We set a timeout so that a quick pass through the area
-            // won't bring up the warning.
-            setTimeout(function() { setWarningState(jQuery(".warning-upper")); },
-                       warnWait);
-          } else if (view.top + view.clientHeight < charCh.bottom) {
-            warnDesired = fadeAmt;
-            setTimeout(function() { setWarningState(jQuery(".warning-lower")); },
-                       warnWait);
+      if (jQuery(editor.getWrapperElement()).find(".warning-upper").length !== 0) {
+        var view = editor.getScrollInfo();
+        cases(get(srcloc, "Srcloc"), "Srcloc", curLoc, {
+          "builtin": function(_) { },
+          "srcloc": function(source, startL, startC, startCh, endL, endC, endCh) {
+            var charCh = editor.charCoords(cmPosFromSrcloc(curLoc).start, "local");
+            if (view.top > charCh.top) {
+              warnDesired = fadeAmt;
+              // We set a timeout so that a quick pass through the area
+              // won't bring up the warning.
+              var warningUpper = jQuery(editor.getWrapperElement()).find(".warning-upper");
+              setTimeout(function() { setWarningState(warningUpper); },
+                         warnWait);
+            } else if (view.top + view.clientHeight < charCh.bottom) {
+              warnDesired = fadeAmt;
+              var warningLower = jQuery(editor.getWrapperElement()).find(".warning-lower");
+              setTimeout(function() { setWarningState(warningLower); },
+                         warnWait);
+            }
           }
-        }
-      });
+        });
+      }
       mapK(locs, function(l, k) { highlightSrcloc(l, cls, k); }, function(ms) {
         marks = marks.concat(ms.filter(function(m) { return m !==  null; }));
       });
@@ -328,7 +334,7 @@ define(["js/js-numbers","/js/share.js","trove/srcloc", "trove/error-display"], f
     return runtime.loadModules(runtime.namespace, [srclocLib, errordisplayLib], function(srcloc, ED) {
       function help(errorDisp) {
         return ffi.cases(get(ED, "ErrorDisplay"), "ErrorDisplay", errorDisp, {
-          "v-sequence": function(seq) { 
+          "v-sequence": function(seq) {
             var result = $("<div>");
             var contents = ffi.toArray(seq);
             for (var i = 0; i < contents.length; i++) {
@@ -336,7 +342,7 @@ define(["js/js-numbers","/js/share.js","trove/srcloc", "trove/error-display"], f
             }
             return result;
           },
-          "numbered-sequence": function(seq) { 
+          "numbered-sequence": function(seq) {
             var result = $("<ol>");
             var contents = ffi.toArray(seq);
             for (var i = 0; i < contents.length; i++) {
@@ -344,7 +350,7 @@ define(["js/js-numbers","/js/share.js","trove/srcloc", "trove/error-display"], f
             }
             return result;
           },
-          "bulleted-sequence": function(seq) { 
+          "bulleted-sequence": function(seq) {
             var result = $("<ul>");
             var contents = ffi.toArray(seq);
             for (var i = 0; i < contents.length; i++) {
@@ -352,7 +358,7 @@ define(["js/js-numbers","/js/share.js","trove/srcloc", "trove/error-display"], f
             }
             return result;
           },
-          "h-sequence": function(seq, separator) { 
+          "h-sequence": function(seq, separator) {
             var result = $("<p>");
             var contents = ffi.toArray(seq);
             for (var i = 0; i < contents.length; i++) {
@@ -405,7 +411,7 @@ define(["js/js-numbers","/js/share.js","trove/srcloc", "trove/error-display"], f
           "optional": function(contents) {
             return expandableMore(help(contents));
           },
-          "text": function(txt) { 
+          "text": function(txt) {
             return $("<span>").text(txt);
           },
           "code": function(contents) {
@@ -429,7 +435,7 @@ define(["js/js-numbers","/js/share.js","trove/srcloc", "trove/error-display"], f
                     if ($.contains(document.documentElement, placeholder[0])) {
                       placeholder.replaceWith(rendered);
                     }
-                    else { 
+                    else {
                       placeholder = rendered;
                     }
                     return rendered;
@@ -445,7 +451,7 @@ define(["js/js-numbers","/js/share.js","trove/srcloc", "trove/error-display"], f
               return help(contentsWithoutLoc);
             }
           },
-          "loc": function(loc) { 
+          "loc": function(loc) {
             return drawSrcloc(editors, runtime, loc);
           },
           "loc-display": function(loc, style, contents) {
@@ -493,6 +499,9 @@ define(["js/js-numbers","/js/share.js","trove/srcloc", "trove/error-display"], f
       } else {
         return renderers.renderText("opaque", val);
       }
+    };
+    renderers["cyclic"] = function renderCyclic(val) {
+      return renderers.renderText("cyclic", val);
     };
     renderers.renderImage = function renderImage(img) {
       var container = $("<span>").addClass('replOutput');
@@ -542,7 +551,7 @@ define(["js/js-numbers","/js/share.js","trove/srcloc", "trove/error-display"], f
       // click will toggle the decimal representation of that
       // number.  Note that this feature abandons the convenience of
       // publishing output via the CodeMirror textarea.
-      if (jsnums.isExact(num) && !jsnums.isInteger(num)) {
+      if (jsnums.isRational(num) && !jsnums.isInteger(num)) {
         // This function returns three string values, numerals to
         // appear before the decimal point, numerals to appear
         // after, and numerals to be repeated.
@@ -572,7 +581,7 @@ define(["js/js-numbers","/js/share.js","trove/srcloc", "trove/error-display"], f
       var echo = $("<span>").addClass("replTextOutput");
       echo.text(renderers.__proto__[valType](val));
       setTimeout(function() {
-        CodeMirror.runMode(echo.text(), "pyret", echo);
+        CodeMirror.runMode(echo.text(), "pyret", echo[0]);
         echo.addClass("cm-s-default");
       }, 0);
       return echo;
@@ -593,9 +602,9 @@ define(["js/js-numbers","/js/share.js","trove/srcloc", "trove/error-display"], f
         .addClass("info-icon");
       container.append(warning);
       warning.click(function(e) {
-        runtime.runThunk(function() { 
+        runtime.runThunk(function() {
           // re-render the value
-          return runtime.toReprJS(runtime.getRef(top.extra.origVal), renderers); 
+          return runtime.toReprJS(runtime.getRef(top.extra.origVal), renderers);
         }, function(newTop) {
           if(runtime.isSuccessResult(newTop)) {
             warning.detach()
@@ -638,8 +647,8 @@ define(["js/js-numbers","/js/share.js","trove/srcloc", "trove/error-display"], f
       }
       container.append(dl);
       container.append(closeBrace);
-      container.click(function(e) { 
-        container.toggleClass("expanded"); 
+      container.click(function(e) {
+        container.toggleClass("expanded");
         e.stopPropagation();
       });
       return container;
@@ -661,39 +670,75 @@ define(["js/js-numbers","/js/share.js","trove/srcloc", "trove/error-display"], f
         container.append(dl);
         container.append(closeParen);
       }
-      container.click(function(e) { 
-        container.toggleClass("expanded"); 
-        e.stopPropagation();
-      });
+      container.click(toggleExpanded);
       return container;
     };
+    function toggleExpanded(e) {
+      $(this).toggleClass("expanded");
+      e.stopPropagation();
+    }
+    function makeInline() {
+      // Assuming this was made by groupItems below, replace all instances of .collection with .inlineCollection
+      $(this).toggleClass("collection");
+      $(this).toggleClass("inlineCollection");
+      $(this).children("li").children("span.contents").children("ul").each(makeInline);
+    }
+    function helper(container, val, values) {
+      if (runtime.ffi.isVSValue(val)) { container.append(values.pop()); }
+      else if (runtime.ffi.isVSStr(val)) { container.append(runtime.unwrap(runtime.getField(val, "s"))); }
+      else if (runtime.ffi.isVSCollection(val)) {
+        container.append($("<span>").text("[" + runtime.unwrap(runtime.getField(val, "name")) + ": "));
+        var ul = $("<ul>").addClass("inlineCollection");
+        container.append(ul);
+        var items = runtime.ffi.toArray(runtime.getField(val, "items"));
+        groupItems(ul, items, values, 0, items.length);
+        container.append($("<span>").text("]"));
+        container.click(function(e) {
+          ul.each(makeInline);
+          e.stopPropagation();
+        });
+      } else if (runtime.ffi.isVSConstr(val)) {
+        container.append($("<span>").text(runtime.unwrap(runtime.getField(val, "name")) + "("));
+        var items = runtime.ffi.toArray(runtime.getField(val, "items"));
+        for (var i = items.length - 1; i >= 0; i--) {
+          helper(container, items[i], values);
+          if (i != 0) { container.append($("<span>").text(", ")); }
+        }
+        container.append($("<span>").text(")"));
+      } else {
+        var items = runtime.ffi.toArray(runtime.getField(val, "items"));
+        for (var i = items.length - 1; i >= 0; i--) {
+          helper(container, items[i], values);
+        }
+      }
+      return container;
+    }
+    function groupItems(ul, items, values, minIdx, maxIdx) {
+      // The grouping behavior isn't visually clean yet, so commenting out for now...
+      // if (Math.log10(maxIdx - minIdx) <= 1) {
+        for (var i = maxIdx - 1; i >= minIdx; i--) {
+          var li = $("<li>").addClass("expanded");
+          var title = $("<span>").addClass("label").text("Item " + (minIdx + maxIdx - 1 - i));
+          var contents = $("<span>").addClass("contents");
+          ul.append(li.append(title).append(contents));
+          helper(contents, items[i], values);
+        }
+      // } else {
+      //   var intervalSize = Math.pow(10, Math.ceil(Math.log10(maxIdx - minIdx)) - 1);
+      //   for (var i = minIdx; i < maxIdx; i += intervalSize) {
+      //     var li = $("<li>");
+      //     var title = $("<span>").addClass("label").addClass("expandable")
+      //       .text("[Items " + i + "--" + Math.min(i + intervalSize - 1, maxIdx - 1) + "]");
+      //     var contents = $("<span>").addClass("contents");
+      //     var newUl = $("<ul>").addClass("inlineCollection");
+      //     ul.append(li.append(title).append(contents.append(newUl)));
+      //     li.click(toggleExpanded);
+      //     groupItems(newUl, items, values, i, Math.min(i + intervalSize, maxIdx));
+      //   }
+      // }
+    }
     renderers["render-valueskeleton"] = function renderValueSkeleton(top) {
       var container = $("<span>").addClass("replToggle replOutput");
-      function helper(container, val, values) {
-        if (runtime.ffi.isVSValue(val)) { container.append(values.pop()); }
-        else if (runtime.ffi.isVSCollection(val)) {
-          var newCont = $("<span>");
-          container.append(newCont);
-          newCont.append($("<span>").text("[" + runtime.unwrap(runtime.getField(val, "name")) + ": "));
-          var items = runtime.ffi.toArray(runtime.getField(val, "items"));
-          for (var i = items.length - 1; i >= 0; i--) {
-            helper(newCont, items[i], values);
-            if (i != 0) { newCont.append($("<span>").text(", ")); }
-          }
-          newCont.append($("<span>").text("]"));
-        } else {
-          var newCont = $("<span>");
-          container.append(newCont);
-          newCont.append($("<span>").text(runtime.unwrap(runtime.getField(val, "name")) + "("));
-          var items = runtime.ffi.toArray(runtime.getField(val, "items"));
-          for (var i = items.length - 1; i >= 0; i--) {
-            helper(newCont, items[i], values);
-            if (i != 0) { newCont.append($("<span>").text(", ")); }
-          }
-          newCont.append($("<span>").text(")"));
-        }
-        return container;
-      };
       return helper(container, top.extra.skeleton, top.done);
     };
   }

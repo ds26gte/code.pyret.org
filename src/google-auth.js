@@ -14,7 +14,6 @@ function makeAuth(config) {
 
   return {
     refreshAccess: function(refreshToken, callback) {
-      console.log(refreshToken);
       var oauth2Client =
           new OAuth2(
               config.google.clientId,
@@ -38,6 +37,7 @@ function makeAuth(config) {
         // for it so that we don't have to do another popup on the client.
         // #notpola
         scope: "email "
+             + "https://spreadsheets.google.com/feeds "
              + "https://www.googleapis.com/auth/drive.file "
              + "https://www.googleapis.com/auth/drive.install",
         state: afterUrl
@@ -52,7 +52,6 @@ function makeAuth(config) {
               config.baseUrl + config.google.redirect
             );
       oauth2Client.getToken(authCode, function(err, tokens) {
-        console.log("Got tokens: ", JSON.stringify(tokens));
         if(err !== null) {
           console.error("Error in Google login: ", err);
           callback(err, null); return;

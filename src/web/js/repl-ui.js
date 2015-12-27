@@ -53,7 +53,6 @@ define(["js/ffi-helpers", "js/runtime-util", "trove/image-lib", "./check-ui.js",
 
     var CM = CodeMirror.fromTextArea(textarea[0], cmOptions);
 
-
     if (useLineNumbers) {
       var upperWarning = jQuery("<div>").addClass("warning-upper");
       var upperArrow = jQuery("<img>").addClass("warning-upper-arrow").attr("src", "/img/up-arrow.png");
@@ -63,13 +62,6 @@ define(["js/ffi-helpers", "js/runtime-util", "trove/image-lib", "./check-ui.js",
       var lowerArrow = jQuery("<img>").addClass("warning-lower-arrow").attr("src", "/img/down-arrow.png");
       lowerWarning.append(lowerArrow);
       CM.display.wrapper.appendChild(lowerWarning.get(0));
-    }
-
-    // True for editor, false for repl entries
-    if(options.runButton) {
-      options.runButton.on("click", function() {
-        runFun(CM.getValue());
-      });
     }
 
     return {
@@ -89,7 +81,7 @@ define(["js/ffi-helpers", "js/runtime-util", "trove/image-lib", "./check-ui.js",
   // NOTE(joe): sadly depends on the page and hard to figure out how to make
   // this less global
   function scroll(output) {
-    $(".repl").animate({ 
+    $(".repl").animate({
          scrollTop: output.height(),
        },
        500
@@ -127,19 +119,18 @@ define(["js/ffi-helpers", "js/runtime-util", "trove/image-lib", "./check-ui.js",
                     console.log("Stats for running definitions:", JSON.stringify(runResult.stats));
                     if(rr.isSuccessResult(runResult)) {
                       if(!isMain) {
-                        var answer = rr.getField(runResult.result, "answer");
-                        if(rr.isNothing(answer)) {
-                          return;
+                        var answer = rr.getColonField(runResult.result, "answer");
+                        if(!rr.isNothing(answer)) {
+                          outputUI.renderPyretValue(output, rr, answer);
+                          scroll(output);
                         }
-                        outputUI.renderPyretValue(output, rr, answer);
-                        scroll(output);
                       }
 
                       checkUI.drawCheckResults(output, editors, rr, runtime.getField(runResult.result, "checks"));
                       scroll(output);
 
                       return true;
-                    
+
                     } else {
                       errorUI.drawError(output, editors, rr, runResult.exn);
                     }
@@ -157,7 +148,7 @@ define(["js/ffi-helpers", "js/runtime-util", "trove/image-lib", "./check-ui.js",
 
   //: -> (code -> printing it on the repl)
   function makeRepl(container, repl, runtime, options) {
-    
+
     var Jsworld = worldLib(runtime, runtime.namespace);
     var items = [];
     var pointer = -1;
@@ -241,10 +232,11 @@ define(["js/ffi-helpers", "js/runtime-util", "trove/image-lib", "./check-ui.js",
     }).css({
       "vertical-align": "middle"
     });
+    var runContents;
     function afterRun(cm) {
       return function() {
         options.runButton.empty();
-        options.runButton.text("Run");
+        options.runButton.append(runContents);
         options.runButton.attr("disabled", false);
         breakButton.attr("disabled", true);
         if(cm) {
@@ -259,6 +251,7 @@ define(["js/ffi-helpers", "js/runtime-util", "trove/image-lib", "./check-ui.js",
       }
     }
     function setWhileRunning() {
+      runContents = options.runButton.contents();
       options.runButton.empty();
       var text = $("<span>").text("Running...");
       text.css({
@@ -278,7 +271,7 @@ define(["js/ffi-helpers", "js/runtime-util", "trove/image-lib", "./check-ui.js",
       editors = {};
       editors["definitions"] = uiOptions.cm;
       interactionsCount = 0;
-      var replResult = repl.restartInteractions(src);
+      var replResult = repl.restartInteractions(src, !!uiOptions["type-check"]);
       var doneRendering = replResult.then(displayResult(output, runtime, repl.runtime, true)).fail(function(err) {
         console.error("Error displaying result: ", err);
       });

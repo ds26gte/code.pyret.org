@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "description": "A simple IDE for Pyret",
   "main": "index.js",
+  "engines": {
+    "npm": "2.1.x"
+  },
   "dependencies": {
     "lodash": "~2.4.1",
     "q": "~1.0.1",
@@ -19,7 +22,7 @@
     "csurf": "^1.1.0",
     "cookie-session": "^1.0.1",
     "cookie-parser": "^1.0.1",
-    "jasmine-node": "^1.14.3",
+    "mocha": "^2.2.1",
     "selenium-webdriver": "^2.41.0",
     "mustache": "^0.8.1",
     "url.js": "^1.0.2",
@@ -37,5 +40,5 @@
     "url": "git://github.com/brownplt/code.pyret.org"
   },
   "author": "Joe Politz",
-  "license": "Apache 2"
+  "license": "Apache-2.0"
 }
