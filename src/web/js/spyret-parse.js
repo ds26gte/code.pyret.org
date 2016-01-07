@@ -7587,6 +7587,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
   })();
 
   function schemeToPyretAST(code, name, single) {
+    // single == true for code coming from repl
     var debug = false;
     var sexp = plt.compiler.lex(code, name, debug);
     var ast = plt.compiler.parse(sexp, debug)
@@ -7605,8 +7606,8 @@ define(["./wescheme-support.js", 'js/js-numbers'
         plt.compiler.makeImportSnippet('world')
       ];
       //ws_ast.kids[0].kids = preimports;
-      ws_ast.kids[0].unshift(preimports[1])
-      ws_ast.kids[0].unshift(preimports[0])
+      ws_ast.kids[0].kids.unshift(preimports[1])
+      ws_ast.kids[0].kids.unshift(preimports[0])
     }
     var ws_ast_j = JSON.stringify(ws_ast);
 
