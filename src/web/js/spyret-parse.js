@@ -3500,6 +3500,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
       // Lists
       ,
       ["append", 0, true],
+      ['spyret_append_2', 2],
       ["assq", 2] // *
       ,
       ["assv", 2] // *
@@ -4370,12 +4371,27 @@ define(["./wescheme-support.js", 'js/js-numbers'
         (throwError(types.Message(["ASSERTION FAILURE: couldn't find a usable location"]), new Location(0, 0, 0, 0))),
         appendArgs = qqlist.map(function(x) {
           return desugarQuasiQuotedListElement(x, pinfo, depth, loc)[0];
-        }),
+        })
+        /* ,
         appendSym = new symbolExpr('append');
       appendSym.location = loc
       var appendCall = new callExpr(appendSym, appendArgs);
       appendCall.location = loc;
       return [appendCall, pinfo];
+      */
+
+      var listSym = new symbolExpr('list')
+      listSym.location = loc
+      var acc = new callExpr(listSym, [])
+      for (var i = appendArgs.length - 1; i >= 0; i--) {
+        var appendSym = new symbolExpr('spyret_append_2')
+        appendSym.location = loc
+        acc = new callExpr(appendSym, [appendArgs[i], acc])
+        acc.location = loc
+      }
+
+      return [acc, pinfo]
+
     }
 
     // go through each item in search of unquote or unquoteSplice
