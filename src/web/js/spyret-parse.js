@@ -292,6 +292,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["empty?"] = "is-empty";
     symbolMap["cons?"] = "is-link";
     symbolMap["cons"] = "link";
+    symbolMap["append"] = "spyret_append_2";
 
     symbolMap["*"] = "_times";
     symbolMap["+"] = "_spyret_plus_numeric";
