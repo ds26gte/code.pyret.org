@@ -294,7 +294,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["cons"] = "link";
 
     symbolMap["*"] = "_times";
-    symbolMap["+"] = "_plusnumeric";
+    symbolMap["+"] = "_spyret_plus_numeric";
     symbolMap["-"] = "_minus";
     symbolMap["/"] = "_divide";
     symbolMap["<"] = "_lessthan";
