@@ -6348,15 +6348,34 @@ define(["./wescheme-support.js", 'js/js-numbers'
       };
     }
 
+    function pyretizeSymbol(str) {
+      var str2
+      var str_pyret_name = symbolMap[str] // do this for local vars too?
+      if (str_pyret_name) {
+        str2 = str_pyret_name
+      } else if (str.length === 1) { // do this for local vars too?
+        str2 = str
+      } else {
+        str2 = str.replace(/\//g, 'ƎSLASH').
+        replace(/\?/g, 'ƎQUESTION').
+        replace(/!/g, 'ƎBANG').
+        replace(/\+/g, 'ƎPLUS').
+        replace(/^_/, 'ƎUNDERSCORE').
+        replace(/^(\d)/, 'Ǝ$1')
+      }
+      return str2
+    }
+
     // given a symbol, make a binding (used for let-expr, fun-expr, lam-expr...)
     function makeBindingFromSymbol(sym) {
       var loc = sym.location;
+      var psym = pyretizeSymbol(sym.val)
       return {
         name: "binding",
         kids: [{
           name: "NAME",
-          value: sym.val,
-          key: "'NAME:" + sym.val,
+          value: psym,
+          key: "'NAME:" + psym,
           pos: loc
         }],
         pos: loc
@@ -6401,10 +6420,12 @@ define(["./wescheme-support.js", 'js/js-numbers'
           pos: loc
         };
       } else {
+        var psym = sym.val
+        //var psym = pyretizeSymbol(sym.val)
         kid = {
           name: "STRING",
-          value: '"' + sym.val + '"',
-          key: "'STRING:\"" + sym.val + "\"",
+          value: '"' + psym + '"',
+          key: "'STRING:\"" + psym + "\"",
           pos: loc
         };
         result = {
@@ -7541,19 +7562,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     // symbolExpr(val)
     symbolExpr.prototype.toPyretAST = function() {
       var loc = this.location;
-      var sval
-      var val_pyret_name = symbolMap[this.val];
-      if (val_pyret_name) {
-        sval = val_pyret_name;
-      } else if (this.val.length === 1) {
-        sval = this.val
-      } else {
-        sval = this.val.replace(/\//g, 'SLASH').
-        replace(/\?/g, 'ƎQUESTION').
-        replace(/!/g, 'ƎBANG').
-        replace(/\+/g, 'ƎPLUS').
-        replace(/^_/, 'ƎUNDERSCORE')
-      }
+      var sval = pyretizeSymbol(this.val)
       return {
         name: "expr",
         kids: [{
