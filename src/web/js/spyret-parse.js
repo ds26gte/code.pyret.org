@@ -6408,7 +6408,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
           pos: loc
         };
         result = {
-          name: "string-expr",
+          name: "symbol-expr",
           kids: [kid],
           pos: loc
         };
