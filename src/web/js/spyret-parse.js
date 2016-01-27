@@ -6420,7 +6420,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
           pos: loc
         };
       } else {
-        var psym = sym.val
+        var psym = "’" + sym.val
         //var psym = pyretizeSymbol(sym.val)
         kid = {
           name: "STRING",
