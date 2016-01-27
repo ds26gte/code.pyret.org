@@ -578,8 +578,9 @@ define(["js/js-numbers","/js/share.js","trove/srcloc", "trove/error-display"], f
       return $("<span>").addClass("replTextOutput").text("nothing");
     };
     renderers.renderText = function renderText(valType, val) {
+      //console.log('renderers>renderText> ' + valType + ', ' + JSON.stringify(val))
       var echo = $("<span>").addClass("replTextOutput");
-      echo.text(renderers.__proto__[valType](val));
+      echo.text(renderers.__proto__[valType](val, true));
       setTimeout(function() {
         CodeMirror.runMode(echo.text(), "pyret", echo[0]);
         echo.addClass("cm-s-default");
@@ -587,7 +588,8 @@ define(["js/js-numbers","/js/share.js","trove/srcloc", "trove/error-display"], f
       return echo;
     };
     renderers["boolean"] = function(val) { return renderers.renderText("boolean", val); };
-    renderers["string"] = function(val) { return renderers.renderText("string", val); };
+    renderers["string"] = function(val) { //console.log('renderers>string> ' + JSON.stringify(val));
+                                           return renderers.renderText("string", val); };
     renderers["method"] = function(val) { return renderers.renderText("method", val); };
     renderers["function"] = function(val) { return renderers.renderText("function", val); };
     renderers["ref"] = function(val, implicit, pushTodo) {
