@@ -581,7 +581,7 @@ define(["js/js-numbers","/js/share.js","trove/srcloc", "trove/error-display"], f
     };
     renderers.renderText = function renderText(valType, val) {
       var echo = $("<span>").addClass("replTextOutput");
-      echo.text(renderers.__proto__[valType](val));
+      echo.text(renderers.__proto__[valType](val, true));
       setTimeout(function() {
         CodeMirror.runMode(echo.text(), "pyret", echo[0]);
         echo.addClass("cm-s-default");
