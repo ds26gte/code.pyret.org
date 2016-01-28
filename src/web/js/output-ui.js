@@ -6,6 +6,8 @@ define(["js/js-numbers","/js/share.js","trove/srcloc", "trove/error-display"], f
   Math.LN10 = Math.LN10 || Math.log(10);
   Math.log10 = Math.log10 || function log10(n) { return Math.log(n) / Math.LN10; };
 
+  var dialect = 'spyret'
+
   function mapK(inList, f, k, outList) {
     if (inList.length === 0) { k(outList || []); }
     else {
@@ -581,7 +583,7 @@ define(["js/js-numbers","/js/share.js","trove/srcloc", "trove/error-display"], f
     };
     renderers.renderText = function renderText(valType, val) {
       var echo = $("<span>").addClass("replTextOutput");
-      echo.text(renderers.__proto__[valType](val, true));
+      echo.text(renderers.__proto__[valType](val, dialect));
       setTimeout(function() {
         CodeMirror.runMode(echo.text(), "pyret", echo[0]);
         echo.addClass("cm-s-default");
