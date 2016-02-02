@@ -328,6 +328,13 @@ $(function() {
             });
 
           function doRunAction(src) {
+            var marks = editor.cm.getAllMarks();
+            for(var i = 0; i < marks.length; i++) {
+              marks[i].clear();
+            }
+            for(var i = 0; i < editor.cm.widgets.length; i++) {
+              editor.cm.widgets[i].clear();
+            }
             switch (currentAction) {
               case "run":
                 replWidget.runCode(src, {check: true, cm: editor.cm});
@@ -712,7 +719,10 @@ $(function() {
 
           $("#saveButton").click(save);
 
-          Q.all([programLoaded, interactionsReady]).fin(function() { $("#loader").hide(); });
+          Q.all([programLoaded, interactionsReady]).fin(function() {
+            clearInterval($("#loader").data("intervalID"));
+            $("#loader").hide();
+          });
           editor.focus();
         });
         done.fail(function(err) {
