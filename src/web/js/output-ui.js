@@ -1,5 +1,5 @@
 "use strict";
-define(["js/js-numbers","/js/share.js","trove/srcloc", "trove/error-display", "/js/gdrive-locators.js", "compiler/compile-structs.arr", "compiler/compile-lib.arr", "trove/parse-pyret"], function(jsnums,share,srclocLib,errordisplayLib,gdriveLocators, compileLib, compileStructs, parsePyret) {
+define(["js/js-numbers","/js/share.js","trove/srcloc", "trove/error-display", "/js/gdrive-locators.js", "compiler/compile-structs.arr", "compiler/compile-lib.arr", "trove/parse-pyret", "/js/spyret-parse.js"], function(jsnums,share,srclocLib,errordisplayLib,gdriveLocators, compileLib, compileStructs, parsePyret, spyretParse) {
 
   // TODO(joe Aug 18 2014) versioning on shared modules?  Use this file's
   // version or something else?
@@ -492,7 +492,8 @@ define(["js/js-numbers","/js/share.js","trove/srcloc", "trove/error-display", "/
 
   function astFromText(runtime, source, filename) {
     return runtime.loadModules(runtime.namespace, [parsePyret], function(PP) {
-      return runtime.unwrap(runtime.getField(PP, "surface-parse").app(source, filename));
+      return runtime.unwrap(runtime.getField(PP, "spyret-surface-parse").app(
+                     spyretParse.schemeToPyretAST(source, filename), filename));
     });
   }
 
