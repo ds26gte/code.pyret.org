@@ -6420,6 +6420,9 @@ define(["./wescheme-support.js", 'js/js-numbers'
           pos: loc
         };
       } else {
+        throwError(new types.Message([sym.val, ": Scheme-style symbols are not supported; use strings instead"]),
+        loc)
+        /*
         var psym = "’" + sym.val
         //var psym = pyretizeSymbol(sym.val)
         kid = {
@@ -6433,6 +6436,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
           kids: [kid],
           pos: loc
         };
+        */
       }
       return {
         name: "expr",
