@@ -45,9 +45,9 @@ define(["js/ffi-helpers", "trove/srcloc", "trove/error", "trove/contracts", "com
       } else if (typeof(exception) === 'string') {
 
         var spyretExn = JSON.parse(exception);
-        if (spyretExn.type === 'spyret-parse-error') {
+          var spyretErrType = spyretExn.type;
+        if (spyretErrType === 'spyret-parse-error') {
           var pyretLoc = pyretizeSpyretLoc(spyretExn.loc)
-          var spyretErrType = spyretExn.type
           var spyretOrigMsg = spyretExn.msg
           var spyretErrPkt = spyretExn.errPkt
           var spyretErrMsg = spyretOrigMsg
