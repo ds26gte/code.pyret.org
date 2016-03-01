@@ -34,7 +34,8 @@ define(["./wescheme-support.js", 'js/js-numbers'
     function throwError(msg, loc, errClass, errPkt) {
       var spyretErrObj = {
         type: "spyret-parse-error",
-        msg: msg.args.join(''),
+        msg: "",
+        //msg: msg.args.join(''),
         loc: loc,
         errClass: errClass || 'spyret-parse-error',
         errPkt: errPkt
@@ -821,26 +822,22 @@ define(["./wescheme-support.js", 'js/js-numbers'
       // Adds a new defined binding to a pinfo's set.
       this.accumulateDefinedBinding = function(binding, loc) {
         if (plt.compiler.keywords.indexOf(binding.name) > -1) {
-          throwError(new types.Message([new types.ColoredPart(binding.name, binding.loc),
-            ": this is a reserved keyword and cannot be used" +
-            " as a variable or function name"
-          ]), binding.loc);
+          throwError(0,0,0, {
+            errMsg: ",, is a reserved keyword and cannot be used as a variable or function name",
+            errArgLocs: [[binding.name, binding.loc]]
+          });
         } else if (!this.allowRedefinition && this.isRedefinition(binding.name)) {
           var prevBinding = this.env.lookup(binding.name);
           if (prevBinding.loc) {
-            throwError(new types.Message([new types.ColoredPart(binding.name, binding.loc),
-              ": this name has a ",
-              new types.ColoredPart("previous definition", prevBinding.loc),
-              " and cannot be re-defined"
-            ]), binding.loc);
-
+            throwError(0,0,0, {
+              errMsg: ",, has a ,, and cannot be redefined",
+              errArgLocs: [[binding.name, binding.loc], ["previous definition", prevBinding.loc]]
+            });
           } else {
-            throwError(new types.Message([new types.ColoredPart(binding.name, binding.loc),
-              ": this name has a ",
-              "previous definition",
-              " and cannot be re-defined"
-            ]), binding.loc);
-
+            throwError(0,0,0, {
+              errMsg: ",, has a previous definition and cannot be redefined",
+              errArgLocs: [[binding.name, binding.loc]]
+            });
           }
         } else {
           this.env.extend(binding);
@@ -926,7 +923,9 @@ define(["./wescheme-support.js", 'js/js-numbers'
         function lookupProvideBindingInDefinitionBindings(provideBinding) {
           // if it's not defined, throw an error
           if (!that.definedNames.containsKey(provideBinding.symbl)) {
-            throwError(new types.Message(["provided-name-not-defined: ", provideBinding.symbl]));
+            throwError(0,0,0, {
+              errMsg: "provided name " + provideBinding.symbl + " not defined"
+            });
           }
           // if it IS defined, let's examine it and make sure it is what it claims to be
           var binding = checkBindingCompatibility(binding, that.definedNames.get(provideBinding.symbl));
@@ -964,7 +963,9 @@ define(["./wescheme-support.js", 'js/js-numbers'
         // is really a structure.
         function checkBindingCompatibility(binding, exportedBinding) {
           if ((binding instanceof plt.compiler.provideBindingStructId) && (!(exportedBinding instanceof structBinding))) {
-            throwError(new types.Message(["provided-structure-not-structure: ", exportedBinding.symbl]));
+            throwError(0,0,0, {
+              errMsg: "provide structure " + exportedBinding.symbl + " is not a structure"
+            });
           } else {
             return exportedBinding;
           }
@@ -1203,7 +1204,9 @@ define(["./wescheme-support.js", 'js/js-numbers'
         x === ']' ? '[' :
         x === '}' ? '{' :
         /* else */
-        throwError(new types.Message(["otherDelim: Unknown delimiter: ", x]));
+        throwError(0,0,0, {
+          errMsg: "Unknown delimiter " + x
+        });
     }
 
     // reads through whitespace
@@ -1306,11 +1309,17 @@ define(["./wescheme-support.js", 'js/js-numbers'
       var p = str.charAt(i);
       if (i >= str.length) {
         endOfError = i; // remember where we are, so readList can pick up reading
-        throwError(new types.Message([source, ":", startRow.toString(), ":", (startCol - 1).toString(), ": read: (found end-of-file)"]), new Location(startCol - 1, startRow, i - 2, 2) // back up the startChar before #;, make the span include only those 2
-          , "Error-GenericReadError");
+        throwError(0,0,0, {
+          errMsg: ",, : ,,: found end of file",
+          errArgLocs: [[source, new Location(startCol-1, startRow, i-2, 2)],
+          ["read", new Location(startCol-1, startRow, iStart, 1)]]
+        });
       }
       var sexp = rightListDelims.test(p) ?
-        throwError(new types.Message(["read: expected a ", otherDelim(p), " to open ", new types.ColoredPart(p, new Location(column, startRow, iStart, 1))]), new Location(column, startRow, iStart, 1)) :
+      throwError(0,0,0, {
+        errMsg: "read: expected a " + otherDelim(p) + " to open ,,",
+        errArgLocs: [[p, new Location(column, startRow, iStart, 1)]]
+      }) :
         leftListDelims.test(p) ? readList(str, i) :
         p === '"' ? readString(str, i) :
         p === '#' ? readPoundSExp(str, i) :
@@ -1346,8 +1355,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
         // if it's a dot, treat it as a cons
         if (sexp instanceof symbolExpr && sexp.val == '.') {
           if (dot2Idx) {
-            var msg = new types.Message(["A syntax list may have only 2 `.'s"]);
-            throwError(msg, list[dot1Idx].location);
+            throwError(0,0,0, {
+              errMsg: "A ,, may have only 2 '.'s",
+              errArgLocs: [["syntax list", list[dot1Idx].location]]
+            });
           }
           dot2Idx = dot1Idx ? list.length : false; // if we've seen dot1, save this idx to dot2Idx
           dot1Idx = dot1Idx || list.length; // if we haven't seen dot1, save this idx to dot1Idx
@@ -1365,13 +1376,17 @@ define(["./wescheme-support.js", 'js/js-numbers'
       function processDots(list, dot1Idx, dot2Idx) {
         // if the dot is the first element in the list, throw an error
         if (dot1Idx === 0) {
-          var msg = new types.Message(["A `.' cannot be the first element in a syntax list"]);
-          throwError(msg, list[dot1Idx].location);
+          throwError(0,0,0, {
+            errMsg: "A '.' cannot be the first elemet in a ,,",
+            errArgLocs: [ ["syntax list", list[dot1Idx].location] ]
+          });
         }
         // if a dot is the last element in the list, throw an error
         if (dot1Idx === (list.length - 1) || dot2Idx === (list.length - 1)) {
-          var msg = new types.Message(["A `.' cannot be the last element in a syntax list"]);
-          throwError(msg, list[dot2Idx || dot1Idx].location);
+          throwError(0,0,0, {
+            errMsg: "A ',' cannot be the last element in a ,,",
+            errArgLocs: [ ["syntax list", list[dot2Idx || dot1Idx].location] ]
+          });
         }
 
         // assuming they are legal, if there are two dots in legal places...
@@ -1379,7 +1394,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
           // if they are not surrounding a single element, throw an error
           if (dot2Idx - dot1Idx !== 2) {
             var msg = new types.Message(["Two `.'s may only surround one syntax item"]);
-            throwError(msg, list[dot2Idx].location);
+            throwError(0,0,0, {
+              errMsg: "Two '.'s may only surround one ,,",
+              errArgLocs: [ ["syntax item", list[dot2Idx].location] ]
+            });
             // if they are, move that element to the front of the list and remove the dots
           } else {
             return list.slice(dot1Idx + 1, dot1Idx + 2).concat(list.slice(0, dot1Idx), list.slice(dot2Idx + 1));
@@ -1387,12 +1405,16 @@ define(["./wescheme-support.js", 'js/js-numbers'
         }
         // okay, we know there's just one dot, so the next element had better be a list AND the last element of the outer list
         if (!(list[dot1Idx + 1] instanceof Array)) {
-          var msg = new types.Message(["A `.' must be followed by a syntax list, but found ", new types.ColoredPart("something else", list[dot1Idx + 1].location)])
-          throwError(msg, list[dot1Idx + 1].location);
+          throwError(0,0,0, {
+            errMsg: "A '.' must be followed by a syntax list, but found ,,",
+            errArgLocs: [ [ "something else", list[dot1Idx+1].location ] ]
+          });
         }
         if (list.length > dot1Idx + 2) {
-          var msg = new types.Message(["A `.' followed by a syntax list must be followed by a closing delimeter, but found ", new types.ColoredPart("something else", list[dot1Idx + 2].location)])
-          throwError(msg, list[dot1Idx + 1].location);
+          throwError(0,0,0, {
+            errMsg: "A '.' followed by a syntax list must be followed by a closing delimiter, but found ,,",
+            errArgLocs: [ ["syntax list", list[dot1Idx+1].location], ["something else", list[dot1Idx+2].location] ]
+          });
           // splice that element into the list, removing the dots
         } else {
           return list.slice(0, dot1Idx).concat(list[dot1Idx + 1], list.slice(dot1Idx + 2));
@@ -1438,35 +1460,20 @@ define(["./wescheme-support.js", 'js/js-numbers'
       }
       // if we reached the end of an otherwise-successful list but there's no closing delim...
       if (i >= str.length) {
-        var msg = new types.Message(["read: expected a ", otherDelim(openingDelim),
-          " to close ",
-          new types.ColoredPart(openingDelim.toString(),
-            new Location(startCol, startRow, iStart, 1))
-        ]);
         // throw an error
-        throwError(msg, errorLocation, undefined,
-        {
-          errorType: 'missing-closing-delimiter',
-          errorMessage1: 'Expected a ' + otherDelim(openingDelim) + ' to close ' + openingDelim + '.'
-        }
-        );
+        var openingLoc = new Location(startCol, startRow, iStart, 1);
+        throwError(0,0,0, {
+          errMsg: ",, a " + otherDelim(openingDelim) + " to close ,,",
+          errArgLocs: [["Expected", errorLocation],
+          [openingDelim, openingLoc]]
+        });
       }
       // if we reached the end of an otherwise-successful list and it's the wrong closing delim...
       if (!matchingDelims(openingDelim, str.charAt(i))) {
-        var msg = new types.Message(["read: expected a ", otherDelim(openingDelim),
-          " to close ",
-          new types.ColoredPart(openingDelim.toString(),
-            new Location(startCol, startRow, iStart, 1)),
-          " but found a ",
-          new types.ColoredPart(str.charAt(i).toString(),
-            new Location(column, line, i, 1))
-        ]);
-        throwError(msg, new Location(column, line, i, 1),
-        undefined,
-        {
-          errorType: 'wrong-closing-delimiter',
-          errorMessage1: 'Expected a ' + otherDelim(openingDelim) + ' to close ' + openingDelim +
-          ' but found ' + str.charAt(i) + '.'
+        throwError(0,0,0, {
+          errMsg: "read: expected a " + otherDelim(openingDelim) + " to close ,, but found a ,,",
+          errArgLocs: [[openingDelim, new Location(startCol, startRow, iStart, 1)],
+          [str.charAt(i), new Location(column, line, i, 1)]]
         });
       }
 
@@ -1549,7 +1556,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
               if (!regexp.test(str.slice(i))) {
                 // remember where we are, so readList can pick up reading
                 endOfError = iStart + greedy.length + 1;
-                throwError(new types.Message([source, ":", startRow.toString(), ":", startCol.toString(), ": read: no hex digit following \\" + chr + " in string"]), new Location(startCol, startRow, iStart, i - iStart + 1), "Error-GenericReadError");
+                throwError(0,0,0, {
+                  errMsg: "read: no hex digit following " + chr + " in ,,",
+                  errArgLocs: [["string", new Location(startCol, startRow, iStart, i-iStart+1)]]
+                });
               }
               var match = regexp.exec(str.slice(i))[1];
               chr = String.fromCharCode(parseInt(match, 16));
@@ -1565,7 +1575,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
             default:
               // remember where we are, so readList can pick up reading
               endOfError = iStart + greedy.length + 1;
-              throwError(new types.Message([source, ":", startRow.toString(), ":", startCol.toString(), ": read: unknown escape sequence \\" + chr + " in string"]), new Location(startCol, startRow, iStart, i - iStart), "Error-GenericReadError");
+                throwError(0,0,0, {
+                  errMsg: "read: unknown escape sequence \\" + chr + " in ,,",
+                  errArgLocs: [["string", new Location(startCol, startRow, iStart, i-iStart)]]
+                });
           }
         }
         datum += chr;
@@ -1574,9 +1587,9 @@ define(["./wescheme-support.js", 'js/js-numbers'
       // if the next char after iStart+openquote+greedy isn't a closing quote, it's an unclosed string
       if (!closedString) {
         endOfError = iStart + greedy.length; // remember where we are, so readList can pick up reading
-        throwError(new types.Message([source, ":", startRow.toString(), ":", startCol.toString(), ": read: expected a closing \'\"\'"]), new Location(startCol, startRow, iStart, 1), "Error-GenericReadError",
-        {
-          errMsg: "read: expected a closing \""
+        throwError(0,0,0, {
+          errMsg: ",,: expected a closing \'\"\'",
+          errArgLocs: [["read", new Location(startCol, startRow, iStart, 1)]]
         });
       }
       var strng = new literal(new types.string(datum));
@@ -1601,8 +1614,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
 
       // throwUnsupportedError : ErrorString token -> Error
       function throwUnsupportedError(errorStr, token) {
-        var msg = new types.Message([source, ":", line.toString(), ":", (column - 1).toString(), errorStr]);
-        throwError(msg, new Location(startCol, startRow, iStart, token.length + 1), "Error-GenericReadError");
+        throwError(0,0,0, {
+          errMsg: ",,",
+          errArgLocs: [[errorStr, new Location(startCol, startRow, iStart, token.length + 1)]]
+        });
       }
 
       if (i < str.length) {
@@ -1668,11 +1683,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
               elts.length + " value" + ((elts.length > 1) ? "s" : ""),
               " provided"
             ]);
-            throwError(msg, new Location(startCol, startRow, iStart, vectorTest[0].length),
-            undefined,
-            {
-              errMsg: "read: vector length " + len + " is too small, " +
-                elts.length + " value" + ((elts.length > 1) ? "s" : "") + " provided"
+            throwError(0,0,0, {
+              errMsg: ",,: vector length " + len + " is too small, " +
+                elts.length + " value" + ((elts.length > 1) ? "s" : "") + " provided",
+                errArgLocs: [["read", new Location(startCol, startRow, iStart, vectorTest[0].length)]]
             });
           }
 
@@ -1755,7 +1769,11 @@ define(["./wescheme-support.js", 'js/js-numbers'
               datum.location.span++; // expand the datum to include leading '#'
               endOfError = i + datum.location.span;
               var msg = new types.Message([source, ":", startRow.toString(), ":", (column - 1).toString(), " read: WeScheme does not support the '#" + p + "' notation for ", (p === "," ? "unsyntax" : p === "'" ? "syntax" : "quasisyntax")]);
-              throwError(msg, datum.location);
+              throwError(0,0,0, {
+                errMsg: ",,: WeScheme does not support the '#" + p + "' notation for " +
+               (p === "," ? "unsyntax" : p === "'" ? "syntax" : "quasisyntax"),
+               errArgLocs: [["read", datum.location]]
+              });
               break;
               // STRINGS
             case '<<':
@@ -1785,14 +1803,20 @@ define(["./wescheme-support.js", 'js/js-numbers'
             default:
               endOfError = i; // remember where we are, so readList can pick up reading
               var msg = new types.Message([source, ":", line.toString(), ":", (column - 1).toString(), ": read: bad syntax `#", (chunk + nextChar), "'"]);
-              throwError(msg, new Location(startCol, startRow, iStart, (chunk + nextChar).length + 1), "Error-GenericReadError");
+              throwError(0,0,0, {
+                errMsg: ",,: bad syntax '#" + chunk + nextChar + "'",
+                errArgLocs: [["read", new Location(startCol, startRow, iStart, (chunk + nextChar).length + 1)]]
+              });
           }
         }
         }
         // only reached if # is the end of the string...
       } else {
         endOfError = i; // remember where we are, so readList can pick up reading
-        throwError(new types.Message([source, ":", line.toString(), ":", (column - 1).toString(), ": read: bad syntax `#'"]), new Location(startCol, startRow, iStart, i - iStart), "Error-GenericReadError");
+        throwError(0,0,0, {
+          errMsg: ",,: bad syntax '#'",
+          errArgLocs: [["read", new Location(startCol, startRow, iStart, i - iStart)]]
+        });
       }
       datum.location = new Location(startCol, startRow, iStart, i - iStart);
       return datum;
@@ -1857,11 +1881,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
         datum = datum.charAt(0);
         i = iStart + 3; // fast-forward past (1) hash, (2) backslash and (3) single char
       } else {
-        throwError(new types.Message([source, ":", startRow.toString(), ":", (startCol - 1).toString(),
-            ": read: bad character constant: #\\", datum
-          ]),
-          new Location(startCol - 1, startRow, iStart, i - iStart),
-          "Error-GenericReadError");
+        throwError(0,0,0, {
+          errMsg: ",,: bad character constant: #\\" + datum,
+          errArgLocs: [["read", new Location(startCol - 1, startRow, iStart, i - iStart)]]
+        });
       }
       var chr = new literal(new types['char'](datum));
       chr.location = new Location(startCol, startRow, iStart, i - iStart);
@@ -1888,7 +1911,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
         column++; // move ahead
       }
       if (i + 1 >= str.length) {
-        throwError(new types.Message(["read: Unexpected EOF when reading a multiline comment"]), new Location(startCol, startRow, iStart, i - iStart));
+        throwError(0,0,0, {
+          errMsg: ",,: unexpected EOF when reading a multiline comment",
+          errArgLocs: [["read", new Location(startCol, startRow, iStart, i - iStart)]]
+        });
       }
       i++;
       column++; // hop over '|#'
@@ -1915,11 +1941,9 @@ define(["./wescheme-support.js", 'js/js-numbers'
       // if we're done reading, make sure we didn't read past the end of the file
       if (i + 1 >= str.length) {
         endOfError = i; // remember where we are, so readList can pick up reading
-        throwError(new types.Message([source, ":", startRow.toString(), ":", (startCol - 1).toString(), ": read: expected a commented-out element for `#;' (found end-of-file)"]), new Location(startCol - 1, startRow, i - 2, 2) // back up the startChar before #;, make the span include only those 2
-          , "Error-GenericReadError",
-          {
-            errorType: 'eof-after-hash-semicolon',
-            errorMessage1: 'Expected a commented-out element for #; but found eof.'
+        throwError(0,0,0, {
+            errMsg: ",,: expected a commented-out element for '#;' (found end-of-file)",
+            errArgLocs: [["read", new Location(startCol - 1, startRow, i - 2, 2)]]
           });
       }
       // if we're here, then we read a proper s-expr
@@ -1946,8 +1970,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
       }
       if (i > str.length) {
         endOfError = i; // remember where we are, so readList can pick up reading
-        throwError(new types.Message(["read: Unexpected EOF when reading a line comment"]),
-          new Location(startCol, startRow, iStart, i - iStart));
+        throwError(0,0,0, {
+          errMsg: ",,: unexpected EOF when reading a line comment",
+          errArgLocs: [["read", new Location(startCol, startRow, iStart, i - iStart)]]
+        });
       }
       var atom = new Comment(txt);
       atom.location = new Location(startCol, startRow, iStart, i + 1 - iStart);
@@ -1979,7 +2005,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
           p == ",@" ? " unquoting " :
           /* else */
           "";
-        throwError(new types.Message([source, ":", startRow.toString(), ":", startCol.toString(), ": read: expected an element for" + action, p, " (found end-of-file)"]), new Location(startCol, startRow, iStart, p.length), "Error-GenericReadError");
+        throwError(0,0,0, {
+          errMsg: ",,: expected an element for" + action + p + " (found end-of-file)",
+          errArgLocs: [["read", new Location(startCol, startRow, iStart, p.length)]]
+        });
       }
       if (i + 1 >= str.length) {
         eofError(i);
@@ -2010,7 +2039,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
           var unexpected = /expected a .* to open \",\"(.)\"/.exec(e);
           if (unexpected) {
             endOfError = i + 1; // remember where we are, so readList can pick up reading
-            throwError(new types.Message([source, ":", line.toString(), ":", column.toString(), ": read: unexpected `" + unexpected[1] + "'"]), new Location(column, line, i, 1), "Error-GenericReadError");
+            throwError(0,0,0, {
+              errMsg: ",,: unexpected '" + unexpected[1] + "'",
+              errArgLocs: [["read", new Location(column, line, i, 1)]]
+            });
           }
           throw e;
         }
@@ -2038,9 +2070,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
       if (trailingEscs && (trailingEscs[0].length % 2 > 0)) {
         i = str.length; // jump to the end of the string
         endOfError = i; // remember where we are, so readList can pick up reading
-        throwError(new types.Message([source, ":", line.toString(), ":", startCol.toString(),
-          ": read: EOF following `\\' in symbol"
-        ]), new Location(startCol, startRow, iStart, i - iStart), "Error-GenericReadError");
+        throwError(0,0,0, {
+          errMsg: ",,: EOF following '\\' in symbol",
+          errArgLocs: [["read", new Location(startCol, startRow, iStart, i - iStart)]]
+        });
       }
       // move the read head and column tracker forward
       i += chunk.length;
@@ -2073,9 +2106,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
             column++;
           }
         }
-        throwError(new types.Message([source, ":", line.toString(), ":", column.toString(),
-          ": read: unbalanced `|'"
-        ]), new Location(column, line, lastVerbatimMarkerIndex, str.length - lastVerbatimMarkerIndex), "Error-GenericReadError");
+        throwError(0,0,0, {
+          errMsg: ",,: unbalanced '|'",
+          errArgLocs: [["read", new Location(column, line, lastVerbatimMarkerIndex, str.length - lastVerbatimMarkerIndex)]]
+        });
       }
 
       // enforce case-sensitivity for non-verbatim sections.
@@ -2114,8 +2148,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
           // if it's not a number OR a symbol
         } catch (e) {
           endOfError = i; // remember where we are, so readList can pick up reading
-          var msg = new types.Message([source, ":", startRow.toString(), ":", startCol.toString(), ": read: " + e.message]);
-          throwError(msg, new Location(startCol, startRow, iStart, i - iStart), "Error-GenericReadError");
+          throwError(0,0,0, {
+            errMsg: ",,: " + e.message,
+            errArgLocs: [["read", new Location(startCol, startRow, iStart, i - iStart)]]
+          });
         }
       }
       node.stx = filtered; // save the string that generated the symbol/number to begin with
@@ -2245,8 +2281,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
           isExpr(sexp) ? parseExpr(sexp) :
           isRequire(sexp) ? parseRequire(sexp) :
           isProvide(sexp) ? parseProvide(sexp) :
-          throwError(new types.Message(["Not a Definition, Expression, Library Require, or Provide"]),
-            sexp.location);
+          throwError(0,0,0, {
+            errMsg: ",,",
+            errArgLocs: [["Not a Definition, Expression, Library Require, or Provide", sexp.location]]
+          });
       }
       return sexps.map(parseSExp);
     }
@@ -2254,8 +2292,11 @@ define(["./wescheme-support.js", 'js/js-numbers'
     // parse : sexp list -> Program list
     function parse(sexp) {
       return (sexp.length === 0) ? [] :
-        (!isCons(sexp)) ? throwError(new types.Message(["The sexp is not a list of definitions or expressions: " + sexp]),
-          sexp.location) :
+        (!isCons(sexp)) ?
+        throwError(0,0,0, {
+          errMsg: ",, is not a list of definitions or expressions",
+          errArgLocs: [[sexp, sexp.location]]
+        });
         parseStar(sexp);
     }
 
@@ -2282,24 +2323,41 @@ define(["./wescheme-support.js", 'js/js-numbers'
       function parseDefStruct(sexp) {
         // is it just (define-struct)?
         if (sexp.length < 2) {
-          throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected the structure name after define-struct, but nothing's there"]), sexp.location);
+          throwError(0,0,0, {
+            errMsg: "Expected structure name after ,,, but nothing's there",
+            errArgLocs: [[sexp[0].val, sexp[0].location]]
+          });
         }
         // is the structure name there?
         if (!(sexp[1] instanceof symbolExpr)) {
-          throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected the structure name after define-struct, but found ", new types.ColoredPart("something else", sexp[1].location)]), sexp.location);
+          throwError(0,0,0, {
+            errMsg: "Expected structure name after ,,, but found ,,",
+            errArgLocs: [[sexp[0].val, sexp[0].location],
+            ["something else", sexp[1].location]]
+          });
         }
         // is it just (define-struct <name>)?
         if (sexp.length < 3) {
-          throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected at least one field name (in parentheses) after the ", new types.ColoredPart("structure name", sexp[1].location), ", but nothing's there"]), sexp.location);
+          throwError(0,0,0, {
+            errMsg: "Expected at least one field name (in parentheses) after ,,, but nothing's there",
+            errArgLocs: [["structure name", sexp[1].location]]
+          });
         }
         // is the structure name followed by a list?
         if (!(sexp[2] instanceof Array)) {
-          throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected at least one field name (in parentheses) after the ", new types.ColoredPart("structure name", sexp[1].location), ", but found ", new types.ColoredPart("something else", sexp[2].location)]), sexp.location);
+          throwError(0,0,0, {
+            errMsg: "Expected at least one field name (in parentheses) after ,,, but found ,,",
+            errArgLocs: [["structure name", sexp[1].location],
+            ["something else", sexp[2].location]]
+          });
         }
         // is it a list of not-all-symbols?
         sexp[2].forEach(function(arg) {
           if (!(arg instanceof symbolExpr)) {
-            throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a field name, but found ", new types.ColoredPart("something else", arg.location)]), sexp.location);
+          throwError(0,0,0, {
+            errMsg: "Expected a field name, but found ,,",
+            errArgLocs: [["something else", arg.location]]
+          });
           }
         });
         // too many expressions?
@@ -2309,7 +2367,12 @@ define(["./wescheme-support.js", 'js/js-numbers'
             }),
             wording1 = (sexp[2].length === 1) ? "field name" : "field names",
             wording2 = extraLocs.length + " extra " + ((extraLocs.length === 1) ? "part" : "parts");
-          throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected nothing after the ", new types.ColoredPart(wording1, sexp[2].location), ", but found ", new types.MultiPart(wording2, extraLocs, false)]), sexp.location);
+          throwError(0,0,0, {
+            errMsg: ",, expected nothing after the ,,, but found ,,",
+            errArgLocs: [[sexp[0].val, sexp[0].location],
+            [wording1, sexp[2].location],
+            [wording2, extraLocs[0]]]
+          });
         }
         return new defStruct(parseIdExpr(sexp[1]), sexp[2].map(parseIdExpr), sexp);
       }
@@ -2317,15 +2380,26 @@ define(["./wescheme-support.js", 'js/js-numbers'
       function parseMultiDef(sexp) {
         // is it just (define-values)?
         if (sexp.length < 2) {
-          throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expects a list of variables and a body, but found neither"]), sexp.location);
+          throwError(0,0,0, {
+            errMsg: ",, expects a list of variables and a body, but found neither",
+            errArgLocs: [[sexp[0].val, sexp[0].location]]
+          });
         }
         // is it just (define-values ... )?
         if (sexp.length < 3) {
-          throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expects a list of variables and a body, but found only ", new types.ColoredPart("one part", sexp[1].location)]), sexp.location);
+          throwError(0,0,0, {
+            errMsg: ",, expects a list of variables and a body, but found only ,,",
+            errArgLocs: [[sexp[0].val, sexp[0].location],
+            ["one part", sexp[1].location]]
+          });
         }
         // is it (define-values <not a list> )?
         if (!(sexp[1] instanceof Array)) {
-          throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expects a list of variables and a body, but found ", new types.ColoredPart("something else", sexp[1].location)]), sexp.location);
+          throwError(0,0,0, {
+            errMsg: ",, expects a list of variables and a body, but found only ,,",
+            errArgLocs: [[sexp[0].val, sexp[0].location],
+            ["something else", sexp[1].location]]
+          });
         }
         // too many parts?
         if (sexp.length > 3) {
@@ -2333,8 +2407,11 @@ define(["./wescheme-support.js", 'js/js-numbers'
               return sexp.location;
             }),
             wording = extraLocs.length + " extra " + ((extraLocs.length === 1) ? "part" : "parts"),
-            msg = new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expects a list of variables and a body" + ", but found ", new types.MultiPart(wording, extraLocs, false)]);
-          throwError(msg, sexp.location);
+          throwError(0,0,0, {
+            errMsg: ",, expects a list of variables and a body, but found ,,",
+            errArgLocs: [[sexp[0].val, sexp[0].location],
+            [wording, extraLocs[0]]]
+          });
         }
         return new defVars(sexp[1].map(parseIdExpr), parseExpr(sexp[2]), sexp);
       }
@@ -2342,37 +2419,43 @@ define(["./wescheme-support.js", 'js/js-numbers'
       function parseDef(sexp) {
         // is it just (define)?
         if (sexp.length < 2) {
-          throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a variable, or a function name and its variables " + "(in parentheses), after define, but nothing's there"]), sexp.location, undefined,
-          {
-            errMsg: ",,: expected a variable, or a function name and its variables (in parentheses), after define, " +
-              "but nothing's there",
-              errArgLocs: [
-                [sexp[0].val, sexp[0].location]
-              ]
+          throwError(0,0,0, {
+            errMsg: "Expected a variable, or a function name and its variables (in parentheses), after ,,, but nothing's there",
+            errArgLocs: [ [sexp[0].val, sexp[0].location] ]
           });
         }
         // If it's (define (...)...)
         if (sexp[1] instanceof Array) {
           // is there at least one element?
           if (sexp[1].length === 0) {
-            throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a name for the function within ", new types.ColoredPart("the parentheses", sexp[1].location)]), sexp.location);
+            throwError(0,0,0, {
+              errMsg: ",, expected a name for the function within ,,",
+              errArgLocs: [ [sexp[0],val, sexp[0].location],
+              ["the parentheses", sexp[1].location]]
+              });
           }
           // is the first element in the list a symbol?
           if (!(sexp[1][0] instanceof symbolExpr)) {
-            throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a function name after the open parenthesis but found ", new types.ColoredPart("something else", sexp[1][0].location)]), sexp.location);
+            throwError(0,0,0, {
+              errMsg: ",, expected a function name after the open parenthesis but found ,,",
+              errArgLocs: [ [sexp[0].val, sexp[0].location],
+              ["something else", sexp[1][0].location] ]
+            });
           }
           // is the next element a list of not-all-symbols?
           sexp[1].forEach(function(arg) {
             if (!(arg instanceof symbolExpr)) {
-              throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a variable but found ", new types.ColoredPart("something else", arg.location)]), sexp.location);
+              throwError(0,0,0, {
+                errMsg: ",, expected a variable but found ,,",
+                errArgLocs: [[sexp[0].val, sexp[0].location],
+                ["something else", arg.location]]
+              });
             }
           });
           // is it just (define (<name> <args>))?
           if (sexp.length < 3) {
-            throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected an expression for the function body, but nothing's there"]),
-            sexp.location, undefined,
-            {
-              errMsg: ",,: expected an expression for the function body, but nothing's there",
+            throwError(0,0,0, {
+              errMsg: ",, expected an expression for the function body, but nothing's there",
               errArgLocs: [[sexp[0].val, sexp[0].location]]
             });
           }
@@ -2382,14 +2465,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
                 return sexp.location;
               }),
               wording = extraLocs.length + " extra " + ((extraLocs.length === 1) ? "part" : "parts");
-            throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected only one expression for the function body" + ", but found ", new types.MultiPart(wording, extraLocs, false)]),
-            sexp.location, undefined,
-            {
-              errMsg: ",,: expected only one expression for the function body, but found ,,",
-                errArgLocs: [
-                  [sexp[0].val, sexp[0].location],
-                  [wording, extraLocs[0]]
-                ]
+            throwError(0,0,0, {
+              errMsg: ",, expected only one expression for the function body, but found ,,",
+              errArgLocs: [[sexp[0].val, sexp[0].location],
+              [wording, extraLocs[0]]]
             });
           }
           var args = rest(sexp[1]).map(parseIdExpr);
@@ -2400,13 +2479,11 @@ define(["./wescheme-support.js", 'js/js-numbers'
         if (sexp[1] instanceof symbolExpr) {
           // is it just (define x)?
           if (sexp.length < 3) {
-            throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected an expression after the variable ", new types.ColoredPart(sexp[1].val, sexp[1].location), " but nothing's there"]),
-            sexp.location, undefined,
-            {
-              errorType: 'missing-expression-after-variable',
-              errorMessage1: 'Expected an expression after variable, but nothing\'s there.'
-            }
-            );
+            throwError(0,0,0, {
+              errMsg: ",, expected an expression after the variable ,,, but nothing's there",
+              errArgLocs: [[sexp[0].val, sexp[0].location],
+              [sexp[1].val, sexp[1].location]]
+            });
           }
           // too many parts?
           if (sexp.length > 3) {
@@ -2414,18 +2491,29 @@ define(["./wescheme-support.js", 'js/js-numbers'
                 return sexp.location;
               }),
               wording = extraLocs.length + " extra " + ((extraLocs.length === 1) ? "part" : "parts");
-            throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected only one expression after the variable ", new types.ColoredPart(sexp[1].val, sexp[1].location), ", but found ", new types.MultiPart(wording, extraLocs, false)]), sexp.location);
+            throwError(0,0,0, {
+              errMsg: ",, expected only one expression after the variable ,, but found ,,",
+              errArgLocs: [[sexp[0].val, sexp[0].location],
+              [sexp[1].val, sexp[1].location],
+              [wording, extraLocs[0]]]
+            });
           }
           return new defVar(parseIdExpr(sexp[1]), parseExpr(sexp[2]), sexp);
         }
         // If it's (define <invalid> ...)
-        throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a variable but found ", new types.ColoredPart("something else", sexp[1].location)]), sexp.location);
+        throwError(0,0,0, {
+          errMsg: ",, expected a variable but found ,,",
+          errArgLocs: [[sexp[0].val, sexp[0].location],
+          ["something else", sexp[1].location]]
+        });
       }
       var def = isStructDefinition(sexp) ? parseDefStruct(sexp) :
         isValueDefinition(sexp) ? parseDef(sexp) :
         isMultiValueDefinition ? parseMultiDef(sexp) :
-        throwError(new types.Message([": expected to find a definition, but found: " + sexp]),
-          sexp.location);
+        throwError(0,0,0, {
+          errMsg: "Expected to find a definition, but found ,,",
+          errArgLocs: [[sexp, sexp.location]]
+        });
       def.location = sexp.location;
       return def;
     }
@@ -2445,55 +2533,58 @@ define(["./wescheme-support.js", 'js/js-numbers'
     function parseExprList(sexp) {
       function parseFuncCall(sexp) {
         if (isSymbolEqualTo(sexp[0], "unquote")) {
-          throwError(new types.Message(["misuse of a comma or 'unquote, not under a quasiquoting backquote"]), sexp.location, "Error-GenericSyntacticError");
+          throwError(0,0,0, {
+            errMsg: ",, of comma or 'unquote, not under a quasiquoting backquote",
+            errArgLocs: [["misuse", sexp.location]]
+          });
         }
         if (isSymbolEqualTo(sexp[0], "unquote-splicing")) {
-          throwError(new types.Message(["misuse of a ,@ or unquote-splicing, not under a quasiquoting backquote"]), sexp.location, "Error-GenericSyntacticError");
+          throwError(0,0,0, {
+            errMsg: ",, of ,@ or unquote-splicing, not under a quasiquoting backquote",
+            errArgLocs: [["misuse", sexp.location]]
+          });
         }
         if (isSymbolEqualTo(sexp[0], "else")) {
-          throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp.location), ": not allowed ", new types.ColoredPart("here", sexp.location), ", because this is not a question in a clause"]), sexp.location);
+          throwError(0,0,0, {
+            errMsg: ",, not allowed here, because this is not a question in a clause",
+            errArgLocs: [[sexp[0].val, sexp.location]]
+          });
         }
         return isCons(sexp) ? new callExpr(parseExpr(sexp[0]), rest(sexp).map(parseExpr), sexp[0]) :
-          throwError(new types.Message(["function call sexp"]), sexp.location);
+          throwError(0,0,0, {
+            errMsg: ",,",
+            errArgLocs: [["function call sexp", sexp.location]]
+          });
       }
 
       function parseLambdaExpr(sexp) {
         // is it just (lambda)?
         if (sexp.length === 1) {
-          throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected at least one variable (in parentheses) after lambda, but nothing's there"]),
-            sexp.location);
+          throwError(0,0,0, {
+            errMsg: "Expected at least one variable (in parentheses) after ,,, but nothing's there",
+            errArgLocs: [["lambda", sexp[0].location]]
+          });
         }
         // is it just (lambda <not-list>)?
         if (!(sexp[1] instanceof Array)) {
-          throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected at least one variable (in parentheses) after lambda, but found ", new types.ColoredPart("something else", sexp[1].location)]),
-            sexp.location, undefined,
-            {
-              errMsg: ",,: expected at least one variable (in parentheses) after lambda, but found ,,",
-                errArgLocs: [
-                  [sexp[0].val, sexp[0].location],
-                  ["something else", sexp[1].location]
-                ]
-            });
+          throwError(0,0,0, {
+            errMsg: "Expected at least one variable (in parentheses) after ,,, but found ,,",
+            errArgLocs: [["lambda", sexp[0].location], ["something else", sexp[1].location]]
+          });
         }
         // is it a list of not-all-symbols?
         sexp[1].forEach(function(arg) {
           if (!(arg instanceof symbolExpr)) {
-            var msg = new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a list of variables after lambda, but found ", new types.ColoredPart("something else", arg.location)]);
-            throwError(msg, sexp.location, undefined,
-            {
-              errMsg: ",,: expected a list of variables after lambda, but found ,,",
-                errArgLocs: [
-                  [sexp[0].val, sexp[0].location],
-                  ["something else", arg.location]
-                ]
+            throwError(0,0,0, {
+              errMsg: "Expected a list of variables after ,,, but found ,,",
+                errArgLocs: [ [sexp[0].val, sexp[0].location],
+                ["something else", arg.location] ]
             });
           }
         });
         // is it just (lambda (x))?
         if (sexp.length === 2) {
-          throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected an expression for the function body, but nothing's there"]),
-            sexp.location, undefined,
-            {
+          throwError(0,0,0, {
               errMsg: ",,: expected an expression for the function body, but nothing's there",
               errArgLocs: [[sexp[0].val, sexp[0].location]]
             });
@@ -2504,9 +2595,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
               return sexp.location;
             }),
             wording = extraLocs.length + " extra " + ((extraLocs.length === 1) ? "part" : "parts"),
-            msg = new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected only one expression for the function body, but found ", new types.MultiPart(wording, extraLocs, false)]);
-          throwError(msg, sexp.location, undefined,
-          {
+          throwError(0,0,0, {
               errMsg: ",,: expected only one expression for the function body, but found ,,",
                 errArgLocs: [
                   [sexp[0].val, sexp[0].location],
@@ -2522,25 +2611,35 @@ define(["./wescheme-support.js", 'js/js-numbers'
       function parseLocalExpr(sexp) {
         // is it just (local)?
         if (sexp.length === 1) {
-          throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected at least one definition (in square brackets) after local," + " but nothing's there"]),
-            sexp.location);
+          throwError(0,0,0, {
+            errMsg: "Expected at least one definition (in square brackets) after ,,, but nothing's there",
+            errArgLocs: [["local", sexp[0].location]]
+          });
         }
         // is it just (local <not-list>)?
         if (!(sexp[1] instanceof Array)) {
-          throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a collection of definitions, but given ", new types.ColoredPart("something else", sexp[1].location)]),
-            sexp[1].location);
+          throwError(0,0,0, {
+            errMsg: ",, expected a collection of definitions, but given ,,",
+            errArgLocs: [[sexp[0].val, sexp[0].location],
+            ["something else", sexp[1].location]]
+          });
         }
         // is it a list of not-all-definitions?
         sexp[1].forEach(function(def) {
           if (!isDefinition(def)) {
-            throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a definition, but given ", new types.ColoredPart("something else", def.location)]),
-              def.location);
+            throwError(0,0,0, {
+              errMsg: ",, expected a definition, but given ,,"
+              errArgLocs: [[sexp[0].val, sexp[0].location],
+              ["something else", def.location]]
+            });
           }
         });
         // is it just (local [...defs...] ))?
         if (sexp.length === 2) {
-          throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a single body, but found none"]),
-            sexp.location);
+          throwError(0,0,0, {
+            errMsg: ",, expected a single body, but found none",
+            errArgLocs: [[sexp[0].val, sexp[0].location]]
+          });
         }
         // too many expressions?
         if (sexp.length > 3) {
@@ -2548,8 +2647,11 @@ define(["./wescheme-support.js", 'js/js-numbers'
               return sexp.location;
             }),
             wording = extraLocs.length + " extra " + ((extraLocs.length === 1) ? "part" : "parts");
-          throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a single body, but found ", new types.MultiPart(wording, extraLocs, false)]),
-            sexp.location);
+          throwError(0,0,0, {
+            errMsg: ",, expected a single body, but found ,,",
+            errArgLocs: [[sexp[0].val, sexp[0].location],
+            [wording, extraLocs[0]]]
+          });
         }
         return new localExpr(sexp[1].map(parseDefinition), parseExpr(sexp[2]), sexp[0]);
       }
@@ -2557,25 +2659,35 @@ define(["./wescheme-support.js", 'js/js-numbers'
       function parseLetrecExpr(sexp) {
         // is it just (letrec)?
         if (sexp.length < 3) {
-          throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected an expression after the bindings, but nothing's there"]),
-            sexp.location);
+          throwError(0,0,0, {
+            errMsg: ",, expected an expression after the bindings, but nothing's there",
+            errArgLocs: [[sexp[0].val, sexp[0].location]]
+          });
         }
         // is it just (letrec <not-list>)?
         if (!(sexp[1] instanceof Array)) {
-          throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a key/value pair, but given ", new types.ColoredPart("something else", sexp[1].location)]),
-            sexp.location);
+          throwError(0,0,0, {
+            errMsg: ",, expected a key/value pair, but given ,,",
+            errArgLocs: [[sexp[0].val, sexp[0].location],
+            ["something else", sexp[1].location]]
+          });
         }
         // is it a list of not-all-bindings?
         sexp[1].forEach(function(binding) {
           if (!sexpIsCouple(binding)) {
-            throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a key/value pair, but given ", new types.ColoredPart("something else", binding.location)]),
-              binding.location);
+            throwError(0,0,0, {
+              errMsg: ",, expected a key/value pair, but given ,,",
+              errArgLocs: [[sexp[0].val, sexp[0].location],
+              ["something else", binding.location]]
+            });
           }
         });
         // is it just (letrec (...bindings...) ))?
         if (sexp.length === 2) {
-          throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected an expression after the bindings, but nothing's there"]),
-            sexp.location);
+          throwError(0,0,0, {
+            errMsg: ",, expected an expression after the bindings, but nothing's there",
+            errArgLocs: [[sexp[0].val, sexp[0].location]]
+          });
         }
         // too many expressions?
         if (sexp.length > 3) {
@@ -2583,8 +2695,11 @@ define(["./wescheme-support.js", 'js/js-numbers'
               return sexp.location;
             }),
             wording = extraLocs.length + " extra " + ((extraLocs.length === 1) ? "part" : "parts");
-          throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a single body, but found ", new types.MultiPart(wording, extraLocs, false)]),
-            sexp.location);
+          throwError(0,0,0, {
+            errMsg: ",, expected a single body, but found ,,",
+            errArgLocs: [[sexp[0].val, sexp[0].location],
+            [wording, extraLocs[0]]]
+          });
         }
         return new letrecExpr(sexp[1].map(parseBinding), parseExpr(sexp[2]), sexp[0]);
       }
@@ -2592,19 +2707,27 @@ define(["./wescheme-support.js", 'js/js-numbers'
       function parseLetExpr(sexp) {
         // is it just (let)?
         if (sexp.length === 1) {
-          throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected at least one binding (in parentheses) after let, but nothing's there"]),
-            sexp.location);
+          throwError(0,0,0, {
+            errMsg: ",, expected at least one binding (in parentheses), but nothing's there",
+            errArgLocs: [[sexp[0].val, sexp[0].location]]
+          });
         }
         // is it just (let <not-list>)?
         if (!(sexp[1] instanceof Array)) {
-          throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected sequence of key value pairs, but given ", new types.ColoredPart("something else", sexp[1].location)]),
-            sexp[1].location);
+          throwError(0,0,0, {
+            errMsg: ",, expected sequence of key/value pairs, but given ,,",
+            errArgLocs: [[sexp[0].val, sexp[0].location],
+            ["something else", sexp[1].location]]
+          });
         }
         // is it a list of not-all-bindings?
         sexp[1].forEach(function(binding) {
           if (!sexpIsCouple(binding)) {
-            throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a key/value pair, but given ", new types.ColoredPart("something else", binding.location)]),
-              binding.location);
+            throwError(0,0,0, {
+              errMsg: ",, expected a key/value pair, but given ,,",
+              errArgLocs: [[sexp[0].val, sexp[0].location],
+              ["something else", binding.location]]
+            });
           }
         });
         // too many expressions?
@@ -2613,13 +2736,18 @@ define(["./wescheme-support.js", 'js/js-numbers'
               return sexp.location;
             }),
             wording = extraLocs.length + " extra " + ((extraLocs.length === 1) ? "part" : "parts");
-          throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a single body, but found ", new types.MultiPart(wording, extraLocs, false)]),
-            sexp.location);
+          throwError(0,0,0, {
+            errMsg: ",, expected a single body, but found ,,",
+            errArgLocs: [[sexp[0].val, sexp[0].location],
+            [wording, extraLocs[0]]]
+          });
         }
         // is it just (let (...bindings...) ))?
         if (sexp.length === 2) {
-          throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a single body, but found none"]),
-            sexp.location);
+          throwError(0,0,0, {
+            errMsg: ",, expected a single body, but found none",
+            errArgLocs: [[sexp[0].val, sexp[0].location]]
+          });
         }
         return new letExpr(sexp[1].map(parseBinding), parseExpr(sexp[2]), sexp);
       }
@@ -2627,25 +2755,35 @@ define(["./wescheme-support.js", 'js/js-numbers'
       function parseLetStarExpr(sexp) {
         // is it just (let*)?
         if (sexp.length === 1) {
-          throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected an expression after the bindings, but nothing's there"]),
-            sexp.location);
+          throwError(0,0,0, {
+            errMsg: ",, expected an expression after the bindings, but nothing's there",
+            errArgLocs: [[sexp[0].val, sexp[0].location]]
+          });
         }
         // is it just (let* <not-list>)?
         if (!(sexp[1] instanceof Array)) {
-          var msg = new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected sequence of key/value pairs, but given ", new types.ColoredPart("something else", sexp[1].location)]);
-          throwError(msg, sexp.location);
+          throwError(0,0,0, {
+            errMsg: ",, expected sequence of key/value pairs, but given ,,",
+            errArgLocs: [[sexp[0].val, sexp[0].location],
+            ["something else",  sexp[1].location]]
+          });
         }
         // is it a list of not-all-bindings?
         sexp[1].forEach(function(binding) {
           if (!sexpIsCouple(binding)) {
-            throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a key/value pair, but given ", new types.ColoredPart("something else", binding.location)]),
-              binding.location);
+            throwError(0,0,0, {
+              errMsg: ",, expected a key/value pair, but given ,,",
+              errArgLocs: [[sexp[0].val, sexp[0].location],
+              ["something else", binding.location]]
+            });
           }
         });
         // is it just (let* (...bindings...) ))?
         if (sexp.length === 2) {
-          throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a single body, but found none"]),
-            sexp.location);
+          throwError(0,0,0, {
+            errMsg: ",, expected a single body, but found none",
+            errArgLocs: [[sexp[0].val, sexp[0].location]]
+          });
         }
         // too many expressions?
         if (sexp.length > 3) {
@@ -2653,8 +2791,11 @@ define(["./wescheme-support.js", 'js/js-numbers'
               return sexp.location;
             }),
             wording = extraLocs.length + " extra " + ((extraLocs.length === 1) ? "part" : "parts");
-          throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a single body, but found ", new types.MultiPart(wording, extraLocs, false)]),
-            sexp.location);
+          throwError(0,0,0, {
+            errMsg: ",, expected a single body, but found ,,",
+            errArgLocs: [[sexp[0].val, sexp[0].location],
+            [wording, extraLocs[0]]]
+          });
         }
         var bindings = sexp[1].map(parseBinding);
         bindings.location = sexp[1].location;
@@ -2664,16 +2805,21 @@ define(["./wescheme-support.js", 'js/js-numbers'
       function parseIfExpr(sexp) {
         // Does it have too few parts?
         if (sexp.length < 4) {
-          throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a test, a consequence, and an alternative, but all three were not found"]),
-            sexp.location);
+          throwError(0,0,0, {
+            errMsg: ",, expected a test, a consequence, and an alternative, but not all three found",
+            errArgLocs: [[sexp[0].val, sexp[0].location]]
+          });
         }
         // Does it have too many parts?
         if (sexp.length > 4) {
           var extraLocs = sexp.slice(1).map(function(sexp) {
             return sexp.location;
           });
-          throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected only a test, a consequence, and an alternative, ", "but found ", new types.MultiPart("more than three of these", extraLocs, false)]),
-            sexp.location);
+          throwError(0,0,0, {
+            errMsg: ",, expected only a test, a consequence, and an alternative, but found ,,",
+            errArgLocs: [[sexp[0].val, sexp[0].location],
+            ["more than three of these", extraLocs[0]]]
+          });
         }
         return new ifExpr(parseExpr(sexp[1]), parseExpr(sexp[2]), parseExpr(sexp[3]), sexp[0]);
       }
@@ -2681,8 +2827,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
       function parseBeginExpr(sexp) {
         // is it just (begin)?
         if (sexp.length < 2) {
-          var msg = new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": Inside a begin, expected to find a body, but nothing was found."]);
-          throwError(msg, sexp.location);
+          throwError(0,0,0, {
+            errMsg: ",, expected to find a body, but nothing was found",
+            errArgLocs: [[(sexp[0].val, sexp[0].location)]]
+          });
         }
         return new beginExpr(rest(sexp).map(parseExpr), sexp[0]);
       }
@@ -2690,21 +2838,11 @@ define(["./wescheme-support.js", 'js/js-numbers'
       function parseAndExpr(sexp) {
         // and must have 2+ arguments
         if (sexp.length < 3) {
-          throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected at least 2 arguments, but given ", (sexp.length === 1) ? "0" : new types.ColoredPart((sexp.length - 1).toString(),
-              sexp[1].location)]),
-            sexp.location, undefined,
-            (sexp.length === 1) ? {
-              errMsg: ",,: expected at least 2 arguments, but given none",
-              errArgLocs: [
-                [sexp[0].val, sexp[0].location]
-              ]
-            } : {
-              errMsg: ",,: expected at least 2 arguments, but given ,,",
-              errArgLocs: [
-                [sexp[0].val, sexp[0].location],
-                ["just one", sexp[1].location]
-              ]
-            });
+          throwError(0,0,0, {
+            errMsg: ",, expected at least 2 arguments, but given ,,",
+            errArgLocs: [[sexp[0].val, sexp[0].location],
+            [(sexp.length === 1) ? "0" : ((sexp.length - 1).toString()), sexp[1].location]]
+          });
         }
         return new andExpr(rest(sexp).map(parseExpr), sexp[0]);
       }
@@ -2712,9 +2850,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
       function parseOrExpr(sexp) {
         // or must have 2+ arguments
         if (sexp.length < 3) {
-          throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected at least 2 arguments, but given ", (sexp.length === 1) ? "0" : new types.ColoredPart((sexp.length - 1).toString(),
-              sexp[1].location)]),
-            sexp.location, undefined,
+          throwError(0,0,0,
             (sexp.length === 1) ? {
               errMsg: ",,: expected at least 2 arguments, but given none",
               errArgLocs: [
@@ -2740,10 +2876,8 @@ define(["./wescheme-support.js", 'js/js-numbers'
         }
         // quote must have exactly one argument
         if (sexp.length < 2) {
-          throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a single argument, but did not find one."]),
-            sexp.location, undefined,
-            {
-              errMsg: ",,: expected a single argument, but didn't find it",
+          throwError(0,0,0, {
+              errMsg: ",, expected a single argument, but didn't find it",
               errArgLocs: [[sexp[0].val, sexp[0].location]]
             });
         }
@@ -2751,10 +2885,8 @@ define(["./wescheme-support.js", 'js/js-numbers'
           var extraLocs = sexp.slice(1).map(function(sexp) {
             return sexp.location;
           });
-          throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a single argument, but found ", new types.MultiPart("more than one.", extraLocs, false)]),
-            sexp.location, undefined,
-            {
-              errMsg: ",,: expected a single argument, but found ,,",
+          throwError(0,0,0, {
+              errMsg: ",, expected a single argument, but found ,,",
               errArgLocs: [[sexp[0].val, sexp[0].location],
               ["more than one", extraLocs[0]]
               ]
@@ -2793,10 +2925,8 @@ define(["./wescheme-support.js", 'js/js-numbers'
     function parseWhenUnlessExpr(sexp) {
       // is it just (when)?
       if (sexp.length < 3) {
-        throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a test and at least one result after " + sexp[0] + ", but nothing's there"]),
-          sexp.location, undefined,
-          {
-            errMsg: ",,: expected a test and at least one result after " + sexp[0] + ", but nothing's there",
+        throwError(0,0,0, {
+            errMsg: ",, expected a test and at least one result after " + sexp[0] + ", but nothing's there",
             errArgLocs: [[sexp[0].val, sexp[0].location]]
           });
       }
@@ -2810,8 +2940,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
     function parseCondExpr(sexp) {
       // is it just (cond)?
       if (sexp.length === 1) {
-        throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected at least one clause after cond, but nothing's there"]),
-          sexp.location);
+        throwError(0,0,0, {
+          errMsg: ",, expected at least one clause after cond, but nothing's there",
+          errArgLocs: [[sexp[0].val, sexp[0].location]]
+        });
       }
       var condLocs = [sexp[0].location, sexp.location.start(), sexp.location.end()];
 
@@ -2823,24 +2955,38 @@ define(["./wescheme-support.js", 'js/js-numbers'
         var clauseLocations = [clause.location.start(), clause.location.end()];
         // is it (cond ...<not-a-clause>..)?
         if (!(clause instanceof Array)) {
-          throwError(new types.Message([new types.MultiPart(sexp[0].val, condLocs, true), ": expected a clause with a question and an answer, but found ", new types.ColoredPart("something else", clause.location)]),
-            clause.location);
+          throwError(0,0,0, {
+            errMsg: ",, expected a clause with a question/answer, but found ,,",
+            errArgLocs: [[sexp[0].val, condLocs[0]],
+            ["something else", clause.location]]
+          });
         }
         if (clause.length === 0) {
-          throwError(new types.Message([new types.MultiPart(sexp[0].val, condLocs, true), ": expected a clause with a question and an answer, but found an ", new types.MultiPart("empty part", clauseLocations, true)]),
-            clause.location);
+          throwError(0,0,0, {
+            errMsg: ",, expected a clause with a question/answer, but found an ,,",
+            errArgLocs: [[sexp[0].val, condLocs[0]],
+            ["empty part", clauseLocations[0]]]
+          });
         }
         if (clause.length === 1) {
-          throwError(new types.Message([new types.MultiPart(sexp[0].val, condLocs, true), ": expected a clause with a question and an answer, but found a ", new types.MultiPart("clause", clauseLocations, true), " with only ", new types.MultiPart("one part", [clause[0].location], false)]),
-            clause.location);
+          throwError(0,0,0, {
+            errMsg: ",, expected a clause with a question/answer, but found a ,, with only ,,",
+            errArgLocs: [[sexp[0].val, condLocs[0]],
+            ["clause", clauseLocations[0]],
+            ["one part", clause[0].location]]
+          });
         }
         if (clause.length > 2) {
           var extraLocs = clause.map(function(sexp) {
               return sexp.location;
             }),
             wording = extraLocs.length + " parts";
-          throwError(new types.Message([new types.MultiPart(sexp[0].val, condLocs, true), ": expected a clause with a question and an answer, but found ", new types.MultiPart("a clause", clauseLocations, true), " with ", new types.MultiPart(wording, extraLocs, false)]),
-            clause.location);
+          throwError(0,0,0, {
+            errMsg: ",, expected a clause with a question/answer, but found ,, with ,,",
+            errArgLocs: [[sexp[0].val, condLocs[0]],
+            ["a clause", clauseLocations[0]],
+            [wording, extraLocs[0]]]
+          });
         }
       }
 
@@ -2850,8 +2996,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
           cpl = new couple(test, result);
         // the only un-parenthesized keyword allowed in the first slot is 'else'
         if ((plt.compiler.keywords.indexOf(test.val) > -1) && (test.val !== "else")) {
-          throwError(new types.Message([new types.ColoredPart(test.val, test.location), ": expected an open parenthesis before ", test.val, ", but found none"]),
-            test.location);
+          throwError(0,0,0, {
+            errMsg: ",, expected an open parenthesis before " + test.val + " but found none",
+            errArgLocs: [[test.val, test.location]]
+          });
         }
         test.isClause = true; // used to determine appropriate "else" use during desugaring
         cpl.location = clause.location;
@@ -2866,9 +3014,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
       // throw an error that points to the next clause (rst + the one we're looking at + "cond")
       rest(sexp).forEach(function(couple, idx) {
         if (isElseClause(couple) && (idx < (numClauses - 1))) {
-          throwError(new types.Message([new types.MultiPart("cond", condLocs, true), ": ", "found an ", new types.ColoredPart("else clause", couple.location), " that isn't the last clause in its cond expression; there is ", new types.ColoredPart("another clause", sexp[idx + 2].location), " after it"]),
-            couple.location, undefined,
-            {
+          throwError(0,0,0, {
               errMsg: ",,: found an ,, that isn't the last clause in its cond expression; there is ,, after it",
               errArgLocs: [["cond", condLocs[0]],
               ["else clause", couple.location],
@@ -2883,41 +3029,63 @@ define(["./wescheme-support.js", 'js/js-numbers'
     function parseCaseExpr(sexp) {
       // is it just (case)?
       if (sexp.length === 1) {
-        var msg = new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected at least one clause after case, but nothing's there"]);
-        throwError(msg, sexp.location);
+        throwError(0,0,0, {
+          errMsg:  ",, expected at least one clause after case, but nothing's there",
+          errArgLocs: [[sexp[0].val, sexp[0].location]]
+        });
       }
       var caseLocs = [sexp[0].location, sexp.location.start(), sexp.location.end()];
       if (sexp.length === 2) {
         var msg = new types.Message([new types.MultiPart(sexp[0].val, caseLocs, true), ": expected a clause with at least one choice (in parentheses)" + " and an answer after the expression, but nothing's there"]);
-        throwError(msg, sexp.location);
+        throwError(0,0,0, {
+          errMsg: ",, expected a clause with at least one choice (in parentheses) and an answer after the expression, but nothing's there",
+          errArgLocs: [[sexp[0].val, caseLocs[0]]]
+        });
       }
 
       function checkCaseCouple(clause) {
         var clauseLocations = [clause.location.start(), clause.location.end()];
         if (!(clause instanceof Array)) {
-          var msg = new types.Message([new types.MultiPart(sexp[0].val, caseLocs, true), ": expected a clause with at least one choice (in parentheses), but found ", new types.ColoredPart("something else", clause.location)]);
-          throwError(msg, sexp.location);
+          throwError(0,0,0, {
+            errMsg:  ",, expected a clause with at least one choice (in parentheses), but found ,,",
+            errArgLocs: [[sexp[0].val, caseLocs[0]],
+            ["something else", clause.location]]
+          });
         }
         if (clause.length === 0) {
-          var msg = new types.Message([new types.MultiPart(sexp[0].val, caseLocs, true), ": expected at least one choice (in parentheses) and an answer, but found an ", new types.ColoredPart("empty part", clause.location)]);
-          throwError(msg, sexp.location);
+          throwError(0,0,0, {
+            errMsg:  ",, expected at least one choice (in parentheses) and an answer, but found an ,,",
+            errArgLocs: [[sexp[0].val, caseLocs[0]],
+            ["empty part", clause.location]]
+          });
         }
         if (!((clause[0] instanceof Array) ||
             ((clause[0] instanceof symbolExpr) && isSymbolEqualTo(clause[0], "else")))) {
-          var msg = new types.Message([new types.MultiPart(sexp[0].val, caseLocs, true), ": expected 'else', or at least one choice in parentheses, but found ", new types.ColoredPart("something else", clause.location)]);
-          throwError(msg, sexp.location);
+          throwError(0,0,0, {
+            errMsg:  ",, expected 'else', or at least one choice in parentheses, but found ,,",
+            errArgLocs: [[sexp[0].val, caseLocs[0]],
+            ["something else", clause.location]]
+          });
         }
         if (clause.length === 1) {
-          var msg = new types.Message([new types.MultiPart(sexp[0].val, caseLocs, true), ": expected a clause with a question and an answer, but found a ", new types.MultiPart("clause", clauseLocations, true), " with only ", new types.ColoredPart("one part", clause[0].location)]);
-          throwError(msg, sexp.location);
+          throwError(0,0,0, {
+            errMsg:  ",, expected a clause with a question and an answer, but found a ,, with only ,,"
+            errArgLocs: [[sexp[0].val, caseLocs[0]],
+            ["clause", clauseLocations[0]],
+            ["one part", clause[0].location]]
+          });
         }
         if (clause.length > 2) {
           var extraLocs = clause.map(function(sexp) {
               return sexp.location;
             }),
             wording = extraLocs.length + " parts",
-            msg = new types.Message([new types.MultiPart(sexp[0].val, caseLocs, true), ": expected only one expression for the answer in the case clause, but found a ", new types.MultiPart("clause", clauseLocations, true), " with ", new types.MultiPart(wording, extraLocs, false)]);
-          throwError(msg, sexp.location);
+          throwError(0,0,0, {
+            errMsg: ",, expected only one expression for the answer in the case clause, but found a ,, with ,,",
+            errArgLocs: [[sexp[0].val, caseLocs[0]],
+            ["clause", clauseLocations[0]],
+            [wording, extraLocs[0]]]
+          });
         }
       }
 
@@ -2947,8 +3115,12 @@ define(["./wescheme-support.js", 'js/js-numbers'
       // throw an error that points to the next clause (rst + the one we're looking at + "cond")
       clauses.forEach(function(couple, idx) {
         if (isElseClause(couple) && (idx < (numClauses - 1))) {
-          var msg = new types.Message([new types.MultiPart("case", caseLocs, true), ": found an ", new types.ColoredPart("else clause", couple.location), "that isn't the last clause in its case expression; there is ", new types.ColoredPart("another clause", sexp[idx + 2].location), " after it"]);
-          throwError(msg, sexp.location);
+          throwError(0,0,0, {
+            errMsg: ",, found an ,, that isn't the last clause; there is ,, after it",
+            errArgLocs: [["case", caseLocs[0]],
+            ["else clause", couple.location],
+            ["another clause", sexp[idx+2].location]]
+          });
         }
       });
       return new caseExpr(parseExpr(sexp[1]), parsedClauses, sexp[0]);
@@ -2961,16 +3133,25 @@ define(["./wescheme-support.js", 'js/js-numbers'
         binding.stx = sexp;
         return binding;
       } else {
-        throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a sequence of key/value pairs, but given ", new types.ColoredPart("something else", sexp[0].location)]),
-          sexp.location);
+        throwError(0,0,0, {
+          errMsg: ",, expected a sequence of key/value pairs, but given ,,",
+          errArgLocs: [[sexp[0].val, sexp[0].location],
+          ["something else", sexp[0].location]]
+        });
       }
     }
 
     function parseUnquoteExpr(sexp, depth) {
       if (typeof depth === 'undefined') {
-        throwError(new types.Message(["misuse of a comma or 'unquote, not under a quasiquoting backquote"]), sexp.location, "Error-GenericSyntacticError");
+        throwError(0,0,0, {
+          errMsg: ",, of comma or 'unquote, not under a quasiquoting backquote",
+          errArgLocs: [["misuse", sexp.location]]
+        });
       } else if ((sexp.length !== 2)) {
-        throwError(new types.Message(["Inside an unquote, expected to find a single argument, but found " + (sexp.length - 1)]), sexp.location);
+        throwError(0,0,0, {
+          errMsg: "Inside an unquote, expected to find a single argument, but found ,,",
+          errArgLocs: [[(sexp.length - 1) + "", sexp.location]]
+        });
       } else if (depth === 1) {
         var result = new unquotedExpr(parseExpr(sexp[1]))
         result.location = sexp[1].location
@@ -2980,15 +3161,24 @@ define(["./wescheme-support.js", 'js/js-numbers'
         result.location = sexp[1].location
         return result;
       } else {
-        throwError(new types.Message(["ASSERTION FAILURE: depth should have been undefined, or a natural number"]), sexp.location);
+        throwError(0,0,0, {
+          errMsg: ",,: depth should have been undefined, or a natural number",
+          errArgLocs: [["ASSERTION FAILURE", sexp.location]]
+        });
       }
     }
 
     function parseUnquoteSplicingExpr(sexp, depth) {
       if (typeof depth === 'undefined') {
-        throwError(new types.Message(["misuse of a ,@ or unquote-splicing, not under a quasiquoting backquote"]), sexp.location, "Error-GenericSyntacticError");
+        throwError(0,0,0, {
+          errMsg: ",, of a ,@ or unquote-splicing, not under a quasiquoting backquote",
+          errArgLocs: [["misuse", sexp.location]]
+        });
       } else if ((sexp.length !== 2)) {
-        throwError(new types.Message(["Inside an unquote-splicing, expected to find a single argument, but found " + (sexp.length - 1)]), sexp.location);
+        throwError(0,0,0, {
+          errMsg: "Inside an unquote-splicing, expected to find a single argument, but found ,,",
+          errArgLocs: [[(sexp.length - 1) + "", sexp.location]]
+        });
       } else if (depth === 1) {
         var result = new unquoteSplice(parseExpr(sexp[1]))
         result.location = sexp[1].location
@@ -2998,7 +3188,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
         result.location = sexp[1].location
         return result;
       } else {
-        throwError(new types.Message(["ASSERTION FAILURE: depth should have been undefined, or a natural number"]), sexp.location);
+        throwError(0,0,0, {
+          errMsg: ",,: depth should have been undefined, or a natural number",
+          errArgLocs: [["ASSERTION FAILURE", sexp.location]]
+        });
       }
     }
 
@@ -3039,19 +3232,27 @@ define(["./wescheme-support.js", 'js/js-numbers'
       depth = (typeof depth === 'undefined') ? 0 : depth;
       // quasiquote must have exactly one argument
       if (sexp.length < 2) {
-        throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a single argument, but did not find one "]),
-          sexp.location);
+        throwError(0,0,0, {
+          errMsg: ",, expected a single argument, but did not find one",
+          errArgLocs: [[sexp[0].val, sexp[0].location]]
+        });
       }
       if (sexp.length > 2) {
         var extraLocs = sexp.slice(1).map(function(sexp) {
           return sexp.location;
         });
-        throwError(new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a single argument, but found ", new types.MultiPart("more than one.", extraLocs, false)]),
-          sexp.location);
+        throwError(0,0,0, {
+          errMsg: ",, expected a single argument, but found ,,",
+          errArgLocs: [[sexp[0].val, sexp[0].location],
+          ["more than one", extraLocs[0]]
+        });
       }
       // if the argument is (unquote-splicing....), throw an error
       if (isCons(sexp[1]) && isSymbolEqualTo(sexp[1][0], "unquote-splicing")) {
-        throwError(new types.Message(["misuse of ,@ or `unquote-splicing' within a quasiquoting backquote"]), sexp.location);
+        throwError(0,0,0, {
+          errMsg: ",, of ,@ or `unquote-splicing' within a quasiquoting backquote",
+          errArgLocs: [["misuse", sexp.location]]
+        });
       }
 
       var quoted = parseQuasiQuotedItem(sexp[1], depth + 1);
@@ -3089,14 +3290,20 @@ define(["./wescheme-support.js", 'js/js-numbers'
         isLiteral(sexp) ? sexp :
         isSymbolEqualTo("quote", sexp) ? new quotedExpr(sexp) :
         isSymbolEqualTo("empty", sexp) ? new callExpr(new symbolExpr("list"), []) :
-        throwError(new types.Message([new types.ColoredPart("( )", sexp.location), ": expected a function, but nothing's there"]), sexp.location);
+        throwError(0,0,0, {
+          errMsg: ",, expected a function, but nothing's there",
+          errArgLocs: [["( )", sexp.location]]
+        });
       singleton.location = sexp.location;
       return singleton;
     }
 
     function parseIdExpr(sexp) {
       return isSymbol(sexp) ? sexp :
-        throwError(new types.Message(["ID"]), sexp.location);
+        throwError(0,0,0, {
+          errMsg = ",,",
+          errArgLocs = [["ID", sexp.location]]
+        });
     }
 
     function isTupleStartingWithOfLength(sexp, symbol, n) {
@@ -3119,8 +3326,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
     function parseRequire(sexp) {
       // is it (require)?
       if (sexp.length < 2) {
-        var msg = new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a module name after `require', but found nothing"]);
-        throwError(msg, sexp.location);
+        throwError(0,0,0, {
+          errMsg = ",,: expected a module name after `require`, but found nothing",
+          errArgLocs = [[sexp[0].val, sexp[0].location]]
+        });
       }
       // if it's (require (lib...))
       if ((sexp[1] instanceof Array) && isSymbolEqualTo(sexp[1][0], "lib")) {
@@ -3128,24 +3337,36 @@ define(["./wescheme-support.js", 'js/js-numbers'
         if (sexp[1].length < 3) {
           var partsNum = sexp[1].slice(1).length,
             partsStr = partsNum + ((partsNum === 1) ? " part" : " parts"),
-            msg = new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected at least two strings after ", new types.ColoredPart("lib", sexp[1][0].location), " but found only ", partsStr]);
-          throwError(msg, sexp.location);
+          throwError(0,0,0, {
+            errMsg = ",,: expected at least two strings after ,,, but found only " + partsStr,
+            errArgLocs = [[sexp[0].val, sexp[0].location],
+            ["lib", sexp[1][0].location]]
+          });
         }
         // is it (require (lib not-strings))?
         rest(sexp[1]).forEach(function(lit) {
           if (!(isString(lit))) {
             var msg = new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a string for a library collection, but found ", new types.ColoredPart("something else", str.location)]);
-            throwError(msg, sexp.location);
+          throwError(0,0,0, {
+            errMsg = ",,: expected a string for a library collection, but found ,,",
+            errArgLocs = [[sexp[0].val, sexp[0].location],
+            ["something else", str.location]]
+          });
           }
         });
         // if it's (require (planet...))
       } else if ((sexp[1] instanceof Array) && isSymbolEqualTo(sexp[1][0], "planet")) {
-        var msg = new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": Importing PLaneT pacakges is not supported at this time"]);
-        throwError(msg, sexp.location);
+        throwError(0,0,0, {
+          errMsg = ",,: Importing PLaneT pacakges is not supported at this time",
+          errArgLocs = [[sexp[0].val, sexp[0].location]]
+        });
         // if it's (require <not-a-string-or-symbol>)
       } else if (!((sexp[1] instanceof symbolExpr) || isString(sexp[1]))) {
-        var msg = new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a module name as a string or a `(lib ...)' form, but found ", new types.ColoredPart("something else", sexp[1].location)]);
-        throwError(msg, sexp.location);
+        throwError(0,0,0, {
+          errMsg = ",,: expected a module name as a string or a `(lib ...)' form, but found ,,",
+          errArgLocs = [[sexp[0].val, sexp[0].location],
+          ["something else", sexp[1].location]]
+        });
       }
       var req = new requireExpr(sexp[1], sexp[0]);
       req.location = sexp.location;
@@ -3168,8 +3389,11 @@ define(["./wescheme-support.js", 'js/js-numbers'
           return p;
         }
         // everything else is NOT okay
-        var msg = new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": I don't recognize the syntax of this ", new types.ColoredPart("clause", p.location)]);
-        throwError(msg, sexp.location);
+        throwError(0,0,0, {
+          errMsg: ",,: I don't recognize the syntax of this ,,",
+          errArgLocs: [[sexp[0].val, sexp[0].location],
+          ["clause", p.location]]
+        });
       });
       var provide = new provideStatement(clauses, sexp[0]);
       provide.location = sexp.location;
@@ -3869,14 +4093,17 @@ define(["./wescheme-support.js", 'js/js-numbers'
       var visitedIds = {}; // initialize a dictionary of ids we've seen
       lst.forEach(function(id) {
         if (!(id instanceof symbolExpr)) {
-          throwError("expected identifier " + id.val, id.location);
+          throwError(0,0,0, {
+            errMsg: "expected identifier ,,",
+            errArgLocs: [[id.val, id.location]]
+          });
         } else if (visitedIds[id.val]) { // if we've seen this variable before, throw an error
-          throwError(new types.Message([new types.ColoredPart(stx.toString(), stx.location),
-            ": found ",
-            new types.ColoredPart("a variable", id.location),
-            " that is already used ",
-            new types.ColoredPart("here", visitedIds[id.val].location)
-          ]), id.location);
+          throwError(0,0,0, {
+            errMsg: ",,: found ,, that is already used ,,",
+            errArgLocs: [[stx.toString(), stx.location],
+            ["a variable", id.location],
+            ["here", visitedIds[id.val].location]]
+          });
         } else {
           visitedIds[id.val] = id; // otherwise, record the identifier as being visited
         }
@@ -3953,7 +4180,11 @@ define(["./wescheme-support.js", 'js/js-numbers'
       // check for non-symbol arguments
       this.args.forEach(function(arg) {
         if (!(arg instanceof symbolExpr)) {
-          throwError(new types.Message([new types.ColoredPart(this.stx.val, this.stx.location), ": expected a variable but found ", new types.ColoredPart("something else", arg.location)]), sexp.location);
+          throwError(0,0,0, {
+            errMsg: ",,: expected a variable but found ,,",
+            errArgLocs: [[this.stx.val, this.stx.location],
+            ["something else", arg.location]]
+          });
         }
       });
       var bodyAndPinfo = this.body.desugar(pinfo),
@@ -4277,7 +4508,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
 
     quotedExpr.prototype.desugar = function(pinfo) {
       if (typeof this.location === 'undefined') {
-        throwError(new types.Message(["ASSERTION ERROR: Every quotedExpr should have a location"]), loc)
+        throwError(0,0,0, {
+          errMsg: ",,: Every quotedExpr should have a location",
+          errArgLocs: [["ASSERTION ERROR", loc]]
+        });
       }
       // Sexp-lists (arrays) become lists
       // literals and symbols stay themselves
@@ -4291,7 +4525,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
             res.location = loc;
             return [res, pinfo];
           } else {
-            throwError(new types.Message(["ASSERTION ERROR: Found an unexpected item in a quotedExpr"]), loc);
+        throwError(0,0,0, {
+          errMsg: ",,: Found an unexpected item in a quotedExpr",
+          errArgLocs: [["ASSERTION ERROR", loc]]
+        });
           }
         }
       }
@@ -4301,7 +4538,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
 
     unquotedExpr.prototype.desugar = function(pinfo, depth) {
       if (typeof depth === 'undefined') {
-        throwError(new types.Message(["misuse of a ', not under a quasiquoting backquote"]), this.location);
+        throwError(0,0,0, {
+          errMsg: ",, of a ', not under a quasiquoting backquote",
+          errArgLocs: [["misuse", this.location]]
+        });
       } else if (depth === 1) {
         return this.val.desugar(pinfo);
       } else if (depth > 1) {
@@ -4320,13 +4560,19 @@ define(["./wescheme-support.js", 'js/js-numbers'
           return [listCall, pinfo];
         }
       } else {
-        throwError(new types.Message(["ASSERTION FAILURE: depth should have been undefined, or a natural number"]), this.location);
+        throwError(0,0,0, {
+          errMsg: ",,: depth should have been undefined, or a natural number",
+          errArgLocs: [["ASSERTION ERROR", this.location]]
+        });
       }
     };
 
     unquoteSplice.prototype.desugar = function(pinfo, depth) {
       if (typeof depth === 'undefined') {
-        throwError(new types.Message(["misuse of a ,@, not under a quasiquoting backquote"]), this.location);
+        throwError(0,0,0, {
+          errMsg: ",, of a ,@, not under a quasiquoting backquote",
+          errArgLocs: [["misuse", this.location]]
+        });
       } else if (depth === 1) {
         return this.val.desugar(pinfo);
       } else if (depth > 1) {
@@ -4345,7 +4591,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
           return [listCall, pinfo];
         }
       } else {
-        throwError(new types.Message(["ASSERTION FAILURE: depth should have been undefined, or a natural number"]), this.location);
+        throwError(0,0,0, {
+          errMsg: ",,: depth should have been undefined, or a natural number",
+          errArgLocs: [["ASSERTION ERROR", this.location]]
+        });
       }
     };
 
@@ -4369,7 +4618,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
 
       var loc = (typeof qqlist.location != 'undefined') ? qqlist.location :
         ((qqlist instanceof Array) && (typeof qqlist[0].location != 'undefined')) ? qqlist[0].location :
-        (throwError(types.Message(["ASSERTION FAILURE: couldn't find a usable location"]), new Location(0, 0, 0, 0))),
+        (throwError(0,0,0, {
+          errMsg: ",,: couldn't find a usable location",
+          errArgLocs: [["ASSERTION FAILURE", new Location(0,0,0,0)]]
+        }),
         appendArgs = qqlist.map(function(x) {
           return desugarQuasiQuotedListElement(x, pinfo, depth, loc)[0];
         })
@@ -4406,7 +4658,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
           result = this.val.desugar(pinfo, depth + 1)[0];
         }
       } else {
-        throwError(new types.Message(["ASSERTION FAILURE: depth should have been undefined, or a natural number"]), this.location);
+        throwError(0,0,0, {
+          errMsg: ",,: depth should have been undefined, or a natural number",
+          errArgLocs: [["ASSERTION FAILURE", this.location]]
+        });
       }
 
       if (depth == 0) {
@@ -4430,9 +4685,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
       // if we're not in a clause, we'd better not see an "else"...
       if (!this.isClause && (this.val === "else")) {
         var loc = (this.parent && this.parent[0] === this) ? this.parent.location : this.location;
-        throwError(new types.Message([new types.ColoredPart(this.val, loc), ": not allowed ", new types.ColoredPart("here", loc), ", because this is not a question in a clause"]),
-          loc, undefined,
-          {
+        throwError(0,0,0, {
             errMsg: ",,: not allowed ,, because this is not a question in a clause",
             errArgLocs: [[this.val, loc],
             ["here", loc]]
@@ -4440,8 +4693,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
       }
       // if this is a define without a parent, or if it's not the first child of the parent
       if ((this.parent && this.parent[0] !== this) && (this.val === "define")) {
-        var msg = new types.Message([new types.ColoredPart(this.val, this.location), ": not allowed inside an expression"]);
-        throwError(msg, this.location, undefined, {
+        throwError(0,0,0, {
           errMsg: ",,: not allowed inside an expression",
           errArgLocs: [
             [this.val, this.location]
@@ -4451,8 +4703,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
       // if this is a keyword without a parent, or if it's not the first child of the parent
       if (!this.parent &&
         (plt.compiler.keywords.indexOf(this.val) > -1) && (this.val !== "else")) {
-        throwError(new types.Message([new types.ColoredPart(this.val, this.location), ": expected an open parenthesis before ", this.val, ", but found none"]),
-          this.location);
+        throwError(0,0,0, {
+          errMsg: "Expected an open parenthesis before ,,, but found none",
+          errArgLocs: [[this.val, this.location]]
+        });
       }
       // the dot operator is not supported by WeScheme
       if (this.val === ".") {
@@ -4460,13 +4714,19 @@ define(["./wescheme-support.js", 'js/js-numbers'
           this.location.startRow.toString(), ":",
           this.location.startCol.toString(), ": read: '.' is not supported as a symbol in WeScheme"
         ]);
-        throwError(msg, this.location, "Error-GenericReadError");
+        throwError(0,0,0, {
+          errMsg: "read: ,, is not supported as a symbol in WeScheme",
+          errArgLocs: [[".", this.location]]
+        });
       }
       return [this, pinfo];
     };
     unsupportedExpr.prototype.desugar = function(pinfo) {
       this.location.span = this.errorSpan;
-      throwError(this.errorMsg, this.location, "Error-GenericReadError");
+      throwError(0,0,0, {
+        errMsg: ",,",
+        errArgLocs: [[this.errorMsg, this.location]]
+      });
     }
 
     //////////////////////////////////////////////////////////////////////////////
@@ -4486,11 +4746,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
     defFunc.prototype.collectDefinitions = function(pinfo) {
       this.args.forEach(function(arg) {
         if (plt.compiler.keywords.indexOf(arg.val) > -1) {
-          throwError(new types.Message([new types.ColoredPart(arg.val, arg.location),
-            ": this is a reserved keyword and cannot be used" +
-            " as a variable or function name"
-          ]), arg.location);
-
+          throwError(0,0,0, {
+            errMsg: ",, is a reserved keyword and cannot be used as a variable or function name"
+            errArgLocs: [[arg.val, arg.location]]
+          });
         }
       });
 
@@ -4560,8 +4819,11 @@ define(["./wescheme-support.js", 'js/js-numbers'
 
       function throwModuleError(moduleName) {
         var bestGuess = plt.compiler.moduleGuess(that.spec.toString());
-        var msg = new types.Message(["Found require of the module ", new types.ColoredPart(that.spec.toString(), that.spec.location), ", but this module is unknown.", ((bestGuess.name === that.spec.toString()) ? "" : " Did you mean '" + bestGuess.name + "'?")]);
-        throwError(msg, that.spec.location, "Error-UnknownModule");
+        throwError(0,0,0, {
+          errMsg: "Found require of the module ,,, but this module is unknown." +
+         ((bestGuess.name === that.spec.toString()) ? "" : " Did you mean '" + bestGuess.name + "'?"),
+         errArgLocs: [[that.spec.toString(), that.spec.location]]
+        });
       }
 
       // if it's an invalid moduleName, throw an error
@@ -4662,8 +4924,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
             addProvidedName(clause.val);
             return pinfo;
           } else {
-            var msg = new types.Message(["The name '", new types.ColoredPart(clause.toString(), clause.location), "', is not defined in the program, and cannot be provided."]);
-            throwError(msg, clause.location);
+            throwError(0,0,0, {
+              errMsg: "The name ',,' is not defined in the program, and cannot be provided",
+              errArgLocs: [[clause.toString(), clause.location]]
+            });
           }
           // if it's an array, make sure the struct is defined (otherwise error)
           // NOTE: ONLY (struct-out id) IS SUPPORTED AT THIS TIME
@@ -4677,11 +4941,17 @@ define(["./wescheme-support.js", 'js/js-numbers'
             fns.forEach(addProvidedName);
             return pinfo;
           } else {
-            throwError(new types.Message(["The struct '", new types.ColoredPart(clause[1].toString(), clause[1].location), "', is not defined in the program, and cannot be provided"]), clause.location);
+            throwError(0,0,0, {
+              errMsg: "The struct ',,' is not defined in the program, and cannot be provided",
+              errArgLocs: [[clause[1].toString(), clause[1].location]]
+            });
           }
           // anything with a different format throws an error
         } else {
-          throw "Impossible: all invalid provide clauses should have been filtered out!";
+          throwError(0,0,0, {
+            errMsg: "Impossible: all invalid provide clauses should have been filtered out!";
+            errArgLocs: []
+          });
         }
       }
       return this.clauses.reduce(collectProvidesFromClause, pinfo);
@@ -4791,8 +5061,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
       // if this is a keyword without a parent, or if it's not the first child of the parent
       if ((plt.compiler.keywords.indexOf(this.val) > -1) &&
         (!this.parent || this.parent[0] !== this) || (this.parent instanceof couple)) {
-        throwError(new types.Message([new types.ColoredPart(this.val, this.location), ": expected an open parenthesis before ", this.val, ", but found none"]),
-          this.location);
+        throwError(0,0,0, {
+          errMsg: "Expected an open parenthesis before ,,, but found none",
+          errArgLocs: [[this.val, this.location]]
+        });
       }
       var binding = env.lookup_context(this.val);
       if (binding) {
@@ -6420,8 +6692,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
           pos: loc
         };
       } else {
-        throwError(new types.Message([sym.val, ": Scheme-style symbols are not supported; use strings instead"]),
-        loc)
+        throwError(0,0,0, {
+          errMsg: "Scheme-style symbol ,, not supported: use string instead",
+          errArgLocs: [ [sym.val, loc] ]
+        });
         /*
         var psym = "’" + sym.val
         //var psym = pyretizeSymbol(sym.val)
