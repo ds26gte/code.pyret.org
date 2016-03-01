@@ -1395,7 +1395,6 @@ define(["./wescheme-support.js", 'js/js-numbers'
         if (dot2Idx) {
           // if they are not surrounding a single element, throw an error
           if (dot2Idx - dot1Idx !== 2) {
-            var msg = new types.Message(["Two `.'s may only surround one syntax item"]);
             throwError({
               errMsg: "Two '.'s may only surround one ,,",
               errArgLocs: [ ["syntax item", list[dot2Idx].location] ]
@@ -1681,10 +1680,6 @@ define(["./wescheme-support.js", 'js/js-numbers'
             len = size === "" ? elts.length : parseInt(vectorTest[1]); // set the size to a number
           // test vector size
           if (elts.length > len) {
-            var msg = new types.Message(["read: vector length " + len + " is too small, ",
-              elts.length + " value" + ((elts.length > 1) ? "s" : ""),
-              " provided"
-            ]);
             throwError({
               errMsg: ",,: vector length " + len + " is too small, " +
                 elts.length + " value" + ((elts.length > 1) ? "s" : "") + " provided",
@@ -1770,7 +1765,6 @@ define(["./wescheme-support.js", 'js/js-numbers'
               datum.location.startChar--;
               datum.location.span++; // expand the datum to include leading '#'
               endOfError = i + datum.location.span;
-              var msg = new types.Message([source, ":", startRow.toString(), ":", (column - 1).toString(), " read: WeScheme does not support the '#" + p + "' notation for ", (p === "," ? "unsyntax" : p === "'" ? "syntax" : "quasisyntax")]);
               throwError({
                 errMsg: ",,: WeScheme does not support the '#" + p + "' notation for " +
                (p === "," ? "unsyntax" : p === "'" ? "syntax" : "quasisyntax"),
@@ -1804,7 +1798,6 @@ define(["./wescheme-support.js", 'js/js-numbers'
               }
             default:
               endOfError = i; // remember where we are, so readList can pick up reading
-              var msg = new types.Message([source, ":", line.toString(), ":", (column - 1).toString(), ": read: bad syntax `#", (chunk + nextChar), "'"]);
               throwError({
                 errMsg: ",,: bad syntax '#" + chunk + nextChar + "'",
                 errArgLocs: [["read", new Location(startCol, startRow, iStart, (chunk + nextChar).length + 1)]]
@@ -3040,7 +3033,6 @@ define(["./wescheme-support.js", 'js/js-numbers'
       }
       var caseLocs = [sexp[0].location, sexp.location.start(), sexp.location.end()];
       if (sexp.length === 2) {
-        var msg = new types.Message([new types.MultiPart(sexp[0].val, caseLocs, true), ": expected a clause with at least one choice (in parentheses)" + " and an answer after the expression, but nothing's there"]);
         throwError({
           errMsg: ",, expected a clause with at least one choice (in parentheses) and an answer after the expression, but nothing's there",
           errArgLocs: [[sexp[0].val, caseLocs[0]]]
@@ -3350,7 +3342,6 @@ define(["./wescheme-support.js", 'js/js-numbers'
         // is it (require (lib not-strings))?
         rest(sexp[1]).forEach(function(lit) {
           if (!(isString(lit))) {
-            var msg = new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a string for a library collection, but found ", new types.ColoredPart("something else", str.location)]);
           throwError({
             errMsg:  ",,: expected a string for a library collection, but found ,,",
             errArgLocs:  [[sexp[0].val, sexp[0].location],
@@ -4714,10 +4705,6 @@ define(["./wescheme-support.js", 'js/js-numbers'
       }
       // the dot operator is not supported by WeScheme
       if (this.val === ".") {
-        var msg = new types.Message([this.location.source, ":",
-          this.location.startRow.toString(), ":",
-          this.location.startCol.toString(), ": read: '.' is not supported as a symbol in WeScheme"
-        ]);
         throwError({
           errMsg: "read: ,, is not supported as a symbol in WeScheme",
           errArgLocs: [[".", this.location]]
