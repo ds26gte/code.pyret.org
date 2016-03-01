@@ -2293,10 +2293,12 @@ define(["./wescheme-support.js", 'js/js-numbers'
     function parse(sexp) {
       return (sexp.length === 0) ? [] :
         (!isCons(sexp)) ?
-        throwError(0,0,0, {
+        throwError(0, 0, 0, {
           errMsg: ",, is not a list of definitions or expressions",
-          errArgLocs: [[sexp, sexp.location]]
-        });
+          errArgLocs: [
+            [sexp, sexp.location]
+          ]
+        }) :
         parseStar(sexp);
     }
 
@@ -2406,7 +2408,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
           var extraLocs = sexp.slice(3).map(function(sexp) {
               return sexp.location;
             }),
-            wording = extraLocs.length + " extra " + ((extraLocs.length === 1) ? "part" : "parts"),
+            wording = extraLocs.length + " extra " + ((extraLocs.length === 1) ? "part" : "parts");
           throwError(0,0,0, {
             errMsg: ",, expects a list of variables and a body, but found ,,",
             errArgLocs: [[sexp[0].val, sexp[0].location],
@@ -2594,7 +2596,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
           var extraLocs = sexp.slice(3).map(function(sexp) {
               return sexp.location;
             }),
-            wording = extraLocs.length + " extra " + ((extraLocs.length === 1) ? "part" : "parts"),
+            wording = extraLocs.length + " extra " + ((extraLocs.length === 1) ? "part" : "parts");
           throwError(0,0,0, {
               errMsg: ",,: expected only one expression for the function body, but found ,,",
                 errArgLocs: [
@@ -2628,7 +2630,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         sexp[1].forEach(function(def) {
           if (!isDefinition(def)) {
             throwError(0,0,0, {
-              errMsg: ",, expected a definition, but given ,,"
+              errMsg: ",, expected a definition, but given ,,",
               errArgLocs: [[sexp[0].val, sexp[0].location],
               ["something else", def.location]]
             });
@@ -3069,7 +3071,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         }
         if (clause.length === 1) {
           throwError(0,0,0, {
-            errMsg:  ",, expected a clause with a question and an answer, but found a ,, with only ,,"
+            errMsg:  ",, expected a clause with a question and an answer, but found a ,, with only ,,",
             errArgLocs: [[sexp[0].val, caseLocs[0]],
             ["clause", clauseLocations[0]],
             ["one part", clause[0].location]]
@@ -3079,7 +3081,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
           var extraLocs = clause.map(function(sexp) {
               return sexp.location;
             }),
-            wording = extraLocs.length + " parts",
+            wording = extraLocs.length + " parts";
           throwError(0,0,0, {
             errMsg: ",, expected only one expression for the answer in the case clause, but found a ,, with ,,",
             errArgLocs: [[sexp[0].val, caseLocs[0]],
@@ -3244,7 +3246,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         throwError(0,0,0, {
           errMsg: ",, expected a single argument, but found ,,",
           errArgLocs: [[sexp[0].val, sexp[0].location],
-          ["more than one", extraLocs[0]]
+          ["more than one", extraLocs[0]]]
         });
       }
       // if the argument is (unquote-splicing....), throw an error
@@ -3301,8 +3303,8 @@ define(["./wescheme-support.js", 'js/js-numbers'
     function parseIdExpr(sexp) {
       return isSymbol(sexp) ? sexp :
         throwError(0,0,0, {
-          errMsg = ",,",
-          errArgLocs = [["ID", sexp.location]]
+          errMsg: ",,",
+          errArgLocs: [["ID", sexp.location]]
         });
     }
 
@@ -3327,8 +3329,8 @@ define(["./wescheme-support.js", 'js/js-numbers'
       // is it (require)?
       if (sexp.length < 2) {
         throwError(0,0,0, {
-          errMsg = ",,: expected a module name after `require`, but found nothing",
-          errArgLocs = [[sexp[0].val, sexp[0].location]]
+          errMsg:  ",,: expected a module name after `require`, but found nothing",
+          errArgLocs:  [[sexp[0].val, sexp[0].location]]
         });
       }
       // if it's (require (lib...))
@@ -3336,10 +3338,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
         // is it (require (lib)) or (require (lib <string>))
         if (sexp[1].length < 3) {
           var partsNum = sexp[1].slice(1).length,
-            partsStr = partsNum + ((partsNum === 1) ? " part" : " parts"),
+            partsStr = partsNum + ((partsNum === 1) ? " part" : " parts");
           throwError(0,0,0, {
-            errMsg = ",,: expected at least two strings after ,,, but found only " + partsStr,
-            errArgLocs = [[sexp[0].val, sexp[0].location],
+            errMsg:  ",,: expected at least two strings after ,,, but found only " + partsStr,
+            errArgLocs: [[sexp[0].val, sexp[0].location],
             ["lib", sexp[1][0].location]]
           });
         }
@@ -3348,8 +3350,8 @@ define(["./wescheme-support.js", 'js/js-numbers'
           if (!(isString(lit))) {
             var msg = new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a string for a library collection, but found ", new types.ColoredPart("something else", str.location)]);
           throwError(0,0,0, {
-            errMsg = ",,: expected a string for a library collection, but found ,,",
-            errArgLocs = [[sexp[0].val, sexp[0].location],
+            errMsg:  ",,: expected a string for a library collection, but found ,,",
+            errArgLocs:  [[sexp[0].val, sexp[0].location],
             ["something else", str.location]]
           });
           }
@@ -3357,14 +3359,14 @@ define(["./wescheme-support.js", 'js/js-numbers'
         // if it's (require (planet...))
       } else if ((sexp[1] instanceof Array) && isSymbolEqualTo(sexp[1][0], "planet")) {
         throwError(0,0,0, {
-          errMsg = ",,: Importing PLaneT pacakges is not supported at this time",
-          errArgLocs = [[sexp[0].val, sexp[0].location]]
+          errMsg : ",,: Importing PLaneT pacakges is not supported at this time",
+          errArgLocs : [[sexp[0].val, sexp[0].location]]
         });
         // if it's (require <not-a-string-or-symbol>)
       } else if (!((sexp[1] instanceof symbolExpr) || isString(sexp[1]))) {
         throwError(0,0,0, {
-          errMsg = ",,: expected a module name as a string or a `(lib ...)' form, but found ,,",
-          errArgLocs = [[sexp[0].val, sexp[0].location],
+          errMsg : ",,: expected a module name as a string or a `(lib ...)' form, but found ,,",
+          errArgLocs : [[sexp[0].val, sexp[0].location],
           ["something else", sexp[1].location]]
         });
       }
@@ -4621,7 +4623,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         (throwError(0,0,0, {
           errMsg: ",,: couldn't find a usable location",
           errArgLocs: [["ASSERTION FAILURE", new Location(0,0,0,0)]]
-        }),
+        })),
         appendArgs = qqlist.map(function(x) {
           return desugarQuasiQuotedListElement(x, pinfo, depth, loc)[0];
         })
@@ -4747,7 +4749,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
       this.args.forEach(function(arg) {
         if (plt.compiler.keywords.indexOf(arg.val) > -1) {
           throwError(0,0,0, {
-            errMsg: ",, is a reserved keyword and cannot be used as a variable or function name"
+            errMsg: ",, is a reserved keyword and cannot be used as a variable or function name",
             errArgLocs: [[arg.val, arg.location]]
           });
         }
@@ -4949,7 +4951,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
           // anything with a different format throws an error
         } else {
           throwError(0,0,0, {
-            errMsg: "Impossible: all invalid provide clauses should have been filtered out!";
+            errMsg: "Impossible: all invalid provide clauses should have been filtered out!",
             errArgLocs: []
           });
         }
