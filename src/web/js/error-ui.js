@@ -47,13 +47,15 @@ define(["js/ffi-helpers", "trove/srcloc", "trove/error", "trove/contracts", "com
         var spyretExn = JSON.parse(exception);
           var spyretErrType = spyretExn.type;
         if (spyretErrType === 'spyret-parse-error') {
-          var pyretLoc = pyretizeSpyretLoc(spyretExn.loc)
-          var spyretOrigMsg = spyretExn.msg
+          //var pyretLoc = pyretizeSpyretLoc(spyretExn.loc);
+          //var spyretOrigMsg = spyretExn.msg;
           var spyretErrPkt = spyretExn.errPkt
-          var spyretErrMsg = spyretOrigMsg
+          //var spyretErrMsg = spyretOrigMsg;
+          var spyretErrMsg = "";
           var spyretErrArgLocs = []
           if (spyretErrPkt) {
-            spyretErrMsg = spyretErrPkt.errMsg || spyretOrigMsg
+            //spyretErrMsg = spyretErrPkt.errMsg || spyretOrigMsg;
+            spyretErrMsg = spyretErrPkt.errMsg || "";
             spyretErrArgLocs = spyretErrPkt.errArgLocs || []
           }
           var spyretErrArgs = []
@@ -75,7 +77,7 @@ define(["js/ffi-helpers", "trove/srcloc", "trove/error", "trove/contracts", "com
           // make a PyretFailException and call drawPyretException on it
           var spyretErrArgsList = runtime.ffi.makeList(spyretErrArgs)
           var spyretErrLocsList = runtime.ffi.makeList(spyretErrLocs)
-          var spyretParseExn = get(error, spyretErrType).app(pyretLoc, spyretErrMsg, spyretErrArgsList, spyretErrLocsList)
+          var spyretParseExn = get(error, spyretErrType).app(spyretErrMsg, spyretErrArgsList, spyretErrLocsList);
           var pyretExn = runtime.makePyretFailException(spyretParseExn)
           drawPyretException(pyretExn)
 
