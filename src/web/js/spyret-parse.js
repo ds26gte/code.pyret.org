@@ -31,13 +31,15 @@ define(["./wescheme-support.js", 'js/js-numbers'
       this.str = str;
     }
 
-    function throwError(msg, loc, errClass, errPkt) {
+    function throwError(errPkt) {
       var spyretErrObj = {
         type: "spyret-parse-error",
+        /*
         msg: "",
         //msg: msg.args.join(''),
         loc: loc,
         errClass: errClass || 'spyret-parse-error',
+        */
         errPkt: errPkt
       }
       throw JSON.stringify(spyretErrObj)
@@ -822,19 +824,19 @@ define(["./wescheme-support.js", 'js/js-numbers'
       // Adds a new defined binding to a pinfo's set.
       this.accumulateDefinedBinding = function(binding, loc) {
         if (plt.compiler.keywords.indexOf(binding.name) > -1) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",, is a reserved keyword and cannot be used as a variable or function name",
             errArgLocs: [[binding.name, binding.loc]]
           });
         } else if (!this.allowRedefinition && this.isRedefinition(binding.name)) {
           var prevBinding = this.env.lookup(binding.name);
           if (prevBinding.loc) {
-            throwError(0,0,0, {
+            throwError({
               errMsg: ",, has a ,, and cannot be redefined",
               errArgLocs: [[binding.name, binding.loc], ["previous definition", prevBinding.loc]]
             });
           } else {
-            throwError(0,0,0, {
+            throwError({
               errMsg: ",, has a previous definition and cannot be redefined",
               errArgLocs: [[binding.name, binding.loc]]
             });
@@ -923,7 +925,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         function lookupProvideBindingInDefinitionBindings(provideBinding) {
           // if it's not defined, throw an error
           if (!that.definedNames.containsKey(provideBinding.symbl)) {
-            throwError(0,0,0, {
+            throwError({
               errMsg: "provided name " + provideBinding.symbl + " not defined"
             });
           }
@@ -963,7 +965,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         // is really a structure.
         function checkBindingCompatibility(binding, exportedBinding) {
           if ((binding instanceof plt.compiler.provideBindingStructId) && (!(exportedBinding instanceof structBinding))) {
-            throwError(0,0,0, {
+            throwError({
               errMsg: "provide structure " + exportedBinding.symbl + " is not a structure"
             });
           } else {
@@ -1204,7 +1206,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         x === ']' ? '[' :
         x === '}' ? '{' :
         /* else */
-        throwError(0,0,0, {
+        throwError({
           errMsg: "Unknown delimiter " + x
         });
     }
@@ -1309,14 +1311,14 @@ define(["./wescheme-support.js", 'js/js-numbers'
       var p = str.charAt(i);
       if (i >= str.length) {
         endOfError = i; // remember where we are, so readList can pick up reading
-        throwError(0,0,0, {
+        throwError({
           errMsg: ",, : ,,: found end of file",
           errArgLocs: [[source, new Location(startCol-1, startRow, i-2, 2)],
           ["read", new Location(startCol-1, startRow, iStart, 1)]]
         });
       }
       var sexp = rightListDelims.test(p) ?
-      throwError(0,0,0, {
+      throwError({
         errMsg: "read: expected a " + otherDelim(p) + " to open ,,",
         errArgLocs: [[p, new Location(column, startRow, iStart, 1)]]
       }) :
@@ -1355,7 +1357,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         // if it's a dot, treat it as a cons
         if (sexp instanceof symbolExpr && sexp.val == '.') {
           if (dot2Idx) {
-            throwError(0,0,0, {
+            throwError({
               errMsg: "A ,, may have only 2 '.'s",
               errArgLocs: [["syntax list", list[dot1Idx].location]]
             });
@@ -1376,14 +1378,14 @@ define(["./wescheme-support.js", 'js/js-numbers'
       function processDots(list, dot1Idx, dot2Idx) {
         // if the dot is the first element in the list, throw an error
         if (dot1Idx === 0) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: "A '.' cannot be the first elemet in a ,,",
             errArgLocs: [ ["syntax list", list[dot1Idx].location] ]
           });
         }
         // if a dot is the last element in the list, throw an error
         if (dot1Idx === (list.length - 1) || dot2Idx === (list.length - 1)) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: "A ',' cannot be the last element in a ,,",
             errArgLocs: [ ["syntax list", list[dot2Idx || dot1Idx].location] ]
           });
@@ -1394,7 +1396,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
           // if they are not surrounding a single element, throw an error
           if (dot2Idx - dot1Idx !== 2) {
             var msg = new types.Message(["Two `.'s may only surround one syntax item"]);
-            throwError(0,0,0, {
+            throwError({
               errMsg: "Two '.'s may only surround one ,,",
               errArgLocs: [ ["syntax item", list[dot2Idx].location] ]
             });
@@ -1405,13 +1407,13 @@ define(["./wescheme-support.js", 'js/js-numbers'
         }
         // okay, we know there's just one dot, so the next element had better be a list AND the last element of the outer list
         if (!(list[dot1Idx + 1] instanceof Array)) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: "A '.' must be followed by a syntax list, but found ,,",
             errArgLocs: [ [ "something else", list[dot1Idx+1].location ] ]
           });
         }
         if (list.length > dot1Idx + 2) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: "A '.' followed by a syntax list must be followed by a closing delimiter, but found ,,",
             errArgLocs: [ ["syntax list", list[dot1Idx+1].location], ["something else", list[dot1Idx+2].location] ]
           });
@@ -1462,7 +1464,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
       if (i >= str.length) {
         // throw an error
         var openingLoc = new Location(startCol, startRow, iStart, 1);
-        throwError(0,0,0, {
+        throwError({
           errMsg: ",, a " + otherDelim(openingDelim) + " to close ,,",
           errArgLocs: [["Expected", errorLocation],
           [openingDelim, openingLoc]]
@@ -1470,7 +1472,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
       }
       // if we reached the end of an otherwise-successful list and it's the wrong closing delim...
       if (!matchingDelims(openingDelim, str.charAt(i))) {
-        throwError(0,0,0, {
+        throwError({
           errMsg: "read: expected a " + otherDelim(openingDelim) + " to close ,, but found a ,,",
           errArgLocs: [[openingDelim, new Location(startCol, startRow, iStart, 1)],
           [str.charAt(i), new Location(column, line, i, 1)]]
@@ -1556,7 +1558,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
               if (!regexp.test(str.slice(i))) {
                 // remember where we are, so readList can pick up reading
                 endOfError = iStart + greedy.length + 1;
-                throwError(0,0,0, {
+                throwError({
                   errMsg: "read: no hex digit following " + chr + " in ,,",
                   errArgLocs: [["string", new Location(startCol, startRow, iStart, i-iStart+1)]]
                 });
@@ -1575,7 +1577,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
             default:
               // remember where we are, so readList can pick up reading
               endOfError = iStart + greedy.length + 1;
-                throwError(0,0,0, {
+                throwError({
                   errMsg: "read: unknown escape sequence \\" + chr + " in ,,",
                   errArgLocs: [["string", new Location(startCol, startRow, iStart, i-iStart)]]
                 });
@@ -1587,7 +1589,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
       // if the next char after iStart+openquote+greedy isn't a closing quote, it's an unclosed string
       if (!closedString) {
         endOfError = iStart + greedy.length; // remember where we are, so readList can pick up reading
-        throwError(0,0,0, {
+        throwError({
           errMsg: ",,: expected a closing \'\"\'",
           errArgLocs: [["read", new Location(startCol, startRow, iStart, 1)]]
         });
@@ -1614,7 +1616,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
 
       // throwUnsupportedError : ErrorString token -> Error
       function throwUnsupportedError(errorStr, token) {
-        throwError(0,0,0, {
+        throwError({
           errMsg: ",,",
           errArgLocs: [[errorStr, new Location(startCol, startRow, iStart, token.length + 1)]]
         });
@@ -1683,7 +1685,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
               elts.length + " value" + ((elts.length > 1) ? "s" : ""),
               " provided"
             ]);
-            throwError(0,0,0, {
+            throwError({
               errMsg: ",,: vector length " + len + " is too small, " +
                 elts.length + " value" + ((elts.length > 1) ? "s" : "") + " provided",
                 errArgLocs: [["read", new Location(startCol, startRow, iStart, vectorTest[0].length)]]
@@ -1769,7 +1771,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
               datum.location.span++; // expand the datum to include leading '#'
               endOfError = i + datum.location.span;
               var msg = new types.Message([source, ":", startRow.toString(), ":", (column - 1).toString(), " read: WeScheme does not support the '#" + p + "' notation for ", (p === "," ? "unsyntax" : p === "'" ? "syntax" : "quasisyntax")]);
-              throwError(0,0,0, {
+              throwError({
                 errMsg: ",,: WeScheme does not support the '#" + p + "' notation for " +
                (p === "," ? "unsyntax" : p === "'" ? "syntax" : "quasisyntax"),
                errArgLocs: [["read", datum.location]]
@@ -1803,7 +1805,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
             default:
               endOfError = i; // remember where we are, so readList can pick up reading
               var msg = new types.Message([source, ":", line.toString(), ":", (column - 1).toString(), ": read: bad syntax `#", (chunk + nextChar), "'"]);
-              throwError(0,0,0, {
+              throwError({
                 errMsg: ",,: bad syntax '#" + chunk + nextChar + "'",
                 errArgLocs: [["read", new Location(startCol, startRow, iStart, (chunk + nextChar).length + 1)]]
               });
@@ -1813,7 +1815,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         // only reached if # is the end of the string...
       } else {
         endOfError = i; // remember where we are, so readList can pick up reading
-        throwError(0,0,0, {
+        throwError({
           errMsg: ",,: bad syntax '#'",
           errArgLocs: [["read", new Location(startCol, startRow, iStart, i - iStart)]]
         });
@@ -1881,7 +1883,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         datum = datum.charAt(0);
         i = iStart + 3; // fast-forward past (1) hash, (2) backslash and (3) single char
       } else {
-        throwError(0,0,0, {
+        throwError({
           errMsg: ",,: bad character constant: #\\" + datum,
           errArgLocs: [["read", new Location(startCol - 1, startRow, iStart, i - iStart)]]
         });
@@ -1911,7 +1913,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         column++; // move ahead
       }
       if (i + 1 >= str.length) {
-        throwError(0,0,0, {
+        throwError({
           errMsg: ",,: unexpected EOF when reading a multiline comment",
           errArgLocs: [["read", new Location(startCol, startRow, iStart, i - iStart)]]
         });
@@ -1941,7 +1943,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
       // if we're done reading, make sure we didn't read past the end of the file
       if (i + 1 >= str.length) {
         endOfError = i; // remember where we are, so readList can pick up reading
-        throwError(0,0,0, {
+        throwError({
             errMsg: ",,: expected a commented-out element for '#;' (found end-of-file)",
             errArgLocs: [["read", new Location(startCol - 1, startRow, i - 2, 2)]]
           });
@@ -1970,7 +1972,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
       }
       if (i > str.length) {
         endOfError = i; // remember where we are, so readList can pick up reading
-        throwError(0,0,0, {
+        throwError({
           errMsg: ",,: unexpected EOF when reading a line comment",
           errArgLocs: [["read", new Location(startCol, startRow, iStart, i - iStart)]]
         });
@@ -2005,7 +2007,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
           p == ",@" ? " unquoting " :
           /* else */
           "";
-        throwError(0,0,0, {
+        throwError({
           errMsg: ",,: expected an element for" + action + p + " (found end-of-file)",
           errArgLocs: [["read", new Location(startCol, startRow, iStart, p.length)]]
         });
@@ -2039,7 +2041,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
           var unexpected = /expected a .* to open \",\"(.)\"/.exec(e);
           if (unexpected) {
             endOfError = i + 1; // remember where we are, so readList can pick up reading
-            throwError(0,0,0, {
+            throwError({
               errMsg: ",,: unexpected '" + unexpected[1] + "'",
               errArgLocs: [["read", new Location(column, line, i, 1)]]
             });
@@ -2070,7 +2072,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
       if (trailingEscs && (trailingEscs[0].length % 2 > 0)) {
         i = str.length; // jump to the end of the string
         endOfError = i; // remember where we are, so readList can pick up reading
-        throwError(0,0,0, {
+        throwError({
           errMsg: ",,: EOF following '\\' in symbol",
           errArgLocs: [["read", new Location(startCol, startRow, iStart, i - iStart)]]
         });
@@ -2106,7 +2108,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
             column++;
           }
         }
-        throwError(0,0,0, {
+        throwError({
           errMsg: ",,: unbalanced '|'",
           errArgLocs: [["read", new Location(column, line, lastVerbatimMarkerIndex, str.length - lastVerbatimMarkerIndex)]]
         });
@@ -2148,7 +2150,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
           // if it's not a number OR a symbol
         } catch (e) {
           endOfError = i; // remember where we are, so readList can pick up reading
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",,: " + e.message,
             errArgLocs: [["read", new Location(startCol, startRow, iStart, i - iStart)]]
           });
@@ -2281,7 +2283,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
           isExpr(sexp) ? parseExpr(sexp) :
           isRequire(sexp) ? parseRequire(sexp) :
           isProvide(sexp) ? parseProvide(sexp) :
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",,",
             errArgLocs: [["Not a Definition, Expression, Library Require, or Provide", sexp.location]]
           });
@@ -2293,7 +2295,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     function parse(sexp) {
       return (sexp.length === 0) ? [] :
         (!isCons(sexp)) ?
-        throwError(0, 0, 0, {
+        throwError({
           errMsg: ",, is not a list of definitions or expressions",
           errArgLocs: [
             [sexp, sexp.location]
@@ -2325,14 +2327,14 @@ define(["./wescheme-support.js", 'js/js-numbers'
       function parseDefStruct(sexp) {
         // is it just (define-struct)?
         if (sexp.length < 2) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: "Expected structure name after ,,, but nothing's there",
             errArgLocs: [[sexp[0].val, sexp[0].location]]
           });
         }
         // is the structure name there?
         if (!(sexp[1] instanceof symbolExpr)) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: "Expected structure name after ,,, but found ,,",
             errArgLocs: [[sexp[0].val, sexp[0].location],
             ["something else", sexp[1].location]]
@@ -2340,14 +2342,14 @@ define(["./wescheme-support.js", 'js/js-numbers'
         }
         // is it just (define-struct <name>)?
         if (sexp.length < 3) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: "Expected at least one field name (in parentheses) after ,,, but nothing's there",
             errArgLocs: [["structure name", sexp[1].location]]
           });
         }
         // is the structure name followed by a list?
         if (!(sexp[2] instanceof Array)) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: "Expected at least one field name (in parentheses) after ,,, but found ,,",
             errArgLocs: [["structure name", sexp[1].location],
             ["something else", sexp[2].location]]
@@ -2356,7 +2358,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         // is it a list of not-all-symbols?
         sexp[2].forEach(function(arg) {
           if (!(arg instanceof symbolExpr)) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: "Expected a field name, but found ,,",
             errArgLocs: [["something else", arg.location]]
           });
@@ -2369,7 +2371,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
             }),
             wording1 = (sexp[2].length === 1) ? "field name" : "field names",
             wording2 = extraLocs.length + " extra " + ((extraLocs.length === 1) ? "part" : "parts");
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",, expected nothing after the ,,, but found ,,",
             errArgLocs: [[sexp[0].val, sexp[0].location],
             [wording1, sexp[2].location],
@@ -2382,14 +2384,14 @@ define(["./wescheme-support.js", 'js/js-numbers'
       function parseMultiDef(sexp) {
         // is it just (define-values)?
         if (sexp.length < 2) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",, expects a list of variables and a body, but found neither",
             errArgLocs: [[sexp[0].val, sexp[0].location]]
           });
         }
         // is it just (define-values ... )?
         if (sexp.length < 3) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",, expects a list of variables and a body, but found only ,,",
             errArgLocs: [[sexp[0].val, sexp[0].location],
             ["one part", sexp[1].location]]
@@ -2397,7 +2399,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         }
         // is it (define-values <not a list> )?
         if (!(sexp[1] instanceof Array)) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",, expects a list of variables and a body, but found only ,,",
             errArgLocs: [[sexp[0].val, sexp[0].location],
             ["something else", sexp[1].location]]
@@ -2409,7 +2411,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
               return sexp.location;
             }),
             wording = extraLocs.length + " extra " + ((extraLocs.length === 1) ? "part" : "parts");
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",, expects a list of variables and a body, but found ,,",
             errArgLocs: [[sexp[0].val, sexp[0].location],
             [wording, extraLocs[0]]]
@@ -2421,7 +2423,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
       function parseDef(sexp) {
         // is it just (define)?
         if (sexp.length < 2) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: "Expected a variable, or a function name and its variables (in parentheses), after ,,, but nothing's there",
             errArgLocs: [ [sexp[0].val, sexp[0].location] ]
           });
@@ -2430,7 +2432,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         if (sexp[1] instanceof Array) {
           // is there at least one element?
           if (sexp[1].length === 0) {
-            throwError(0,0,0, {
+            throwError({
               errMsg: ",, expected a name for the function within ,,",
               errArgLocs: [ [sexp[0],val, sexp[0].location],
               ["the parentheses", sexp[1].location]]
@@ -2438,7 +2440,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
           }
           // is the first element in the list a symbol?
           if (!(sexp[1][0] instanceof symbolExpr)) {
-            throwError(0,0,0, {
+            throwError({
               errMsg: ",, expected a function name after the open parenthesis but found ,,",
               errArgLocs: [ [sexp[0].val, sexp[0].location],
               ["something else", sexp[1][0].location] ]
@@ -2447,7 +2449,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
           // is the next element a list of not-all-symbols?
           sexp[1].forEach(function(arg) {
             if (!(arg instanceof symbolExpr)) {
-              throwError(0,0,0, {
+              throwError({
                 errMsg: ",, expected a variable but found ,,",
                 errArgLocs: [[sexp[0].val, sexp[0].location],
                 ["something else", arg.location]]
@@ -2456,7 +2458,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
           });
           // is it just (define (<name> <args>))?
           if (sexp.length < 3) {
-            throwError(0,0,0, {
+            throwError({
               errMsg: ",, expected an expression for the function body, but nothing's there",
               errArgLocs: [[sexp[0].val, sexp[0].location]]
             });
@@ -2467,7 +2469,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
                 return sexp.location;
               }),
               wording = extraLocs.length + " extra " + ((extraLocs.length === 1) ? "part" : "parts");
-            throwError(0,0,0, {
+            throwError({
               errMsg: ",, expected only one expression for the function body, but found ,,",
               errArgLocs: [[sexp[0].val, sexp[0].location],
               [wording, extraLocs[0]]]
@@ -2481,7 +2483,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         if (sexp[1] instanceof symbolExpr) {
           // is it just (define x)?
           if (sexp.length < 3) {
-            throwError(0,0,0, {
+            throwError({
               errMsg: ",, expected an expression after the variable ,,, but nothing's there",
               errArgLocs: [[sexp[0].val, sexp[0].location],
               [sexp[1].val, sexp[1].location]]
@@ -2493,7 +2495,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
                 return sexp.location;
               }),
               wording = extraLocs.length + " extra " + ((extraLocs.length === 1) ? "part" : "parts");
-            throwError(0,0,0, {
+            throwError({
               errMsg: ",, expected only one expression after the variable ,, but found ,,",
               errArgLocs: [[sexp[0].val, sexp[0].location],
               [sexp[1].val, sexp[1].location],
@@ -2503,7 +2505,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
           return new defVar(parseIdExpr(sexp[1]), parseExpr(sexp[2]), sexp);
         }
         // If it's (define <invalid> ...)
-        throwError(0,0,0, {
+        throwError({
           errMsg: ",, expected a variable but found ,,",
           errArgLocs: [[sexp[0].val, sexp[0].location],
           ["something else", sexp[1].location]]
@@ -2512,7 +2514,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
       var def = isStructDefinition(sexp) ? parseDefStruct(sexp) :
         isValueDefinition(sexp) ? parseDef(sexp) :
         isMultiValueDefinition ? parseMultiDef(sexp) :
-        throwError(0,0,0, {
+        throwError({
           errMsg: "Expected to find a definition, but found ,,",
           errArgLocs: [[sexp, sexp.location]]
         });
@@ -2535,25 +2537,25 @@ define(["./wescheme-support.js", 'js/js-numbers'
     function parseExprList(sexp) {
       function parseFuncCall(sexp) {
         if (isSymbolEqualTo(sexp[0], "unquote")) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",, of comma or 'unquote, not under a quasiquoting backquote",
             errArgLocs: [["misuse", sexp.location]]
           });
         }
         if (isSymbolEqualTo(sexp[0], "unquote-splicing")) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",, of ,@ or unquote-splicing, not under a quasiquoting backquote",
             errArgLocs: [["misuse", sexp.location]]
           });
         }
         if (isSymbolEqualTo(sexp[0], "else")) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",, not allowed here, because this is not a question in a clause",
             errArgLocs: [[sexp[0].val, sexp.location]]
           });
         }
         return isCons(sexp) ? new callExpr(parseExpr(sexp[0]), rest(sexp).map(parseExpr), sexp[0]) :
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",,",
             errArgLocs: [["function call sexp", sexp.location]]
           });
@@ -2562,14 +2564,14 @@ define(["./wescheme-support.js", 'js/js-numbers'
       function parseLambdaExpr(sexp) {
         // is it just (lambda)?
         if (sexp.length === 1) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: "Expected at least one variable (in parentheses) after ,,, but nothing's there",
             errArgLocs: [["lambda", sexp[0].location]]
           });
         }
         // is it just (lambda <not-list>)?
         if (!(sexp[1] instanceof Array)) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: "Expected at least one variable (in parentheses) after ,,, but found ,,",
             errArgLocs: [["lambda", sexp[0].location], ["something else", sexp[1].location]]
           });
@@ -2577,7 +2579,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         // is it a list of not-all-symbols?
         sexp[1].forEach(function(arg) {
           if (!(arg instanceof symbolExpr)) {
-            throwError(0,0,0, {
+            throwError({
               errMsg: "Expected a list of variables after ,,, but found ,,",
                 errArgLocs: [ [sexp[0].val, sexp[0].location],
                 ["something else", arg.location] ]
@@ -2586,7 +2588,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         });
         // is it just (lambda (x))?
         if (sexp.length === 2) {
-          throwError(0,0,0, {
+          throwError({
               errMsg: ",,: expected an expression for the function body, but nothing's there",
               errArgLocs: [[sexp[0].val, sexp[0].location]]
             });
@@ -2597,7 +2599,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
               return sexp.location;
             }),
             wording = extraLocs.length + " extra " + ((extraLocs.length === 1) ? "part" : "parts");
-          throwError(0,0,0, {
+          throwError({
               errMsg: ",,: expected only one expression for the function body, but found ,,",
                 errArgLocs: [
                   [sexp[0].val, sexp[0].location],
@@ -2613,14 +2615,14 @@ define(["./wescheme-support.js", 'js/js-numbers'
       function parseLocalExpr(sexp) {
         // is it just (local)?
         if (sexp.length === 1) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: "Expected at least one definition (in square brackets) after ,,, but nothing's there",
             errArgLocs: [["local", sexp[0].location]]
           });
         }
         // is it just (local <not-list>)?
         if (!(sexp[1] instanceof Array)) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",, expected a collection of definitions, but given ,,",
             errArgLocs: [[sexp[0].val, sexp[0].location],
             ["something else", sexp[1].location]]
@@ -2629,7 +2631,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         // is it a list of not-all-definitions?
         sexp[1].forEach(function(def) {
           if (!isDefinition(def)) {
-            throwError(0,0,0, {
+            throwError({
               errMsg: ",, expected a definition, but given ,,",
               errArgLocs: [[sexp[0].val, sexp[0].location],
               ["something else", def.location]]
@@ -2638,7 +2640,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         });
         // is it just (local [...defs...] ))?
         if (sexp.length === 2) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",, expected a single body, but found none",
             errArgLocs: [[sexp[0].val, sexp[0].location]]
           });
@@ -2649,7 +2651,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
               return sexp.location;
             }),
             wording = extraLocs.length + " extra " + ((extraLocs.length === 1) ? "part" : "parts");
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",, expected a single body, but found ,,",
             errArgLocs: [[sexp[0].val, sexp[0].location],
             [wording, extraLocs[0]]]
@@ -2661,14 +2663,14 @@ define(["./wescheme-support.js", 'js/js-numbers'
       function parseLetrecExpr(sexp) {
         // is it just (letrec)?
         if (sexp.length < 3) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",, expected an expression after the bindings, but nothing's there",
             errArgLocs: [[sexp[0].val, sexp[0].location]]
           });
         }
         // is it just (letrec <not-list>)?
         if (!(sexp[1] instanceof Array)) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",, expected a key/value pair, but given ,,",
             errArgLocs: [[sexp[0].val, sexp[0].location],
             ["something else", sexp[1].location]]
@@ -2677,7 +2679,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         // is it a list of not-all-bindings?
         sexp[1].forEach(function(binding) {
           if (!sexpIsCouple(binding)) {
-            throwError(0,0,0, {
+            throwError({
               errMsg: ",, expected a key/value pair, but given ,,",
               errArgLocs: [[sexp[0].val, sexp[0].location],
               ["something else", binding.location]]
@@ -2686,7 +2688,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         });
         // is it just (letrec (...bindings...) ))?
         if (sexp.length === 2) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",, expected an expression after the bindings, but nothing's there",
             errArgLocs: [[sexp[0].val, sexp[0].location]]
           });
@@ -2697,7 +2699,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
               return sexp.location;
             }),
             wording = extraLocs.length + " extra " + ((extraLocs.length === 1) ? "part" : "parts");
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",, expected a single body, but found ,,",
             errArgLocs: [[sexp[0].val, sexp[0].location],
             [wording, extraLocs[0]]]
@@ -2709,14 +2711,14 @@ define(["./wescheme-support.js", 'js/js-numbers'
       function parseLetExpr(sexp) {
         // is it just (let)?
         if (sexp.length === 1) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",, expected at least one binding (in parentheses), but nothing's there",
             errArgLocs: [[sexp[0].val, sexp[0].location]]
           });
         }
         // is it just (let <not-list>)?
         if (!(sexp[1] instanceof Array)) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",, expected sequence of key/value pairs, but given ,,",
             errArgLocs: [[sexp[0].val, sexp[0].location],
             ["something else", sexp[1].location]]
@@ -2725,7 +2727,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         // is it a list of not-all-bindings?
         sexp[1].forEach(function(binding) {
           if (!sexpIsCouple(binding)) {
-            throwError(0,0,0, {
+            throwError({
               errMsg: ",, expected a key/value pair, but given ,,",
               errArgLocs: [[sexp[0].val, sexp[0].location],
               ["something else", binding.location]]
@@ -2738,7 +2740,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
               return sexp.location;
             }),
             wording = extraLocs.length + " extra " + ((extraLocs.length === 1) ? "part" : "parts");
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",, expected a single body, but found ,,",
             errArgLocs: [[sexp[0].val, sexp[0].location],
             [wording, extraLocs[0]]]
@@ -2746,7 +2748,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         }
         // is it just (let (...bindings...) ))?
         if (sexp.length === 2) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",, expected a single body, but found none",
             errArgLocs: [[sexp[0].val, sexp[0].location]]
           });
@@ -2757,14 +2759,14 @@ define(["./wescheme-support.js", 'js/js-numbers'
       function parseLetStarExpr(sexp) {
         // is it just (let*)?
         if (sexp.length === 1) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",, expected an expression after the bindings, but nothing's there",
             errArgLocs: [[sexp[0].val, sexp[0].location]]
           });
         }
         // is it just (let* <not-list>)?
         if (!(sexp[1] instanceof Array)) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",, expected sequence of key/value pairs, but given ,,",
             errArgLocs: [[sexp[0].val, sexp[0].location],
             ["something else",  sexp[1].location]]
@@ -2773,7 +2775,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         // is it a list of not-all-bindings?
         sexp[1].forEach(function(binding) {
           if (!sexpIsCouple(binding)) {
-            throwError(0,0,0, {
+            throwError({
               errMsg: ",, expected a key/value pair, but given ,,",
               errArgLocs: [[sexp[0].val, sexp[0].location],
               ["something else", binding.location]]
@@ -2782,7 +2784,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         });
         // is it just (let* (...bindings...) ))?
         if (sexp.length === 2) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",, expected a single body, but found none",
             errArgLocs: [[sexp[0].val, sexp[0].location]]
           });
@@ -2793,7 +2795,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
               return sexp.location;
             }),
             wording = extraLocs.length + " extra " + ((extraLocs.length === 1) ? "part" : "parts");
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",, expected a single body, but found ,,",
             errArgLocs: [[sexp[0].val, sexp[0].location],
             [wording, extraLocs[0]]]
@@ -2807,7 +2809,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
       function parseIfExpr(sexp) {
         // Does it have too few parts?
         if (sexp.length < 4) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",, expected a test, a consequence, and an alternative, but not all three found",
             errArgLocs: [[sexp[0].val, sexp[0].location]]
           });
@@ -2817,7 +2819,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
           var extraLocs = sexp.slice(1).map(function(sexp) {
             return sexp.location;
           });
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",, expected only a test, a consequence, and an alternative, but found ,,",
             errArgLocs: [[sexp[0].val, sexp[0].location],
             ["more than three of these", extraLocs[0]]]
@@ -2829,7 +2831,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
       function parseBeginExpr(sexp) {
         // is it just (begin)?
         if (sexp.length < 2) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",, expected to find a body, but nothing was found",
             errArgLocs: [[(sexp[0].val, sexp[0].location)]]
           });
@@ -2840,7 +2842,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
       function parseAndExpr(sexp) {
         // and must have 2+ arguments
         if (sexp.length < 3) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",, expected at least 2 arguments, but given ,,",
             errArgLocs: [[sexp[0].val, sexp[0].location],
             [(sexp.length === 1) ? "0" : ((sexp.length - 1).toString()), sexp[1].location]]
@@ -2852,7 +2854,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
       function parseOrExpr(sexp) {
         // or must have 2+ arguments
         if (sexp.length < 3) {
-          throwError(0,0,0,
+          throwError(
             (sexp.length === 1) ? {
               errMsg: ",,: expected at least 2 arguments, but given none",
               errArgLocs: [
@@ -2878,7 +2880,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         }
         // quote must have exactly one argument
         if (sexp.length < 2) {
-          throwError(0,0,0, {
+          throwError({
               errMsg: ",, expected a single argument, but didn't find it",
               errArgLocs: [[sexp[0].val, sexp[0].location]]
             });
@@ -2887,7 +2889,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
           var extraLocs = sexp.slice(1).map(function(sexp) {
             return sexp.location;
           });
-          throwError(0,0,0, {
+          throwError({
               errMsg: ",, expected a single argument, but found ,,",
               errArgLocs: [[sexp[0].val, sexp[0].location],
               ["more than one", extraLocs[0]]
@@ -2927,7 +2929,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     function parseWhenUnlessExpr(sexp) {
       // is it just (when)?
       if (sexp.length < 3) {
-        throwError(0,0,0, {
+        throwError({
             errMsg: ",, expected a test and at least one result after " + sexp[0] + ", but nothing's there",
             errArgLocs: [[sexp[0].val, sexp[0].location]]
           });
@@ -2942,7 +2944,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     function parseCondExpr(sexp) {
       // is it just (cond)?
       if (sexp.length === 1) {
-        throwError(0,0,0, {
+        throwError({
           errMsg: ",, expected at least one clause after cond, but nothing's there",
           errArgLocs: [[sexp[0].val, sexp[0].location]]
         });
@@ -2957,21 +2959,21 @@ define(["./wescheme-support.js", 'js/js-numbers'
         var clauseLocations = [clause.location.start(), clause.location.end()];
         // is it (cond ...<not-a-clause>..)?
         if (!(clause instanceof Array)) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",, expected a clause with a question/answer, but found ,,",
             errArgLocs: [[sexp[0].val, condLocs[0]],
             ["something else", clause.location]]
           });
         }
         if (clause.length === 0) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",, expected a clause with a question/answer, but found an ,,",
             errArgLocs: [[sexp[0].val, condLocs[0]],
             ["empty part", clauseLocations[0]]]
           });
         }
         if (clause.length === 1) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",, expected a clause with a question/answer, but found a ,, with only ,,",
             errArgLocs: [[sexp[0].val, condLocs[0]],
             ["clause", clauseLocations[0]],
@@ -2983,7 +2985,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
               return sexp.location;
             }),
             wording = extraLocs.length + " parts";
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",, expected a clause with a question/answer, but found ,, with ,,",
             errArgLocs: [[sexp[0].val, condLocs[0]],
             ["a clause", clauseLocations[0]],
@@ -2998,7 +3000,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
           cpl = new couple(test, result);
         // the only un-parenthesized keyword allowed in the first slot is 'else'
         if ((plt.compiler.keywords.indexOf(test.val) > -1) && (test.val !== "else")) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",, expected an open parenthesis before " + test.val + " but found none",
             errArgLocs: [[test.val, test.location]]
           });
@@ -3016,7 +3018,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
       // throw an error that points to the next clause (rst + the one we're looking at + "cond")
       rest(sexp).forEach(function(couple, idx) {
         if (isElseClause(couple) && (idx < (numClauses - 1))) {
-          throwError(0,0,0, {
+          throwError({
               errMsg: ",,: found an ,, that isn't the last clause in its cond expression; there is ,, after it",
               errArgLocs: [["cond", condLocs[0]],
               ["else clause", couple.location],
@@ -3031,7 +3033,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     function parseCaseExpr(sexp) {
       // is it just (case)?
       if (sexp.length === 1) {
-        throwError(0,0,0, {
+        throwError({
           errMsg:  ",, expected at least one clause after case, but nothing's there",
           errArgLocs: [[sexp[0].val, sexp[0].location]]
         });
@@ -3039,7 +3041,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
       var caseLocs = [sexp[0].location, sexp.location.start(), sexp.location.end()];
       if (sexp.length === 2) {
         var msg = new types.Message([new types.MultiPart(sexp[0].val, caseLocs, true), ": expected a clause with at least one choice (in parentheses)" + " and an answer after the expression, but nothing's there"]);
-        throwError(0,0,0, {
+        throwError({
           errMsg: ",, expected a clause with at least one choice (in parentheses) and an answer after the expression, but nothing's there",
           errArgLocs: [[sexp[0].val, caseLocs[0]]]
         });
@@ -3048,14 +3050,14 @@ define(["./wescheme-support.js", 'js/js-numbers'
       function checkCaseCouple(clause) {
         var clauseLocations = [clause.location.start(), clause.location.end()];
         if (!(clause instanceof Array)) {
-          throwError(0,0,0, {
+          throwError({
             errMsg:  ",, expected a clause with at least one choice (in parentheses), but found ,,",
             errArgLocs: [[sexp[0].val, caseLocs[0]],
             ["something else", clause.location]]
           });
         }
         if (clause.length === 0) {
-          throwError(0,0,0, {
+          throwError({
             errMsg:  ",, expected at least one choice (in parentheses) and an answer, but found an ,,",
             errArgLocs: [[sexp[0].val, caseLocs[0]],
             ["empty part", clause.location]]
@@ -3063,14 +3065,14 @@ define(["./wescheme-support.js", 'js/js-numbers'
         }
         if (!((clause[0] instanceof Array) ||
             ((clause[0] instanceof symbolExpr) && isSymbolEqualTo(clause[0], "else")))) {
-          throwError(0,0,0, {
+          throwError({
             errMsg:  ",, expected 'else', or at least one choice in parentheses, but found ,,",
             errArgLocs: [[sexp[0].val, caseLocs[0]],
             ["something else", clause.location]]
           });
         }
         if (clause.length === 1) {
-          throwError(0,0,0, {
+          throwError({
             errMsg:  ",, expected a clause with a question and an answer, but found a ,, with only ,,",
             errArgLocs: [[sexp[0].val, caseLocs[0]],
             ["clause", clauseLocations[0]],
@@ -3082,7 +3084,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
               return sexp.location;
             }),
             wording = extraLocs.length + " parts";
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",, expected only one expression for the answer in the case clause, but found a ,, with ,,",
             errArgLocs: [[sexp[0].val, caseLocs[0]],
             ["clause", clauseLocations[0]],
@@ -3117,7 +3119,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
       // throw an error that points to the next clause (rst + the one we're looking at + "cond")
       clauses.forEach(function(couple, idx) {
         if (isElseClause(couple) && (idx < (numClauses - 1))) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",, found an ,, that isn't the last clause; there is ,, after it",
             errArgLocs: [["case", caseLocs[0]],
             ["else clause", couple.location],
@@ -3135,7 +3137,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         binding.stx = sexp;
         return binding;
       } else {
-        throwError(0,0,0, {
+        throwError({
           errMsg: ",, expected a sequence of key/value pairs, but given ,,",
           errArgLocs: [[sexp[0].val, sexp[0].location],
           ["something else", sexp[0].location]]
@@ -3145,12 +3147,12 @@ define(["./wescheme-support.js", 'js/js-numbers'
 
     function parseUnquoteExpr(sexp, depth) {
       if (typeof depth === 'undefined') {
-        throwError(0,0,0, {
+        throwError({
           errMsg: ",, of comma or 'unquote, not under a quasiquoting backquote",
           errArgLocs: [["misuse", sexp.location]]
         });
       } else if ((sexp.length !== 2)) {
-        throwError(0,0,0, {
+        throwError({
           errMsg: "Inside an unquote, expected to find a single argument, but found ,,",
           errArgLocs: [[(sexp.length - 1) + "", sexp.location]]
         });
@@ -3163,7 +3165,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         result.location = sexp[1].location
         return result;
       } else {
-        throwError(0,0,0, {
+        throwError({
           errMsg: ",,: depth should have been undefined, or a natural number",
           errArgLocs: [["ASSERTION FAILURE", sexp.location]]
         });
@@ -3172,12 +3174,12 @@ define(["./wescheme-support.js", 'js/js-numbers'
 
     function parseUnquoteSplicingExpr(sexp, depth) {
       if (typeof depth === 'undefined') {
-        throwError(0,0,0, {
+        throwError({
           errMsg: ",, of a ,@ or unquote-splicing, not under a quasiquoting backquote",
           errArgLocs: [["misuse", sexp.location]]
         });
       } else if ((sexp.length !== 2)) {
-        throwError(0,0,0, {
+        throwError({
           errMsg: "Inside an unquote-splicing, expected to find a single argument, but found ,,",
           errArgLocs: [[(sexp.length - 1) + "", sexp.location]]
         });
@@ -3190,7 +3192,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         result.location = sexp[1].location
         return result;
       } else {
-        throwError(0,0,0, {
+        throwError({
           errMsg: ",,: depth should have been undefined, or a natural number",
           errArgLocs: [["ASSERTION FAILURE", sexp.location]]
         });
@@ -3234,7 +3236,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
       depth = (typeof depth === 'undefined') ? 0 : depth;
       // quasiquote must have exactly one argument
       if (sexp.length < 2) {
-        throwError(0,0,0, {
+        throwError({
           errMsg: ",, expected a single argument, but did not find one",
           errArgLocs: [[sexp[0].val, sexp[0].location]]
         });
@@ -3243,7 +3245,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         var extraLocs = sexp.slice(1).map(function(sexp) {
           return sexp.location;
         });
-        throwError(0,0,0, {
+        throwError({
           errMsg: ",, expected a single argument, but found ,,",
           errArgLocs: [[sexp[0].val, sexp[0].location],
           ["more than one", extraLocs[0]]]
@@ -3251,7 +3253,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
       }
       // if the argument is (unquote-splicing....), throw an error
       if (isCons(sexp[1]) && isSymbolEqualTo(sexp[1][0], "unquote-splicing")) {
-        throwError(0,0,0, {
+        throwError({
           errMsg: ",, of ,@ or `unquote-splicing' within a quasiquoting backquote",
           errArgLocs: [["misuse", sexp.location]]
         });
@@ -3292,7 +3294,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         isLiteral(sexp) ? sexp :
         isSymbolEqualTo("quote", sexp) ? new quotedExpr(sexp) :
         isSymbolEqualTo("empty", sexp) ? new callExpr(new symbolExpr("list"), []) :
-        throwError(0,0,0, {
+        throwError({
           errMsg: ",, expected a function, but nothing's there",
           errArgLocs: [["( )", sexp.location]]
         });
@@ -3302,7 +3304,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
 
     function parseIdExpr(sexp) {
       return isSymbol(sexp) ? sexp :
-        throwError(0,0,0, {
+        throwError({
           errMsg: ",,",
           errArgLocs: [["ID", sexp.location]]
         });
@@ -3328,7 +3330,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     function parseRequire(sexp) {
       // is it (require)?
       if (sexp.length < 2) {
-        throwError(0,0,0, {
+        throwError({
           errMsg:  ",,: expected a module name after `require`, but found nothing",
           errArgLocs:  [[sexp[0].val, sexp[0].location]]
         });
@@ -3339,7 +3341,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         if (sexp[1].length < 3) {
           var partsNum = sexp[1].slice(1).length,
             partsStr = partsNum + ((partsNum === 1) ? " part" : " parts");
-          throwError(0,0,0, {
+          throwError({
             errMsg:  ",,: expected at least two strings after ,,, but found only " + partsStr,
             errArgLocs: [[sexp[0].val, sexp[0].location],
             ["lib", sexp[1][0].location]]
@@ -3349,7 +3351,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         rest(sexp[1]).forEach(function(lit) {
           if (!(isString(lit))) {
             var msg = new types.Message([new types.ColoredPart(sexp[0].val, sexp[0].location), ": expected a string for a library collection, but found ", new types.ColoredPart("something else", str.location)]);
-          throwError(0,0,0, {
+          throwError({
             errMsg:  ",,: expected a string for a library collection, but found ,,",
             errArgLocs:  [[sexp[0].val, sexp[0].location],
             ["something else", str.location]]
@@ -3358,13 +3360,13 @@ define(["./wescheme-support.js", 'js/js-numbers'
         });
         // if it's (require (planet...))
       } else if ((sexp[1] instanceof Array) && isSymbolEqualTo(sexp[1][0], "planet")) {
-        throwError(0,0,0, {
+        throwError({
           errMsg : ",,: Importing PLaneT pacakges is not supported at this time",
           errArgLocs : [[sexp[0].val, sexp[0].location]]
         });
         // if it's (require <not-a-string-or-symbol>)
       } else if (!((sexp[1] instanceof symbolExpr) || isString(sexp[1]))) {
-        throwError(0,0,0, {
+        throwError({
           errMsg : ",,: expected a module name as a string or a `(lib ...)' form, but found ,,",
           errArgLocs : [[sexp[0].val, sexp[0].location],
           ["something else", sexp[1].location]]
@@ -3391,7 +3393,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
           return p;
         }
         // everything else is NOT okay
-        throwError(0,0,0, {
+        throwError({
           errMsg: ",,: I don't recognize the syntax of this ,,",
           errArgLocs: [[sexp[0].val, sexp[0].location],
           ["clause", p.location]]
@@ -4095,12 +4097,12 @@ define(["./wescheme-support.js", 'js/js-numbers'
       var visitedIds = {}; // initialize a dictionary of ids we've seen
       lst.forEach(function(id) {
         if (!(id instanceof symbolExpr)) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: "expected identifier ,,",
             errArgLocs: [[id.val, id.location]]
           });
         } else if (visitedIds[id.val]) { // if we've seen this variable before, throw an error
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",,: found ,, that is already used ,,",
             errArgLocs: [[stx.toString(), stx.location],
             ["a variable", id.location],
@@ -4182,7 +4184,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
       // check for non-symbol arguments
       this.args.forEach(function(arg) {
         if (!(arg instanceof symbolExpr)) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",,: expected a variable but found ,,",
             errArgLocs: [[this.stx.val, this.stx.location],
             ["something else", arg.location]]
@@ -4510,7 +4512,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
 
     quotedExpr.prototype.desugar = function(pinfo) {
       if (typeof this.location === 'undefined') {
-        throwError(0,0,0, {
+        throwError({
           errMsg: ",,: Every quotedExpr should have a location",
           errArgLocs: [["ASSERTION ERROR", loc]]
         });
@@ -4527,7 +4529,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
             res.location = loc;
             return [res, pinfo];
           } else {
-        throwError(0,0,0, {
+        throwError({
           errMsg: ",,: Found an unexpected item in a quotedExpr",
           errArgLocs: [["ASSERTION ERROR", loc]]
         });
@@ -4540,7 +4542,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
 
     unquotedExpr.prototype.desugar = function(pinfo, depth) {
       if (typeof depth === 'undefined') {
-        throwError(0,0,0, {
+        throwError({
           errMsg: ",, of a ', not under a quasiquoting backquote",
           errArgLocs: [["misuse", this.location]]
         });
@@ -4562,7 +4564,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
           return [listCall, pinfo];
         }
       } else {
-        throwError(0,0,0, {
+        throwError({
           errMsg: ",,: depth should have been undefined, or a natural number",
           errArgLocs: [["ASSERTION ERROR", this.location]]
         });
@@ -4571,7 +4573,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
 
     unquoteSplice.prototype.desugar = function(pinfo, depth) {
       if (typeof depth === 'undefined') {
-        throwError(0,0,0, {
+        throwError({
           errMsg: ",, of a ,@, not under a quasiquoting backquote",
           errArgLocs: [["misuse", this.location]]
         });
@@ -4593,7 +4595,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
           return [listCall, pinfo];
         }
       } else {
-        throwError(0,0,0, {
+        throwError({
           errMsg: ",,: depth should have been undefined, or a natural number",
           errArgLocs: [["ASSERTION ERROR", this.location]]
         });
@@ -4620,7 +4622,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
 
       var loc = (typeof qqlist.location != 'undefined') ? qqlist.location :
         ((qqlist instanceof Array) && (typeof qqlist[0].location != 'undefined')) ? qqlist[0].location :
-        (throwError(0,0,0, {
+        (throwError({
           errMsg: ",,: couldn't find a usable location",
           errArgLocs: [["ASSERTION FAILURE", new Location(0,0,0,0)]]
         })),
@@ -4660,7 +4662,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
           result = this.val.desugar(pinfo, depth + 1)[0];
         }
       } else {
-        throwError(0,0,0, {
+        throwError({
           errMsg: ",,: depth should have been undefined, or a natural number",
           errArgLocs: [["ASSERTION FAILURE", this.location]]
         });
@@ -4687,7 +4689,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
       // if we're not in a clause, we'd better not see an "else"...
       if (!this.isClause && (this.val === "else")) {
         var loc = (this.parent && this.parent[0] === this) ? this.parent.location : this.location;
-        throwError(0,0,0, {
+        throwError({
             errMsg: ",,: not allowed ,, because this is not a question in a clause",
             errArgLocs: [[this.val, loc],
             ["here", loc]]
@@ -4695,7 +4697,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
       }
       // if this is a define without a parent, or if it's not the first child of the parent
       if ((this.parent && this.parent[0] !== this) && (this.val === "define")) {
-        throwError(0,0,0, {
+        throwError({
           errMsg: ",,: not allowed inside an expression",
           errArgLocs: [
             [this.val, this.location]
@@ -4705,7 +4707,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
       // if this is a keyword without a parent, or if it's not the first child of the parent
       if (!this.parent &&
         (plt.compiler.keywords.indexOf(this.val) > -1) && (this.val !== "else")) {
-        throwError(0,0,0, {
+        throwError({
           errMsg: "Expected an open parenthesis before ,,, but found none",
           errArgLocs: [[this.val, this.location]]
         });
@@ -4716,7 +4718,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
           this.location.startRow.toString(), ":",
           this.location.startCol.toString(), ": read: '.' is not supported as a symbol in WeScheme"
         ]);
-        throwError(0,0,0, {
+        throwError({
           errMsg: "read: ,, is not supported as a symbol in WeScheme",
           errArgLocs: [[".", this.location]]
         });
@@ -4725,7 +4727,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     };
     unsupportedExpr.prototype.desugar = function(pinfo) {
       this.location.span = this.errorSpan;
-      throwError(0,0,0, {
+      throwError({
         errMsg: ",,",
         errArgLocs: [[this.errorMsg, this.location]]
       });
@@ -4748,7 +4750,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     defFunc.prototype.collectDefinitions = function(pinfo) {
       this.args.forEach(function(arg) {
         if (plt.compiler.keywords.indexOf(arg.val) > -1) {
-          throwError(0,0,0, {
+          throwError({
             errMsg: ",, is a reserved keyword and cannot be used as a variable or function name",
             errArgLocs: [[arg.val, arg.location]]
           });
@@ -4821,7 +4823,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
 
       function throwModuleError(moduleName) {
         var bestGuess = plt.compiler.moduleGuess(that.spec.toString());
-        throwError(0,0,0, {
+        throwError({
           errMsg: "Found require of the module ,,, but this module is unknown." +
          ((bestGuess.name === that.spec.toString()) ? "" : " Did you mean '" + bestGuess.name + "'?"),
          errArgLocs: [[that.spec.toString(), that.spec.location]]
@@ -4926,7 +4928,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
             addProvidedName(clause.val);
             return pinfo;
           } else {
-            throwError(0,0,0, {
+            throwError({
               errMsg: "The name ',,' is not defined in the program, and cannot be provided",
               errArgLocs: [[clause.toString(), clause.location]]
             });
@@ -4943,14 +4945,14 @@ define(["./wescheme-support.js", 'js/js-numbers'
             fns.forEach(addProvidedName);
             return pinfo;
           } else {
-            throwError(0,0,0, {
+            throwError({
               errMsg: "The struct ',,' is not defined in the program, and cannot be provided",
               errArgLocs: [[clause[1].toString(), clause[1].location]]
             });
           }
           // anything with a different format throws an error
         } else {
-          throwError(0,0,0, {
+          throwError({
             errMsg: "Impossible: all invalid provide clauses should have been filtered out!",
             errArgLocs: []
           });
@@ -5063,7 +5065,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
       // if this is a keyword without a parent, or if it's not the first child of the parent
       if ((plt.compiler.keywords.indexOf(this.val) > -1) &&
         (!this.parent || this.parent[0] !== this) || (this.parent instanceof couple)) {
-        throwError(0,0,0, {
+        throwError({
           errMsg: "Expected an open parenthesis before ,,, but found none",
           errArgLocs: [[this.val, this.location]]
         });
@@ -6694,7 +6696,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
           pos: loc
         };
       } else {
-        throwError(0,0,0, {
+        throwError({
           errMsg: "Scheme-style symbol ,, not supported: use string instead",
           errArgLocs: [ [sym.val, loc] ]
         });
