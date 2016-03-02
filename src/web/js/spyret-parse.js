@@ -2951,7 +2951,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
       // is it just (cond)?
       if (sexp.length === 1) {
         throwError({
-          errMsg: ",, expected at least one clause after cond, but nothing's there",
+          errMsg: ",, expected at least one clause, but nothing's there",
           errArgLocs: [[sexp[0].val, sexp[0].location]]
         });
       }
@@ -2975,14 +2975,14 @@ define(["./wescheme-support.js", 'js/js-numbers'
           throwError({
             errMsg: ",, expected a clause with a question/answer, but found an ,,",
             errArgLocs: [[sexp[0].val, condLocs[0]],
-            ["empty part", clauseLocations[0]]]
+            ["empty part", clause.location]]
           });
         }
         if (clause.length === 1) {
           throwError({
             errMsg: ",, expected a clause with a question/answer, but found a ,, with only ,,",
             errArgLocs: [[sexp[0].val, condLocs[0]],
-            ["clause", clauseLocations[0]],
+            ["clause", clause.location],
             ["one part", clause[0].location]]
           });
         }
@@ -2994,7 +2994,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
           throwError({
             errMsg: ",, expected a clause with a question/answer, but found ,, with ,,",
             errArgLocs: [[sexp[0].val, condLocs[0]],
-            ["a clause", clauseLocations[0]],
+            ["a clause", clause.location],
             [wording, extraLocs[0]]]
           });
         }
