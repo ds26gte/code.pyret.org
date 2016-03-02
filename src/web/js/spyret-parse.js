@@ -2125,7 +2125,12 @@ define(["./wescheme-support.js", 'js/js-numbers'
       filtered = (escaped_nums.test(chunk) || special_chars.test(filtered) ? "|" + filtered + "|" : filtered);
 
       // PERF: start out assuming it's a symbol...
-      var node = new symbolExpr(filtered);
+      var node;
+      if (filtered === "true" || filtered === "false") {
+         node = new literal(filtered === "true");
+      } else {
+       node = new symbolExpr(filtered);
+      }
       // PERF: if it's not trivially a symbol, we take the hit of jsnums.fromSchemeString()
       if ((chunks.length === 1) && !/^[a-zA-Z\-\?]+$/.test(filtered)) {
         // attempt to parse using jsnums.fromSchemeString(), assign to sexp and add location
@@ -2393,7 +2398,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         // is it (define-values <not a list> )?
         if (!(sexp[1] instanceof Array)) {
           throwError({
-            errMsg: ",, expects a list of variables and a body, but found only ,,",
+            errMsg: ",, expects a list of variables and a body, but found ,,",
             errArgLocs: [[sexp[0].val, sexp[0].location],
             ["something else", sexp[1].location]]
           });
@@ -2835,11 +2840,19 @@ define(["./wescheme-support.js", 'js/js-numbers'
       function parseAndExpr(sexp) {
         // and must have 2+ arguments
         if (sexp.length < 3) {
-          throwError({
-            errMsg: ",, expected at least 2 arguments, but given ,,",
-            errArgLocs: [[sexp[0].val, sexp[0].location],
-            [(sexp.length === 1) ? "0" : ((sexp.length - 1).toString()), sexp[1].location]]
-          });
+          throwError(
+            (sexp.length === 1) ? {
+              errMsg: ",,: expected at least 2 arguments, but given none",
+              errArgLocs: [
+                [sexp[0].val, sexp[0].location]
+              ]
+            } : {
+              errMsg: ",,: expected at least 2 arguments, but given ,,",
+              errArgLocs: [
+                [sexp[0].val, sexp[0].location],
+                ["just one", sexp[1].location]
+              ]
+            });
         }
         return new andExpr(rest(sexp).map(parseExpr), sexp[0]);
       }
@@ -6543,9 +6556,9 @@ define(["./wescheme-support.js", 'js/js-numbers'
         pos: blankLoc
       },
       otherwiseStx = {
-        name: "OTHERWISE",
+        name: "OTHERWISECOLON",
         value: "otherwise:",
-        key: "'OTHERWISE:otherwise:",
+        key: "'OTHERWISECOLON:otherwise:",
         pos: blankLoc
       };
 
@@ -7770,10 +7783,15 @@ define(["./wescheme-support.js", 'js/js-numbers'
     // convert to nested, binary ands
     andExpr.prototype.toPyretAST = function() {
       var loc = this.stx.location,
-        infixOperator = {
+        infixOperator_old = {
           name: "AND",
           value: "and",
           key: "'AND:and",
+          pos: loc
+        },
+        infixOperator = {
+          name: "binop",
+          kids: [infixOperator_old],
           pos: loc
         };
       return makeBinopTreeForInfixApplication(infixOperator, this.exprs);
@@ -7783,10 +7801,15 @@ define(["./wescheme-support.js", 'js/js-numbers'
     // convert to nested, binary ors
     orExpr.prototype.toPyretAST = function() {
       var loc = this.stx.location,
-        infixOperator = {
+        infixOperator_old = {
           name: "OR",
           value: "or",
           key: "'OR:or",
+          pos: loc
+        },
+        infixOperator = {
+          name: "binop",
+          kids: [infixOperator_old],
           pos: loc
         };
       return makeBinopTreeForInfixApplication(infixOperator, this.exprs);
