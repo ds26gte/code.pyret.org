@@ -303,8 +303,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["max"] = "num-max";
     symbolMap["min"] = "num-min";
     symbolMap["modulo"] = "num-modulo";
+    symbolMap["negative?"] = "num-is-negative";
     symbolMap["number->string"] = "num-tostring";
     symbolMap["number?"] = "is-number";
+    symbolMap["positive?"] = "num-is-positive";
     symbolMap["round"] = "num-round";
     symbolMap["sin"] = "num-sin";
     symbolMap["sqr"] = "num-sqr";
@@ -312,6 +314,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["sub1"] = "num-sub1";
     symbolMap["tan"] = "num-tan";
     symbolMap["truncate"] = "num-truncate";
+    symbolMap["zero?"] = "num-is-zero";
 
     symbolMap["angle"] = "num-angle";
     symbolMap["conjugate"] = "num-conjugate";
@@ -366,6 +369,9 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["char=?"] = "string-equal";
     symbolMap["char>=?"] = "string-greater-equal";
     symbolMap["char>?"] = "string-greater";
+
+    symbolMap["symbol=?"] = "string-equal";
+    symbolMap["symbol?"] = "is-string";
 
     symbolMap["vector->list"] = "array-to-list-now";
     symbolMap["vector-length"] = "array-length";
