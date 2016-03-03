@@ -1915,7 +1915,8 @@ define(["./wescheme-support.js", 'js/js-numbers'
           errArgLocs: [["read", new Location(startCol - 1, startRow, iStart, i - iStart)]]
         });
       }
-      var chr = new literal(new types['char'](datum));
+      //var chr = new literal(new types['char'](datum));
+      var chr = new literal(new types.string(datum));
       chr.location = new Location(startCol, startRow, iStart, i - iStart);
       return chr;
     }
