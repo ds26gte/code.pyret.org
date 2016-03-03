@@ -356,6 +356,11 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["vector-set!"] = "array-set-now";
     symbolMap["vector?"] = "is-array";
 
+    symbolMap["procedure?"] = "is-function";
+    symbolMap["void"] = "_spyret_void";
+    symbolMap["check-expect"] = "_spyret_check_expect";
+    symbolMap["EXAMPLE"] = "_spyret_check_expect";
+
     // symbol expression (ID)
     function symbolExpr(val, stx) {
       Program.call(this);
