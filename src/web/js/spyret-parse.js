@@ -297,10 +297,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["cons"] = "link";
     symbolMap["append"] = "spyret_append_2";
 
-    symbolMap["*"] = "_times";
-    symbolMap["+"] = "_spyret_plus_numeric";
-    symbolMap["-"] = "_minus";
-    symbolMap["/"] = "_divide";
+    symbolMap["+"] = "_spyret_plus";
+    symbolMap["-"] = "_spyret_minus";
+    symbolMap["*"] = "_spyret_times";
+    symbolMap["/"] = "_spyret_divide";
     symbolMap["<"] = "_lessthan";
     symbolMap["<="] = "_lessequal";
     symbolMap["="] = "num-equal";
@@ -329,6 +329,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["real-part"] = "num-realpart";
     symbolMap["rest"] = "list-rest";
     symbolMap["round"] = "num-round";
+
     symbolMap["string->number"] = "string-tonumber";
     symbolMap["string-ci<=?"] = "string-ci-less-equal";
     symbolMap["string-ci<?"] = "string-ci-less";
@@ -344,6 +345,9 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["string>=?"] = "string-greater-equal";
     symbolMap["string>?"] = "string-greater";
     symbolMap["string?"] = "is-string";
+    symbolMap["substring"] = "_spyret_substring";
+    symbolMap["explode"] = "string-explode";
+
     symbolMap["sub1"] = "num-sub1";
     symbolMap["truncate"] = "num-truncate";
     symbolMap["vector->list"] = "array-to-list-now";
