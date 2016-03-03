@@ -360,6 +360,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["void"] = "_spyret_void";
     symbolMap["check-expect"] = "_spyret_check_expect";
     symbolMap["EXAMPLE"] = "_spyret_check_expect";
+    symbolMap["check-within"] = "_spyret_check_within";
 
     // symbol expression (ID)
     function symbolExpr(val, stx) {
