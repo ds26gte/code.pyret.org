@@ -314,7 +314,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["sub1"] = "num-sub1";
     symbolMap["tan"] = "num-tan";
     symbolMap["truncate"] = "num-truncate";
-    symbolMap["zero?"] = "num-is-zero";
+    symbolMap["zero?"] = "_spyret_zero_p";
 
     symbolMap["angle"] = "num-angle";
     symbolMap["conjugate"] = "num-conjugate";
@@ -357,6 +357,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["string?"] = "is-string";
     symbolMap["substring"] = "_spyret_substring";
 
+    symbolMap["char?"] = "_spyret_char_p";
     symbolMap["char-ci<=?"] = "string-ci-less-equal";
     symbolMap["char-ci<?"] = "string-ci-less";
     symbolMap["char-ci=?"] = "string-ci-equal";
@@ -369,6 +370,8 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["char=?"] = "string-equal";
     symbolMap["char>=?"] = "string-greater-equal";
     symbolMap["char>?"] = "string-greater";
+    symbolMap["char->integer"] = "_spyret_char_to_integer";
+    symbolMap["integer->char"] = "_spyret_integer_to_char";
 
     symbolMap["symbol=?"] = "string-equal";
     symbolMap["symbol?"] = "is-string";
