@@ -323,6 +323,9 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["real-part"] = "num-realpart";
 
     symbolMap["append"] = "spyret_append_2";
+    symbolMap["assoc"] = "list-assoc";
+    symbolMap["assq"] = "list-assoc";
+    symbolMap["assv"] = "list-assoc";
     symbolMap["car"] = "list-first";
     symbolMap["cdr"] = "list-rest";
     symbolMap["cons"] = "link";
