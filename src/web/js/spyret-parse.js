@@ -382,6 +382,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["vector-set!"] = "array-set-now";
     symbolMap["vector?"] = "is-array";
 
+    symbolMap["=~"] = "_spyret_check_within";
     symbolMap["EXAMPLE"] = "_spyret_check_expect";
     symbolMap["bitmap/url"] = "image-url";
     symbolMap["check-expect"] = "_spyret_check_expect";
