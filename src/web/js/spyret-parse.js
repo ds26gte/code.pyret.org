@@ -280,11 +280,11 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["+"] = "_spyret_plus";
     symbolMap["-"] = "_spyret_minus";
     symbolMap["/"] = "_spyret_divide";
-    symbolMap["<"] = "_lessthan";
-    symbolMap["<="] = "_lessequal";
-    symbolMap["="] = "num-equal";
-    symbolMap[">"] = "_greaterthan";
-    symbolMap[">="] = "_greaterequal";
+    symbolMap["<"] = "_spyret_lt";
+    symbolMap["<="] = "_spyret_le";
+    symbolMap["="] = "_spyret_eq";
+    symbolMap[">"] = "_spyret_gt";
+    symbolMap[">="] = "_spyret_ge";
     symbolMap["abs"] = "num-abs";
     symbolMap["acos"] = "num-acos";
     symbolMap["add1"] = "num-add1";
@@ -344,35 +344,35 @@ define(["./wescheme-support.js", 'js/js-numbers'
     //symbolMap["string=?"] = "equal-always";
     symbolMap["explode"] = "string-explode";
     symbolMap["string->number"] = "string-tonumber";
-    symbolMap["string-ci<=?"] = "string-ci-less-equal";
-    symbolMap["string-ci<?"] = "string-ci-less";
-    symbolMap["string-ci=?"] = "string-ci-equal";
-    symbolMap["string-ci>=?"] = "string-ci-greater-equal";
-    symbolMap["string-ci>?"] = "string-ci-greater";
+    symbolMap["string-ci<=?"] = "_spyret_string_ci_le";
+    symbolMap["string-ci<?"] = "_spyret_string_ci_lt";
+    symbolMap["string-ci=?"] = "_spyret_string_ci_eq";
+    symbolMap["string-ci>=?"] = "_spyret_string_ci_ge";
+    symbolMap["string-ci>?"] = "_spyret_string_ci-gt";
     symbolMap["string-downcase"] = "string-tolower";
     symbolMap["string-ref"] = "string-char-at";
     symbolMap["string-upcase"] = "string-toupper";
-    symbolMap["string<=?"] = "string-less-equal";
-    symbolMap["string<?"] = "string-less";
-    symbolMap["string=?"] = "string-equal";
-    symbolMap["string>=?"] = "string-greater-equal";
-    symbolMap["string>?"] = "string-greater";
+    symbolMap["string<=?"] = "_spyret_string_le";
+    symbolMap["string<?"] = "_spyret_string_lt";
+    symbolMap["string=?"] = "_spyret_string_eq";
+    symbolMap["string>=?"] = "_spyret_string_ge";
+    symbolMap["string>?"] = "_spyret_string_gt";
     symbolMap["string?"] = "is-string";
     symbolMap["substring"] = "_spyret_substring";
 
     symbolMap["char?"] = "_spyret_char_p";
-    symbolMap["char-ci<=?"] = "string-ci-less-equal";
-    symbolMap["char-ci<?"] = "string-ci-less";
-    symbolMap["char-ci=?"] = "string-ci-equal";
-    symbolMap["char-ci>=?"] = "string-ci-greater-equal";
-    symbolMap["char-ci>?"] = "string-ci-greater";
+    symbolMap["char-ci<=?"] = "_spyret_string_ci_le";
+    symbolMap["char-ci<?"] = "_spyret_string_ci_lt";
+    symbolMap["char-ci=?"] = "_spyret_string_ci_eq";
+    symbolMap["char-ci>=?"] = "_spyret_string_ci_ge";
+    symbolMap["char-ci>?"] = "_spyret_string_ci_gt";
     symbolMap["char-downcase"] = "string-tolower";
     symbolMap["char-upcase"] = "string-toupper";
-    symbolMap["char<=?"] = "string-less-equal";
-    symbolMap["char<?"] = "string-less";
-    symbolMap["char=?"] = "string-equal";
-    symbolMap["char>=?"] = "string-greater-equal";
-    symbolMap["char>?"] = "string-greater";
+    symbolMap["char<=?"] = "_spyret_string_le";
+    symbolMap["char<?"] = "_spyret_string_lt";
+    symbolMap["char=?"] = "_spyret_string_eq";
+    symbolMap["char>=?"] = "_spyret_string_ge";
+    symbolMap["char>?"] = "_spyret_string_gt";
     symbolMap["char->integer"] = "_spyret_char_to_integer";
     symbolMap["integer->char"] = "_spyret_integer_to_char";
 
@@ -1754,8 +1754,19 @@ define(["./wescheme-support.js", 'js/js-numbers'
           switch (p) {
             // CHARACTERS
             case '\\':
+              /*
               datum = readChar(str, i - 1);
               i += datum.location.span - 1;
+              */
+              datum = readChar(str, i - 1);
+              datum.location.startChar--;
+              datum.location.span++;
+              endOfError = i + datum.location.span;
+              throwError({
+                errMsg: ",,: WeScheme does not support the '#\\' notation for characters; " +
+                "use one-character strings instead",
+                errArgLocs: [["read", datum.location]]
+              });
               break;
               // BYTE-STRINGS (unsupported)
             case '"':
