@@ -322,7 +322,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["magnitude"] = "num-magnitude";
     symbolMap["real-part"] = "num-realpart";
 
-    symbolMap["append"] = "spyret_append_2";
+    symbolMap["append"] = "_spyret_append";
     symbolMap["assoc"] = "list-assoc";
     symbolMap["assq"] = "list-assoc";
     symbolMap["assv"] = "list-assoc";
@@ -343,7 +343,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
 
     //symbolMap["string=?"] = "equal-always";
     symbolMap["explode"] = "string-explode";
+    symbolMap["list->string"] = "_spyret_list_to_string";
+    symbolMap["string->list"] = "string-explode";
     symbolMap["string->number"] = "string-tonumber";
+    symbolMap["string-append"] = "_spyret_string_append";
     symbolMap["string-ci<=?"] = "_spyret_string_ci_le";
     symbolMap["string-ci<?"] = "_spyret_string_ci_lt";
     symbolMap["string-ci=?"] = "_spyret_string_ci_eq";
