@@ -332,6 +332,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["cons?"] = "is-link";
     symbolMap["empty?"] = "is-empty";
     symbolMap["first"] = "list-first";
+    symbolMap["foldl"] = "fold";
     symbolMap["length"] = "list-length";
     symbolMap["list->vector"] = "array-from-list";
     symbolMap["list?"] = "is-link";
