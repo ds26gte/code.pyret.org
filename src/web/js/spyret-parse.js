@@ -311,6 +311,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["number?"] = "is-number";
     symbolMap["positive?"] = "num-is-positive";
     symbolMap["round"] = "num-round";
+    symbolMap["sgn"] = "_spyret_sgn";
     symbolMap["sin"] = "num-sin";
     symbolMap["sinh"] = "_spyret_sinh";
     symbolMap["sqr"] = "num-sqr";
