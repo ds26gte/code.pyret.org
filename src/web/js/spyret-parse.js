@@ -364,20 +364,22 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["string?"] = "is-string";
     symbolMap["substring"] = "_spyret_substring";
 
-    symbolMap["char?"] = "_spyret_char_p";
+    symbolMap["char->integer"] = "_spyret_char_to_integer";
+    symbolMap["char-alphabetic?"] = "_spyret_char_alphabetic_p";
     symbolMap["char-ci<=?"] = "_spyret_string_ci_le";
     symbolMap["char-ci<?"] = "_spyret_string_ci_lt";
     symbolMap["char-ci=?"] = "_spyret_string_ci_eq";
     symbolMap["char-ci>=?"] = "_spyret_string_ci_ge";
     symbolMap["char-ci>?"] = "_spyret_string_ci_gt";
     symbolMap["char-downcase"] = "string-tolower";
+    symbolMap["char-numeric?"] = "_spyret_char_numeric_p";
     symbolMap["char-upcase"] = "string-toupper";
     symbolMap["char<=?"] = "_spyret_string_le";
     symbolMap["char<?"] = "_spyret_string_lt";
     symbolMap["char=?"] = "_spyret_string_eq";
     symbolMap["char>=?"] = "_spyret_string_ge";
     symbolMap["char>?"] = "_spyret_string_gt";
-    symbolMap["char->integer"] = "_spyret_char_to_integer";
+    symbolMap["char?"] = "_spyret_char_p";
     symbolMap["integer->char"] = "_spyret_integer_to_char";
 
     symbolMap["symbol=?"] = "string-equal";
