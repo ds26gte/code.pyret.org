@@ -297,8 +297,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["exp"] = "num-exp";
     symbolMap["expt"] = "num-expr";
     symbolMap["floor"] = "num-floor";
+    symbolMap["gcd"] = "_spyret_gcd";
     symbolMap["inexact->exact"] = "num-to-complexrational";
     symbolMap["inexact?"] = "num-is-complexroughnum";
+    symbolMap["lcm"] = "_spyret_lcm";
     symbolMap["log"] = "num-log";
     symbolMap["max"] = "num-max";
     symbolMap["min"] = "num-min";
