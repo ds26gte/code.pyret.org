@@ -292,6 +292,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["atan"] = "num-atan";
     symbolMap["ceiling"] = "num-ceiling";
     symbolMap["cos"] = "num-cos";
+    symbolMap["cosh"] = "_spyret_cosh";
     symbolMap["exact->inexact"] = "num-to-complexroughnum";
     symbolMap["exact?"] = "num-is-complexrational";
     symbolMap["exp"] = "num-exp";
@@ -311,6 +312,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["positive?"] = "num-is-positive";
     symbolMap["round"] = "num-round";
     symbolMap["sin"] = "num-sin";
+    symbolMap["sinh"] = "_spyret_sinh";
     symbolMap["sqr"] = "num-sqr";
     symbolMap["sqrt"] = "num-sqrt";
     symbolMap["sub1"] = "num-sub1";
