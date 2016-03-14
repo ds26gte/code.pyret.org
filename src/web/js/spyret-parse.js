@@ -374,8 +374,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["char-ci>=?"] = "_spyret_string_ci_ge";
     symbolMap["char-ci>?"] = "_spyret_string_ci_gt";
     symbolMap["char-downcase"] = "string-tolower";
+    symbolMap["char-lower-case?"] = "_spyret_char_lower_case_p";
     symbolMap["char-numeric?"] = "_spyret_char_numeric_p";
     symbolMap["char-upcase"] = "string-toupper";
+    symbolMap["char-upper-case?"] = "_spyret_char_upper_case_p";
     symbolMap["char<=?"] = "_spyret_string_le";
     symbolMap["char<?"] = "_spyret_string_lt";
     symbolMap["char=?"] = "_spyret_string_eq";
