@@ -339,6 +339,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["cons"] = "link";
     symbolMap["cons?"] = "is-link";
     symbolMap["empty?"] = "is-empty";
+    symbolMap["null?"] = "is-empty";
     symbolMap["first"] = "list-first";
     symbolMap["foldl"] = "fold";
     symbolMap["length"] = "list-length";
@@ -410,6 +411,8 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["identity"] = "_spyret_identity";
     symbolMap["procedure?"] = "is-function";
     symbolMap["void"] = "_spyret_void";
+
+    symbolMap["null"] = "empty";
 
     // symbol expression (ID)
     function symbolExpr(val, stx) {
