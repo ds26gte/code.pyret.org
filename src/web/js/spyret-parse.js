@@ -404,6 +404,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["bitmap/url"] = "image-url";
     symbolMap["check-expect"] = "_spyret_check_expect";
     symbolMap["check-within"] = "_spyret_check_within";
+    symbolMap["identity"] = "_spyret_identity";
     symbolMap["procedure?"] = "is-function";
     symbolMap["void"] = "_spyret_void";
 
