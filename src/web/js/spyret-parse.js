@@ -296,7 +296,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["exact->inexact"] = "num-to-complexroughnum";
     symbolMap["exact?"] = "num-is-complexrational";
     symbolMap["exp"] = "num-exp";
-    symbolMap["expt"] = "num-expr";
+    symbolMap["expt"] = "num-expt";
     symbolMap["floor"] = "num-floor";
     symbolMap["gcd"] = "_spyret_gcd";
     symbolMap["inexact->exact"] = "num-to-complexrational";
