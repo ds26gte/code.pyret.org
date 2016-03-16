@@ -412,8 +412,8 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["identity"] = "_spyret_identity";
     symbolMap["procedure?"] = "is-function";
     symbolMap["void"] = "_spyret_void";
-
     symbolMap["null"] = "empty";
+    symbolMap["format"] = "_spyret_format";
 
     // symbol expression (ID)
     function symbolExpr(val, stx) {
