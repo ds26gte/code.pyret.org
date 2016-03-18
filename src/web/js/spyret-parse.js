@@ -2203,6 +2203,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
       var node;
       if (filtered === "true" || filtered === "false") {
          node = new literal(filtered === "true");
+      } else if (filtered === "pi") {
+        filtered = "#i" + String(Math.PI);
+      } else if (filtered === "e") {
+        filtered = "#i" + String(Math.E);
       } else {
        node = new symbolExpr(filtered);
       }
@@ -6854,12 +6858,13 @@ define(["./wescheme-support.js", 'js/js-numbers'
       jsnums.ComplexRational.prototype.toPyretAST =
       jsnums.ComplexRoughnum.prototype.toPyretAST =
       function() {
+        var pvalue = this.toString(); // not this.stx
         var loc = this.location;
         return {
           name: "num-expr",
           kids: [{
-            value: this.stx,
-            key: "'NUMBER:" + this.stx,
+            value: pvalue,
+            key: "'NUMBER:" + pvalue,
             name: "NUMBER",
             pos: loc
           }],
