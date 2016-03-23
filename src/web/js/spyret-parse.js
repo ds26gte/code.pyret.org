@@ -297,6 +297,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["cos"] = "num-cos";
     symbolMap["cosh"] = "_spyret_cosh";
     symbolMap["current-seconds"] = "_spyret_current_seconds";
+    symbolMap["denominator"] = "_spyret_denominator";
     symbolMap["exact->inexact"] = "num-to-complexroughnum";
     symbolMap["exact?"] = "num-is-complexrational";
     symbolMap["exp"] = "num-exp";
@@ -313,6 +314,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["negative?"] = "num-is-negative";
     symbolMap["number->string"] = "num-tostring";
     symbolMap["number?"] = "is-number";
+    symbolMap["numerator"] = "_spyret_numerator";
     symbolMap["positive?"] = "num-is-positive";
     symbolMap["round"] = "num-round";
     symbolMap["sgn"] = "_spyret_sgn";
@@ -3734,8 +3736,6 @@ define(["./wescheme-support.js", 'js/js-numbers'
       ["rational?", 1],
       ["quotient", 2],
       ["remainder", 2],
-      ["numerator", 1],
-      ["denominator", 1],
       ["integer?", 1],
       ["real?", 1],
       ["abs", 1],
