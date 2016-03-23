@@ -325,6 +325,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
 
     symbolMap["false?"] = "_spyret_false_p";
     symbolMap["not"] = "_spyret_false_p";
+    symbolMap["boolean=?"] = "_spyret_boolean_eq";
 
     symbolMap["angle"] = "num-angle";
     symbolMap["conjugate"] = "num-conjugate";
