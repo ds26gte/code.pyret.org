@@ -298,6 +298,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["cosh"] = "_spyret_cosh";
     symbolMap["current-seconds"] = "_spyret_current_seconds";
     symbolMap["denominator"] = "_spyret_denominator";
+    symbolMap["even?"] = "_spyret_even_p";
     symbolMap["exact->inexact"] = "num-to-complexroughnum";
     symbolMap["exact?"] = "num-is-complexrational";
     symbolMap["exp"] = "num-exp";
@@ -315,6 +316,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["number->string"] = "num-tostring";
     symbolMap["number?"] = "is-number";
     symbolMap["numerator"] = "_spyret_numerator";
+    symbolMap["odd?"] = "_spyret_odd_p";
     symbolMap["positive?"] = "num-is-positive";
     symbolMap["round"] = "num-round";
     symbolMap["sgn"] = "_spyret_sgn";
@@ -3728,8 +3730,6 @@ define(["./wescheme-support.js", 'js/js-numbers'
       ,
       ["=~", 3],
       ["number->string", 1],
-      ["even?", 1],
-      ["odd?", 1],
       ["positive?", 1],
       ["negative?", 1],
       ["number?", 1],
