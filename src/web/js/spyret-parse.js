@@ -6728,6 +6728,11 @@ define(["./wescheme-support.js", 'js/js-numbers'
       return {
         name: "binding",
         kids: [{
+          name: "SHADOW",
+          value: "shadow",
+          key: "'SHADOW:shadow",
+          pos: loc
+        }, {
           name: "NAME",
           value: psym,
           key: "'NAME:" + psym,
