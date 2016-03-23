@@ -318,6 +318,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["numerator"] = "_spyret_numerator";
     symbolMap["odd?"] = "_spyret_odd_p";
     symbolMap["positive?"] = "num-is-positive";
+    symbolMap["random"] = "_spyret_random";
     symbolMap["round"] = "num-round";
     symbolMap["sgn"] = "_spyret_sgn";
     symbolMap["sin"] = "num-sin";
