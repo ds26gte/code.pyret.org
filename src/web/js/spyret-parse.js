@@ -332,6 +332,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["magnitude"] = "num-magnitude";
     symbolMap["real-part"] = "num-realpart";
 
+    symbolMap["andmap"] = "_spyret_andmap";
     symbolMap["append"] = "_spyret_append";
     symbolMap["assoc"] = "list-assoc";
     symbolMap["assq"] = "list-assoc";
@@ -341,16 +342,18 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["cons"] = "link";
     symbolMap["cons?"] = "is-link";
     symbolMap["empty?"] = "is-empty";
-    symbolMap["null?"] = "is-empty";
     symbolMap["first"] = "list-first";
     symbolMap["foldl"] = "fold";
     symbolMap["length"] = "list-length";
     symbolMap["list->vector"] = "array-from-list";
     symbolMap["list?"] = "is-link";
+    symbolMap["map"] = "_spyret_map";
     symbolMap["member"] = "list-member";
     symbolMap["memq"] = "list-member";
     symbolMap["memv"] = "list-member";
-    symbolMap["ormap"] = "any";
+    symbolMap["null?"] = "is-empty";
+    symbolMap["ormap"] = "_spyret_ormap";
+    //symbolMap["ormap"] = "any";
     symbolMap["rest"] = "list-rest";
 
     //symbolMap["string=?"] = "equal-always";
