@@ -307,6 +307,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["gcd"] = "_spyret_gcd";
     symbolMap["inexact->exact"] = "num-to-complexrational";
     symbolMap["inexact?"] = "num-is-complexroughnum";
+    symbolMap["integer?"] = "_spyret_integer_p";
     symbolMap["lcm"] = "_spyret_lcm";
     symbolMap["log"] = "num-log";
     symbolMap["max"] = "num-max";
@@ -319,6 +320,8 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["odd?"] = "_spyret_odd_p";
     symbolMap["positive?"] = "num-is-positive";
     symbolMap["random"] = "_spyret_random";
+    symbolMap["rational?"] = "_spyret_rational_p";
+    symbolMap["real?"] = "_spyret_real_p";
     symbolMap["round"] = "num-round";
     symbolMap["sgn"] = "_spyret_sgn";
     symbolMap["sin"] = "num-sin";
@@ -3734,11 +3737,8 @@ define(["./wescheme-support.js", 'js/js-numbers'
       ["positive?", 1],
       ["negative?", 1],
       ["number?", 1],
-      ["rational?", 1],
       ["quotient", 2],
       ["remainder", 2],
-      ["integer?", 1],
-      ["real?", 1],
       ["abs", 1],
       ["acos", 1],
       ["add1", 1],
