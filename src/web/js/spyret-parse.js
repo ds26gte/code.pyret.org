@@ -413,6 +413,9 @@ define(["./wescheme-support.js", 'js/js-numbers'
 
     symbolMap["symbol=?"] = "string-equal";
     symbolMap["symbol?"] = "is-string";
+    symbolMap["symbol->string"] = "_spyret_identity";
+    symbolMap["string->symbol"] = "_spyret_identity";
+    symbolMap["string-copy"] = "_spyret_identity"; //not quite, but why when strings are immutable?
 
     symbolMap["vector->list"] = "array-to-list-now";
     symbolMap["vector-length"] = "array-length";
