@@ -319,9 +319,11 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["numerator"] = "_spyret_numerator";
     symbolMap["odd?"] = "_spyret_odd_p";
     symbolMap["positive?"] = "num-is-positive";
+    symbolMap["quotient"] = "_spyret_quotient";
     symbolMap["random"] = "_spyret_random";
     symbolMap["rational?"] = "_spyret_rational_p";
     symbolMap["real?"] = "_spyret_real_p";
+    symbolMap["remainder"] = "_spyret_remainder";
     symbolMap["round"] = "num-round";
     symbolMap["sgn"] = "_spyret_sgn";
     symbolMap["sin"] = "num-sin";
