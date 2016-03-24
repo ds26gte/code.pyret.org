@@ -371,6 +371,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     //symbolMap["string=?"] = "equal-always";
     symbolMap["explode"] = "string-explode";
     symbolMap["list->string"] = "_spyret_list_to_string";
+    symbolMap["string"] = "_spyret_string";
     symbolMap["string->list"] = "string-explode";
     symbolMap["string->number"] = "_spyret_string_to_number";
     symbolMap["string-append"] = "_spyret_string_append";
