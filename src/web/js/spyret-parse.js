@@ -426,8 +426,38 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["vector-set!"] = "array-set-now";
     symbolMap["vector?"] = "is-array";
 
+    symbolMap["above/align"] = "above-align";
+    symbolMap["angle?"] = "is-angle";
+    symbolMap["beside/align"] = "beside-align";
+    symbolMap["bitmap/url"] = "bitmap-url";
+    symbolMap["color-list->image"] = "color-list-to-image";
+    symbolMap["image->color-list"] = "image-to-color-list";
+    symbolMap["image-color?"] = "is-image-color";
+    symbolMap["image?"] = "is-image";
+    symbolMap["mode?"] = "is-mode";
+    symbolMap["overlay/align"] = "overlay-align";
+    symbolMap["overlay/xy"] = "overlay-xy";
+    symbolMap["place-image/align"] = "place-image-align";
+    symbolMap["scale/xy"] = "scale-xy";
+    symbolMap["scene+line"] = "scene-line";
+    symbolMap["side-count?"] = "is-side-count";
+    symbolMap["step-count?"] = "is-step-count";
+    symbolMap["text/font"] = "text-font";
+    symbolMap["triangle/aas"] = "triangle-aas";
+    symbolMap["triangle/asa"] = "triangle-asa";
+    symbolMap["triangle/ass"] = "triangle-ass";
+    symbolMap["triangle/saa"] = "triangle-saa";
+    symbolMap["triangle/sas"] = "triangle-sas";
+    symbolMap["triangle/ssa"] = "triangle-ssa";
+    symbolMap["triangle/sss"] = "triangle-sss";
+    symbolMap["underlay/align"] = "underlay-align";
+    symbolMap["underlay/xy"] = "underlay-xy";
+    symbolMap["x-place?"] = "is-x-place";
+    symbolMap["y-place?"] = "is-y-place";
+
+    symbolMap["key=?"] = "is-key-equal";
+
     symbolMap["EXAMPLE"] = "_spyret_check_expect";
-    symbolMap["bitmap/url"] = "image-url";
     symbolMap["check-expect"] = "_spyret_check_expect";
     symbolMap["check-within"] = "_spyret_check_within";
     symbolMap["identity"] = "_spyret_identity";
