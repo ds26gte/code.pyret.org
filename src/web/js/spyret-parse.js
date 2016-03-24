@@ -372,7 +372,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["explode"] = "string-explode";
     symbolMap["list->string"] = "_spyret_list_to_string";
     symbolMap["string->list"] = "string-explode";
-    symbolMap["string->number"] = "string-tonumber";
+    symbolMap["string->number"] = "_spyret_string_to_number";
     symbolMap["string-append"] = "_spyret_string_append";
     symbolMap["string-ci<=?"] = "_spyret_string_ci_le";
     symbolMap["string-ci<?"] = "_spyret_string_ci_lt";
