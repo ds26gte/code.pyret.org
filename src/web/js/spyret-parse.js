@@ -351,8 +351,8 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["assoc"] = "list-assoc";
     symbolMap["assq"] = "list-assoc";
     symbolMap["assv"] = "list-assoc";
-    symbolMap["car"] = "list-first";
-    symbolMap["cdr"] = "list-rest";
+    //symbolMap["car"] = "list-first";
+    //symbolMap["cdr"] = "list-rest";
     symbolMap["cons"] = "link";
     symbolMap["cons?"] = "is-link";
     symbolMap["empty?"] = "is-empty";
@@ -369,6 +369,21 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["ormap"] = "_spyret_ormap";
     //symbolMap["ormap"] = "any";
     symbolMap["rest"] = "list-rest";
+
+    symbolMap["caaar"] = "_spyret_caaar";
+    symbolMap["caadr"] = "_spyret_caadr";
+    symbolMap["caar"] = "_spyret_caar";
+    symbolMap["cadar"] = "_spyret_cadar";
+    symbolMap["caddr"] = "_spyret_caddr";
+    symbolMap["cadr"] = "_spyret_cadr";
+    symbolMap["car"] = "_spyret_car";
+    symbolMap["cdaar"] = "_spyret_cdaar";
+    symbolMap["cdadr"] = "_spyret_cdadr";
+    symbolMap["cdar"] = "_spyret_cdar";
+    symbolMap["cddar"] = "_spyret_cddar";
+    symbolMap["cdddr"] = "_spyret_cdddr";
+    symbolMap["cddr"] = "_spyret_cddr";
+    symbolMap["cdr"] = "_spyret_cdr";
 
     //symbolMap["string=?"] = "equal-always";
     symbolMap["explode"] = "string-explode";
