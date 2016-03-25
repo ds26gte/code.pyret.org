@@ -351,12 +351,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["assoc"] = "list-assoc";
     symbolMap["assq"] = "list-assoc";
     symbolMap["assv"] = "list-assoc";
-    //symbolMap["car"] = "list-first";
-    //symbolMap["cdr"] = "list-rest";
     symbolMap["cons"] = "link";
     symbolMap["cons?"] = "is-link";
     symbolMap["empty?"] = "is-empty";
-    symbolMap["first"] = "list-first";
+    symbolMap["first"] = "_spyret_car";
     symbolMap["foldl"] = "fold";
     symbolMap["length"] = "list-length";
     symbolMap["list->vector"] = "array-from-list";
@@ -366,9 +364,8 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["memq"] = "list-member";
     symbolMap["memv"] = "list-member";
     symbolMap["null?"] = "is-empty";
-    symbolMap["ormap"] = "_spyret_ormap";
-    //symbolMap["ormap"] = "any";
-    symbolMap["rest"] = "list-rest";
+    symbolMap["ormap"] = "_spyret_ormap"; // any, but variadic
+    symbolMap["rest"] = "_spyret_cdr";
 
     symbolMap["caaar"] = "_spyret_caaar";
     symbolMap["caadr"] = "_spyret_caadr";
@@ -4785,7 +4782,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
       listSym.location = loc
       var acc = new callExpr(listSym, [])
       for (var i = appendArgs.length - 1; i >= 0; i--) {
-        var appendSym = new symbolExpr('spyret_append_2')
+        var appendSym = new symbolExpr("append")
         appendSym.location = loc
         acc = new callExpr(appendSym, [appendArgs[i], acc])
         acc.location = loc
@@ -8076,7 +8073,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     var ws_ast_j = JSON.stringify(ws_ast);
 
     //debug
-    console.log('ws_ast_j = ' + ws_ast_j);
+    //console.log('ws_ast_j = ' + ws_ast_j);
 
     return ws_ast_j;
   }
