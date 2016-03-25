@@ -449,6 +449,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["image->color-list"] = "image-to-color-list";
     symbolMap["image-color?"] = "is-image-color";
     symbolMap["image?"] = "is-image";
+    symbolMap["posn?"] = "is-posn";
     symbolMap["color?"] = "is-color";
     symbolMap["mode?"] = "is-mode";
     symbolMap["overlay/align"] = "overlay-align";
