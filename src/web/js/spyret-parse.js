@@ -353,9 +353,12 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["assv"] = "list-assoc";
     symbolMap["cons"] = "link";
     symbolMap["cons?"] = "is-link";
+    symbolMap["eighth"] = "_spyret_eighth";
     symbolMap["empty?"] = "is-empty";
+    symbolMap["fifth"] = "_spyret_fifth";
     symbolMap["first"] = "_spyret_car";
     symbolMap["foldl"] = "fold";
+    symbolMap["fourth"] = "_spyret_fourth";
     symbolMap["length"] = "list-length";
     symbolMap["list->vector"] = "array-from-list";
     symbolMap["list?"] = "is-link";
@@ -366,6 +369,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["null?"] = "is-empty";
     symbolMap["ormap"] = "_spyret_ormap"; // any, but variadic
     symbolMap["rest"] = "_spyret_cdr";
+    symbolMap["second"] = "_spyret_cadr";
+    symbolMap["seventh"] = "_spyret_seventh";
+    symbolMap["sixth"] = "_spyret_sixth";
+    symbolMap["third"] = "_spyret_caddr";
 
     symbolMap["caaar"] = "_spyret_caaar";
     symbolMap["caadr"] = "_spyret_caadr";
