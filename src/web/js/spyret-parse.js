@@ -492,6 +492,11 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["null"] = "empty";
     symbolMap["format"] = "_spyret_format";
 
+    symbolMap["false"] = "_spyret_false";
+    symbolMap["true"] = "_spyret_true";
+    symbolMap["pi"] = "_spyret_pi";
+    symbolMap["e"] = "_spyret_e";
+
     // symbol expression (ID)
     function symbolExpr(val, stx) {
       Program.call(this);
@@ -2277,16 +2282,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
       filtered = (escaped_nums.test(chunk) || special_chars.test(filtered) ? "|" + filtered + "|" : filtered);
 
       // PERF: start out assuming it's a symbol...
-      var node;
-      if (filtered === "true" || filtered === "false") {
-         node = new literal(filtered === "true");
-      } else if (filtered === "pi") {
-        filtered = "#i" + String(Math.PI);
-      } else if (filtered === "e") {
-        filtered = "#i" + String(Math.E);
-      } else {
-       node = new symbolExpr(filtered);
-      }
+      var node = new symbolExpr(filtered);
       // PERF: if it's not trivially a symbol, we take the hit of jsnums.fromSchemeString()
       if ((chunks.length === 1) && !/^[a-zA-Z\-\?]+$/.test(filtered)) {
         // attempt to parse using jsnums.fromSchemeString(), assign to sexp and add location
