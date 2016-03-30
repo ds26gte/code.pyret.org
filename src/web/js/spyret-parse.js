@@ -353,12 +353,8 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["assv"] = "list-assoc";
     symbolMap["cons"] = "link";
     symbolMap["cons?"] = "is-link";
-    symbolMap["eighth"] = "_spyret_eighth";
     symbolMap["empty?"] = "is-empty";
-    symbolMap["fifth"] = "_spyret_fifth";
-    symbolMap["first"] = "_spyret_car";
     symbolMap["foldl"] = "fold";
-    symbolMap["fourth"] = "_spyret_fourth";
     symbolMap["length"] = "list-length";
     symbolMap["list->vector"] = "array-from-list";
     symbolMap["list?"] = "is-link";
@@ -368,11 +364,16 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["memv"] = "list-member";
     symbolMap["null?"] = "is-empty";
     symbolMap["ormap"] = "_spyret_ormap"; // any, but variadic
+
+    symbolMap["eighth"] = "_spyret_eighth";
+    symbolMap["fifth"] = "_spyret_fifth";
+    symbolMap["first"] = "_spyret_first";
+    symbolMap["fourth"] = "_spyret_fourth";
     symbolMap["rest"] = "_spyret_cdr";
-    symbolMap["second"] = "_spyret_cadr";
+    symbolMap["second"] = "_spyret_second";
     symbolMap["seventh"] = "_spyret_seventh";
     symbolMap["sixth"] = "_spyret_sixth";
-    symbolMap["third"] = "_spyret_caddr";
+    symbolMap["third"] = "_spyret_third";
 
     symbolMap["caaar"] = "_spyret_caaar";
     symbolMap["caadr"] = "_spyret_caadr";
@@ -489,7 +490,8 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["identity"] = "_spyret_identity";
     symbolMap["procedure?"] = "is-function";
     symbolMap["void"] = "_spyret_void";
-    symbolMap["null"] = "empty";
+    symbolMap["null"] = "_spyret_null";
+    symbolMap["empty"] = "_spyret_empty";
     symbolMap["format"] = "_spyret_format";
 
     symbolMap["false"] = "_spyret_false";
@@ -497,10 +499,28 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["pi"] = "_spyret_pi";
     symbolMap["e"] = "_spyret_e";
 
+    function pyretizeSymbol(str) {
+      var str2
+      var str_pyret_name = symbolMap[str]
+      if (str_pyret_name) {
+        str2 = str_pyret_name
+      } else if (str.length === 1) {
+        str2 = str
+      } else {
+        str2 = str.replace(/\//g, 'ƎSLASH').
+        replace(/\?/g, 'ƎQUESTION').
+        replace(/!/g, 'ƎBANG').
+        replace(/\+/g, 'ƎPLUS').
+        replace(/^_/, 'ƎUNDERSCORE').
+        replace(/^(\d)/, 'Ǝ$1')
+      }
+      return str2
+    }
+
     // symbol expression (ID)
-    function symbolExpr(val, stx) {
+    function symbolExpr(val, stx, verbatimP) {
       Program.call(this);
-      this.val = val;
+      this.val = verbatimP? val: pyretizeSymbol(val);
       this.stx = stx;
     };
     symbolExpr.prototype = heir(Program.prototype);
@@ -1838,23 +1858,13 @@ define(["./wescheme-support.js", 'js/js-numbers'
           return datum;
         } else {
           // match every valid (or *almost-valid*) sequence of characters, or the empty string
-          var poundChunk = new RegExp("^(false|true|hasheq|hash|fl|fx|\\d+|[tfeibdox]|\\<\\<|[\\\\\\\"\\%\\:\\&\\|\\;\\!\\`\\,\\']|)", 'i'),
+          var poundChunk = new RegExp("^(empty|false|true|hasheq|hash|fl|fx|\\d+|[tfeibdox]|\\<\\<|[\\\\\\\"\\%\\:\\&\\|\\;\\!\\`\\,\\']|)", 'i'),
             chunk = poundChunk.exec(str.slice(i))[0],
             // match the next character
             nextChar = str.charAt(i + chunk.length);
           // grab the first non-whitespace character
-          var big_bool_found = 0
-          if (chunk === 'false' || chunk === 'true') {
-            if (!matchUntilDelim.exec(nextChar)) {
-              datum = new literal(chunk === 'true')
-              var n = (chunk === 'false' ? 5 : 4)
-              i += n
-              column += n
-              big_bool_found = 1
-            }
-          }
-          if (!big_bool_found) {
-          var p = chunk.charAt(0).toLowerCase();
+          //var p = chunk.charAt(0).toLowerCase();
+          var p = chunk;
           switch (p) {
             // CHARACTERS
             case '\\':
@@ -1952,6 +1962,19 @@ define(["./wescheme-support.js", 'js/js-numbers'
                 column++; // move i/col ahead by the char
                 break;
               }
+            case "empty":
+              if (!matchUntilDelim.exec(nextChar)) {
+                datum = new symbolExpr("_spyret_empty", undefined, true);
+                i += 5; column += 5; break;
+              }
+            case 'false':
+              if (!matchUntilDelim.exec(nextChar)) {
+                datum = new literal(false); i += 5; column += 5; break;
+              }
+            case "true":
+              if (!matchUntilDelim.exec(nextChar)) {
+                datum = new literal(true); i += 4; column += 4; break;
+              }
             default:
               endOfError = i; // remember where we are, so readList can pick up reading
               throwError({
@@ -1959,7 +1982,6 @@ define(["./wescheme-support.js", 'js/js-numbers'
                 errArgLocs: [["read", new Location(startCol, startRow, iStart, (chunk + nextChar).length + 1)]]
               });
           }
-        }
         }
         // only reached if # is the end of the string...
       } else {
@@ -3450,7 +3472,6 @@ define(["./wescheme-support.js", 'js/js-numbers'
         isSymbol(sexp) ? sexp :
         isLiteral(sexp) ? sexp :
         isSymbolEqualTo("quote", sexp) ? new quotedExpr(sexp) :
-        isSymbolEqualTo("empty", sexp) ? new callExpr(new symbolExpr("list"), []) :
         throwError({
           errMsg: ",, expected a function, but nothing's there",
           errArgLocs: [["( )", sexp.location]]
@@ -6769,28 +6790,11 @@ define(["./wescheme-support.js", 'js/js-numbers'
       };
     }
 
-    function pyretizeSymbol(str) {
-      var str2
-      var str_pyret_name = symbolMap[str] // do this for local vars too?
-      if (str_pyret_name) {
-        str2 = str_pyret_name
-      } else if (str.length === 1) { // do this for local vars too?
-        str2 = str
-      } else {
-        str2 = str.replace(/\//g, 'ƎSLASH').
-        replace(/\?/g, 'ƎQUESTION').
-        replace(/!/g, 'ƎBANG').
-        replace(/\+/g, 'ƎPLUS').
-        replace(/^_/, 'ƎUNDERSCORE').
-        replace(/^(\d)/, 'Ǝ$1')
-      }
-      return str2
-    }
-
     // given a symbol, make a binding (used for let-expr, fun-expr, lam-expr...)
     function makeBindingFromSymbol(sym) {
       var loc = sym.location;
-      var psym = pyretizeSymbol(sym.val)
+      var psym = sym.val;
+      //var psym = pyretizeSymbol(sym.val)
       return {
         name: "binding",
         kids: [{
@@ -6826,6 +6830,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
 
     // convert a symbol to a Pyret string or a Pyret boolean
     function makeLiteralFromSymbol(sym) {
+      // do we need this anymore? plus: true and false are NOT literals!
       var loc = sym.location,
         result, kid;
       if (["true", "false", "#t", "#f"].indexOf(sym.val) > -1) {
@@ -8005,7 +8010,8 @@ define(["./wescheme-support.js", 'js/js-numbers'
     // symbolExpr(val)
     symbolExpr.prototype.toPyretAST = function() {
       var loc = this.location;
-      var sval = pyretizeSymbol(this.val)
+      var sval = this.val;
+      //var sval = pyretizeSymbol(this.val)
       return {
         name: "expr",
         kids: [{
