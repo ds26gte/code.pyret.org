@@ -591,7 +591,7 @@ define(["js/js-numbers","/js/share.js","trove/srcloc", "trove/error-display"], f
       return echo;
     };
     renderers["boolean"] = function(val) {
-      return renderers.renderText("boolean", (val ? "#t" : "#f"));
+      return renderers.renderText("boolean", (val ? "#true" : "#false"));
     };
     renderers["string"] = function(val) {
       return renderers.renderText("string", val);
