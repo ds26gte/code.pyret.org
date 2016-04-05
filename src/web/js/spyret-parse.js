@@ -6738,32 +6738,20 @@ define(["./wescheme-support.js", 'js/js-numbers'
 
     function convertToPyretAST(programs, pinfo) {
       _pinfo = pinfo;
-      var kiddos = programs.map(function(p) {
-        return {
-          name: "stmt",
-          pos: p.location,
-          kids: [p.toPyretAST()]
-        }
-      })
-      var it = undefined
-      // if there's only one kiddo, and it is a stmt containing a single block,
-      // then let final block be that block
-      // (this allows define-struct defines to bubble to the toplevel, so they're
-      // viable)
-      if (kiddos.length === 1) {
-        var kk = kiddos[0].kids
-        if (kk.length === 1 && kk[0].name === 'block') {
-          it = kk[0]
+      var kiddos = [];
+      for (var i = 0; i < programs.length; i++) {
+        var b = programs[i].toPyretAST();
+        if (b.name === "block") {
+          b.kids.forEach(function(k) { kiddos.push(k); });
+        } else {
+          kiddos.push(b);
         }
       }
-      // if not, wrap an new block around the kiddo(s)
-      if (it === undefined) {
-         it = {
-          name: 'block',
-          pos: programs.location,
-          kids: kiddos
-        }
-      }
+      var it = {
+        name: "block",
+        pos: programs.location,
+        kids: kiddos
+      };
 
       return {
         name: "program",
