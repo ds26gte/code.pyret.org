@@ -6739,15 +6739,27 @@ define(["./wescheme-support.js", 'js/js-numbers'
     function convertToPyretAST(programs, pinfo) {
       _pinfo = pinfo;
       var kiddos = [];
+      var checkExpects = [];
+      var it;
       for (var i = 0; i < programs.length; i++) {
         var b = programs[i].toPyretAST();
         if (b.name === "block") {
           b.kids.forEach(function(k) { kiddos.push(k); });
+        } else if (b.name === "app-expr" &&
+                   b.kids.length > 0 && (it = b.kids[0]) && it.name === "expr" &&
+                   it.kids.length > 0 && (it = it.kids[0]) && it.name === "expr" &&
+                   it.kids.length > 0 && (it = it.kids[0]) && it.name === "id-expr" &&
+                   it.kids.length > 0 && (it = it.kids[0]) &&
+                   it.name === "NAME" && it.value === "_spyret_check_expect") {
+          checkExpects.push(b);
         } else {
           kiddos.push(b);
         }
       }
-      var it = {
+      if (checkExpects.length > 0) {
+        kiddos = kiddos.concat(checkExpects);
+      }
+      it = {
         name: "block",
         pos: programs.location,
         kids: kiddos
