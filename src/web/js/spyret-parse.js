@@ -6823,10 +6823,15 @@ define(["./wescheme-support.js", 'js/js-numbers'
           pos: expr.location
         }
       }
-      // starting with the firs expr, build the binop-expr tree
+      // starting with the first expr, build the binop-expr tree
       var last = exprs[exprs.length - 1],
         rest = exprs.slice(0, exprs.length - 1);
-      return rest.reduceRight(addExprToTree, last.toPyretAST());
+      var it = rest.reduceRight(addExprToTree, last.toPyretAST());
+      return {
+        name: "paren-expr",
+        kids: [lParenStx, it, rParenStx],
+        pos: infixOperator.pos
+      };
     }
 
     // convert a symbol to a Pyret string or a Pyret boolean
