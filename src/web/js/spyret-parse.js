@@ -6699,7 +6699,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
       },
       letrecStx = {
         name: "LETREC",
-        value: "lerec",
+        value: "letrec",
         key: "'LETREC:letrec",
         pos: blankLoc
       },
@@ -7783,7 +7783,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         };
       }
       var loc = this.location,
-        letrecBindings = this.bindings.slice(1).map(makeLetRecBindingExprFromCouple),
+        letrecBindings = this.bindings.slice(0, -1).map(makeLetRecBindingExprFromCouple),
         finalLet = makeLetExprFromCouple(this.bindings[this.bindings.length - 1]).kids[0],
         bodyBlock = {
           name: "block",
