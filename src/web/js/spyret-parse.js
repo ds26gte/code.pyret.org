@@ -459,6 +459,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["image-color?"] = "is-image-color";
     symbolMap["image?"] = "is-image";
     symbolMap["mode?"] = "is-mode";
+    symbolMap["on-tick"] = "_spyret_on-tick";
     symbolMap["overlay"] = "_spyret_overlay";
     symbolMap["overlay/align"] = "_spyret_overlay-align";
     symbolMap["overlay/xy"] = "overlay-xy";
