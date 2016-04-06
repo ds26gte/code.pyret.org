@@ -513,6 +513,18 @@ define(["./wescheme-support.js", 'js/js-numbers'
         replace(/!/g, 'ƎBANG').
         replace(/\+/g, 'ƎPLUS').
         replace(/>/g, 'ƎGT').
+        replace(/</g, 'ƎLT').
+        replace(/=/g, 'ƎEQ').
+        replace(/\*/g, 'ƎSTAR').
+        replace(/\$/g, 'ƎDOLLAR').
+        replace(/:/g, 'ƎCOLON').
+        replace(/%/g, 'ƎPCT').
+        replace(/&/g, 'ƎAND').
+        replace(/@/g, 'ƎAT').
+        replace(/\^/g, 'ƎHAT').
+        replace(/\.(.)/g, 'Ǝ$1').
+        replace(/(.)\./g, '$1Ǝ').
+        replace(/^#%/, 'ƎHASHPCT').
         replace(/^_/, 'ƎUNDERSCORE').
         replace(/^(\d)/, 'Ǝ$1')
       }
