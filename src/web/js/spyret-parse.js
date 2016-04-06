@@ -512,6 +512,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         replace(/\?/g, 'ƎQUESTION').
         replace(/!/g, 'ƎBANG').
         replace(/\+/g, 'ƎPLUS').
+        replace(/>/g, 'ƎGT').
         replace(/^_/, 'ƎUNDERSCORE').
         replace(/^(\d)/, 'Ǝ$1')
       }
