@@ -1610,6 +1610,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
           || /syntax list/.exec(e) // improper use of .
           || /bad syntax/.exec(e) // bad syntax
           || /bad character constant/.exec(e) // bad character constant
+          || /use one-character strings/.exec(e) // disallowed #\c syntax
         ) {
           throw e;
         } else {
