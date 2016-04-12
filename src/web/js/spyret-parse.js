@@ -7921,10 +7921,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
       // make an ifPipe for each non-else clause
       var lastClause = this.clauses[this.clauses.length - 1],
         hasElse = (lastClause.first.stx && lastClause.first.stx === "else"),
-        ifClauses = hasElse ? this.clauses.slice(this.clauses.length - 2) : this.clauses,
+        ifClauses = hasElse ? this.clauses.slice(0, this.clauses.length - 1) : this.clauses,
         branches = ifClauses.map(makeIfPipeBranchfromClause);
 
-      // if there's an else clause, turn it into a block and add it and it's syntax to the list of branches
+      // if there's an else clause, turn it into a block and add it and its syntax to the list of branches
       if (hasElse) {
         var elseClause = this.clauses[this.clauses.length - 1],
           otherwiseBlock = {
