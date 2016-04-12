@@ -7926,13 +7926,13 @@ define(["./wescheme-support.js", 'js/js-numbers'
 
       // if there's an else clause, turn it into a block and add it and its syntax to the list of branches
       if (hasElse) {
-        var elseClause = this.clauses[this.clauses.length - 1],
+        var elseClause = lastClause,
           otherwiseBlock = {
             name: "block",
             kids: [elseClause.second.toPyretAST()],
             pos: elseClause.second.location
           };
-        branches = branches.concat([otherwiseStx, otherwiseBlock]);
+        branches = branches.concat([barStx, otherwiseStx, otherwiseBlock]);
       }
 
       return {
