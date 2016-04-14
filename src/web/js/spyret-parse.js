@@ -4552,10 +4552,6 @@ define(["./wescheme-support.js", 'js/js-numbers'
 
       expr.location = condExhausted.location = exhaustedLoc.location = this.location;
       for (var i = this.clauses.length - 1; i > -1; i--) {
-        // desugar else to true
-        if (this.clauses[i].first instanceof symbolExpr && this.clauses[i].first.val === "else") {
-          this.clauses[i].first.val = "true";
-        }
         expr = new ifExpr(this.clauses[i].first, this.clauses[i].second, expr, this.stx);
         expr.location = this.location;
       }
@@ -7938,10 +7934,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
       }
 
       // make an ifPipe for each non-else clause
-      var lastClause = this.clauses[this.clauses.length - 1],
-        hasElse = (lastClause.first.stx && lastClause.first.stx === "else"),
-        ifClauses = hasElse ? this.clauses.slice(0, this.clauses.length - 1) : this.clauses,
-        branches = ifClauses.map(makeIfPipeBranchfromClause);
+      var lastClause = this.clauses[this.clauses.length - 1];
+      var hasElse = (lastClause.first && lastClause.first.val === "else");
+      var ifClauses = hasElse ? this.clauses.slice(0, this.clauses.length - 1) : this.clauses;
+      var branches = ifClauses.map(makeIfPipeBranchfromClause);
 
       // if there's an else clause, turn it into a block and add it and its syntax to the list of branches
       if (hasElse) {
