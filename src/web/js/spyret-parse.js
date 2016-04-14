@@ -522,8 +522,8 @@ define(["./wescheme-support.js", 'js/js-numbers'
         replace(/&/g, 'ƎAND').
         replace(/@/g, 'ƎAT').
         replace(/\^/g, 'ƎHAT').
-        replace(/\.(.)/g, 'Ǝ$1').
-        replace(/(.)\./g, '$1Ǝ').
+        replace(/\.(.)/g, 'ƎDOT$1').
+        replace(/(.)\./g, '$1ƎDOT').
         replace(/(.)#/g, '$1ƎHASH1').
         replace(/^#%/, 'ƎHASHPCT').
         replace(/^_/, 'ƎUNDERSCORE').
