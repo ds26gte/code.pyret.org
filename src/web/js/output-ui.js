@@ -8,6 +8,33 @@ define(["js/js-numbers","/js/share.js","trove/srcloc", "trove/error-display"], f
 
   var dialect = 'spyret'
 
+  function unPyretizeSymbol(str) {
+    console.log('doing unPyretizeSymbol ' + str);
+    if (!/Ǝ/.test(str)) {
+      return str;
+    }
+    return str.
+    replace(/ƎSLASH/g, '/').
+    replace(/ƎQUESTION/g, '?').
+    replace(/ƎBANG/g, '!').
+    replace(/ƎPLUS/g, '+').
+    replace(/ƎGT/g, '>').
+    replace(/ƎLT/g, '<').
+    replace(/ƎEQ/g, '=').
+    replace(/ƎSTAR/g, '*').
+    replace(/ƎDOLLAR/g, '$').
+    replace(/ƎCOLON/g, ':').
+    replace(/ƎPCT/g, '%').
+    replace(/ƎAND/g, '&').
+    replace(/ƎAT/g, '@').
+    replace(/ƎHAT/g, '^').
+    replace(/ƎDOT/g, '.').
+    replace(/ƎHASH1/g, '#').
+    replace(/ƎHASHPCT/g, '#%').
+    replace(/ƎUNDERSCORE/g, '_').
+    replace(/Ǝ(\d)/g, '$1');
+  }
+
   function mapK(inList, f, k, outList) {
     if (inList.length === 0) { k(outList || []); }
     else {
@@ -414,6 +441,9 @@ define(["js/js-numbers","/js/share.js","trove/srcloc", "trove/error-display"], f
             return expandableMore(help(contents));
           },
           "text": function(txt) {
+            if (dialect === "spyret") {
+              txt = unPyretizeSymbol(txt);
+            }
             return $("<span>").text(txt);
           },
           "code": function(contents) {
