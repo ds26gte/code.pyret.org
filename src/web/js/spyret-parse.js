@@ -6754,19 +6754,24 @@ define(["./wescheme-support.js", 'js/js-numbers'
 
     function convertToPyretAST(programs, pinfo) {
       _pinfo = pinfo;
-      var kiddos = [];
-      var checkDefines = [];
+      var defvars = [];
+      var defuns = [];
+      var otherExps = [];
       var checkExpects = [];
       var it;
       function helper(b) {
         if (b.name === "let-expr" &&
                    b.kids.length > 1 && (it = b.kids[0]) && it.name === "let" &&
                    (it = b.kids[1]) && it.name === "toplevel-binding") {
-          checkDefines.push(b);
+          if (b.kids.length >= 4 && (it = b.kids[3]) && it.name === "binop-expr") {
+            defvars.push(b);
+          } else {
+            defuns.push(b);
+          }
         } else if (b.name === "stmt" &&
                    b.kids.length > 0 && (it = b.kids[0]) &&
                    (it.name === "data-expr" || it.name === "fun-expr")) {
-          checkDefines.push(b);
+          defuns.push(b);
         } else if (b.name === "app-expr" &&
                    b.kids.length > 0 && (it = b.kids[0]) && it.name === "expr" &&
                    it.kids.length > 0 && (it = it.kids[0]) && it.name === "expr" &&
@@ -6775,7 +6780,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
                    it.name === "NAME" && it.value === "_spyret_check_expect") {
           checkExpects.push(b);
         } else {
-          kiddos.push(b);
+          otherExps.push(b);
         }
       }
       for (var i = 0; i < programs.length; i++) {
@@ -6786,12 +6791,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
           helper(b);
         }
       }
-      if (checkDefines.length > 0) {
-        kiddos = checkDefines.concat(kiddos);
-      }
-      if (checkExpects.length > 0) {
-        kiddos = kiddos.concat(checkExpects);
-      }
+      var kiddos = defvars.concat(defuns,otherExps,checkExpects);
       it = {
         name: "block",
         pos: programs.location,
