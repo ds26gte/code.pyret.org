@@ -7096,8 +7096,8 @@ define(["./wescheme-support.js", 'js/js-numbers'
           name: "fun-expr",
           kids: [funStx, {
             name: "NAME",
-            value: this.name.stx,
-            key: "'NAME:" + this.name.stx,
+            value: this.name.val,
+            key: "'NAME:" + this.name.val,
             pos: this.name.location
           }, {
             name: "fun-header",
