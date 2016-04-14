@@ -9,7 +9,6 @@ define(["js/js-numbers","/js/share.js","trove/srcloc", "trove/error-display"], f
   var dialect = 'spyret'
 
   function unPyretizeSymbol(str) {
-    console.log('doing unPyretizeSymbol ' + str);
     if (!/Ǝ/.test(str)) {
       return str;
     }
