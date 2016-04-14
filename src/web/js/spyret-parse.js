@@ -6755,12 +6755,18 @@ define(["./wescheme-support.js", 'js/js-numbers'
     function convertToPyretAST(programs, pinfo) {
       _pinfo = pinfo;
       var kiddos = [];
+      var checkDefines = [];
       var checkExpects = [];
       var it;
-      for (var i = 0; i < programs.length; i++) {
-        var b = programs[i].toPyretAST();
-        if (b.name === "block") {
-          b.kids.forEach(function(k) { kiddos.push(k); });
+      function helper(b) {
+        if (b.name === "let-expr" &&
+                   b.kids.length > 1 && (it = b.kids[0]) && it.name === "let" &&
+                   (it = b.kids[1]) && it.name === "toplevel-binding") {
+          checkDefines.push(b);
+        } else if (b.name === "stmt" &&
+                   b.kids.length > 0 && (it = b.kids[0]) &&
+                   (it.name === "data-expr" || it.name === "fun-expr")) {
+          checkDefines.push(b);
         } else if (b.name === "app-expr" &&
                    b.kids.length > 0 && (it = b.kids[0]) && it.name === "expr" &&
                    it.kids.length > 0 && (it = it.kids[0]) && it.name === "expr" &&
@@ -6771,6 +6777,17 @@ define(["./wescheme-support.js", 'js/js-numbers'
         } else {
           kiddos.push(b);
         }
+      }
+      for (var i = 0; i < programs.length; i++) {
+        var b = programs[i].toPyretAST();
+        if (b.name === "block") {
+          b.kids.forEach(function(b) { helper(b); });
+        } else {
+          helper(b);
+        }
+      }
+      if (checkDefines.length > 0) {
+        kiddos = checkDefines.concat(kiddos);
       }
       if (checkExpects.length > 0) {
         kiddos = kiddos.concat(checkExpects);
