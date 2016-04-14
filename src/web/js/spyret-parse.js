@@ -2319,8 +2319,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
       var escaped_nums = new RegExp("^.*\\\\[\\d]*.*|\\|[\\d]*\\|");
       filtered = (escaped_nums.test(chunk) || special_chars.test(filtered) ? "|" + filtered + "|" : filtered);
 
-      // PERF: start out assuming it's a symbol...
-      var node = new symbolExpr(filtered);
+      var node = undefined;
       // PERF: if it's not trivially a symbol, we take the hit of jsnums.fromSchemeString()
       if ((chunks.length === 1) && !/^[a-zA-Z\-\?]+$/.test(filtered)) {
         // attempt to parse using jsnums.fromSchemeString(), assign to sexp and add location
@@ -2334,6 +2333,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
               numValue.location = new Location(startCol, startRow, iStart, i - iStart);
             }
             node = new literal(numValue);
+            node.stx = filtered;
           }
           // if it's not a number OR a symbol
         } catch (e) {
@@ -2344,7 +2344,9 @@ define(["./wescheme-support.js", 'js/js-numbers'
           });
         }
       }
-      node.stx = filtered; // save the string that generated the symbol/number to begin with
+      if (!node) {
+        node = new symbolExpr(filtered);
+      }
       node.location = new Location(startCol, startRow, iStart, i - iStart);
       return node;
     }
