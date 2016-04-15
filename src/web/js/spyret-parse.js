@@ -354,7 +354,8 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["cons"] = "link";
     symbolMap["cons?"] = "is-link";
     symbolMap["empty?"] = "is-empty";
-    symbolMap["foldl"] = "fold";
+    symbolMap["foldl"] = "_spyret_foldl";
+    symbolMap["foldr"] = "_spyret_foldr";
     symbolMap["length"] = "list-length";
     symbolMap["list->vector"] = "array-from-list";
     symbolMap["list?"] = "is-link";
