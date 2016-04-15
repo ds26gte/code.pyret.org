@@ -365,6 +365,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["memv"] = "list-member";
     symbolMap["null?"] = "is-empty";
     symbolMap["ormap"] = "_spyret_ormap"; // any, but variadic
+    symbolMap["remove"] = "_spyret_remove";
 
     symbolMap["eighth"] = "_spyret_eighth";
     symbolMap["fifth"] = "_spyret_fifth";
