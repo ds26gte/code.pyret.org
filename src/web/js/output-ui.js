@@ -31,6 +31,7 @@ define(["js/js-numbers","/js/share.js","trove/srcloc", "trove/error-display"], f
     replace(/ƎHASH1/g, '#').
     replace(/ƎHASHPCT/g, '#%').
     replace(/ƎUNDERSCORE/g, '_').
+    replace(/ƎEMPTY/g, '').
     replace(/Ǝ(\d)/g, '$1');
   }
 
