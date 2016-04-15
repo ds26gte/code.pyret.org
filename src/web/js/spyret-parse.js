@@ -6742,6 +6742,34 @@ define(["./wescheme-support.js", 'js/js-numbers'
         pos: blankLoc
       };
 
+    function wrapPrint(b) {
+      return {
+        name: "app-expr",
+        pos: blankLoc,
+        kids: [{
+          name: "expr",
+          pos: blankLoc,
+          kids: [{
+            name: "expr",
+            pos: blankLoc,
+            kids: [{
+              name: "id-expr",
+              pos: blankLoc,
+              kids: [{
+                name: "NAME",
+                value: "print",
+                key: "'NAME:print",
+                pos: blankLoc
+              }],
+            }],
+          }],
+        }, {
+          name: "app-args",
+          kids: [lParenStx, b, rParenStx],
+        }],
+      }
+    }
+
     // pinfo that is reset for each translation
     var _pinfo = null;
 
@@ -6750,7 +6778,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     // follows http://www.pyret.org/docs/latest/s_program.html
     // provide and import will never be used
 
-    function convertToPyretAST(programs, pinfo) {
+    function convertToPyretAST(programs, pinfo, single) {
       _pinfo = pinfo;
       var defvars = [];
       var defuns = [];
@@ -6777,8 +6805,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
                    it.kids.length > 0 && (it = it.kids[0]) &&
                    it.name === "NAME" && it.value === "_spyret_check_expect") {
           checkExpects.push(b);
-        } else {
+        } else if (single) {
           otherExps.push(b);
+        } else {
+          otherExps.push(wrapPrint(b));
         }
       }
       for (var i = 0; i < programs.length; i++) {
@@ -8067,6 +8097,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     function makeImportSnippet(fileName) {
       return {
         name: "import-stmt",
+        pos: blankLoc,
         kids: [{
           name: "INCLUDE",
           value: "include",
@@ -8074,19 +8105,18 @@ define(["./wescheme-support.js", 'js/js-numbers'
           pos: blankLoc
         }, {
           name: "import-source",
+          pos: blankLoc,
           kids: [{
             name: "import-name",
+            pos: blankLoc,
             kids: [{
               name: "NAME",
               value: fileName,
               key: "'NAME:" + fileName,
               pos: blankLoc
-            }],
-            pos: blankLoc
-          }],
-          pos: blankLoc
-        }],
-        pos: blankLoc
+            }]
+          }]
+        }]
       }
     }
 
@@ -8110,7 +8140,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     var astAndPinfo = plt.compiler.desugar(ast, undefined, debug);
     var program = astAndPinfo[0];
     var pinfo = plt.compiler.analyze(program, debug);
-    var ws_ast = plt.compiler.toPyretAST(ast, pinfo);
+    var ws_ast = plt.compiler.toPyretAST(ast, pinfo, single);
     if (!single) {
       var preimports = [
         plt.compiler.makeImportSnippet('image'),
