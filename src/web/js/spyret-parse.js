@@ -3108,7 +3108,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
           isSymbolEqualTo("local", peek) ? parseLocalExpr(sexp) :
           isSymbolEqualTo("letrec", peek) ? parseLetrecExpr(sexp) :
           isSymbolEqualTo("let", peek) ? parseLetExpr(sexp) :
-          isSymbolEqualTo("let*", peek) ? parseLetStarExpr(sexp) :
+          isSymbolEqualTo("letƎSTAR", peek) ? parseLetStarExpr(sexp) :
           isSymbolEqualTo("cond", peek) ? parseCondExpr(sexp) :
           isSymbolEqualTo("case", peek) ? parseCaseExpr(sexp) :
           isSymbolEqualTo("if", peek) ? parseIfExpr(sexp) :
@@ -7931,7 +7931,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     letStarExpr.prototype.toPyretAST = function() {
       var loc = this.location,
         stmts = this.bindings.map(makeLetExprFromCouple);
-      stmts = stms.push(this.body.toPyretAST());
+      stmts.push(this.body.toPyretAST());
       return {
         name: "expr",
         kids: [{
