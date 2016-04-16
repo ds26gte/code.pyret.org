@@ -6783,24 +6783,25 @@ define(["./wescheme-support.js", 'js/js-numbers'
 
     function convertToPyretAST(programs, pinfo, single) {
       _pinfo = pinfo;
+      var defuns1 = [];
+      var defuns2 = [];
       var defvars = [];
-      var defuns = [];
       var otherExps = [];
       var checkExpects = [];
       var it;
-      function helper(b) {
+      function helper(b, highPrio) {
         if (b.name === "let-expr" &&
                    b.kids.length > 1 && (it = b.kids[0]) && it.name === "let" &&
                    (it = b.kids[1]) && it.name === "toplevel-binding") {
           if (b.kids.length >= 4 && (it = b.kids[3]) && it.name === "binop-expr") {
             defvars.push(b);
           } else {
-            defuns.push(b);
+            (highPrio? defuns1 : defuns2).push(b);
           }
         } else if (b.name === "stmt" &&
                    b.kids.length > 0 && (it = b.kids[0]) &&
                    (it.name === "data-expr" || it.name === "fun-expr")) {
-          defuns.push(b);
+            (highPrio? defuns1 : defuns2).push(b);
         } else if (b.name === "app-expr" &&
                    b.kids.length > 0 && (it = b.kids[0]) && it.name === "expr" &&
                    it.kids.length > 0 && (it = it.kids[0]) && it.name === "expr" &&
@@ -6817,12 +6818,12 @@ define(["./wescheme-support.js", 'js/js-numbers'
       for (var i = 0; i < programs.length; i++) {
         var b = programs[i].toPyretAST();
         if (b.name === "block") {
-          b.kids.forEach(function(b) { helper(b); });
+          b.kids.forEach(function(b) { helper(b, true); });
         } else {
           helper(b);
         }
       }
-      var kiddos = defvars.concat(defuns,otherExps,checkExpects);
+      var kiddos = defuns1.concat(defuns2,defvars,otherExps,checkExpects);
       it = {
         name: "block",
         pos: programs.location,
