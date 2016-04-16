@@ -530,7 +530,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         replace(/^#%/, 'ƎHASHPCT').
         replace(/^_/, 'ƎUNDERSCORE').
         replace(/^(\d)/, 'Ǝ$1').
-        replace(/^(debug|new)$/, 'ƎEMPTY$1')
+        replace(/^(debug|new|string-split)$/, 'ƎEMPTY$1')
       }
       return str2
     }
