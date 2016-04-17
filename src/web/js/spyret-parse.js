@@ -6790,18 +6790,22 @@ define(["./wescheme-support.js", 'js/js-numbers'
       var checkExpects = [];
       var it;
       function helper(b, highPrio) {
+        //console.log('b = ' + highPrio + ' ' + JSON.stringify(b));
         if (b.name === "let-expr" &&
                    b.kids.length > 1 && (it = b.kids[0]) && it.name === "let" &&
                    (it = b.kids[1]) && it.name === "toplevel-binding") {
           if (b.kids.length >= 4 && (it = b.kids[3]) &&
-             (it.name === "binop-expr" || it.name === "expr")) {
+             (it.name === "binop-expr" || it.name === "expr" || it.name === "app-expr")) {
+            //console.log('defvar');
             defvars.push(b);
           } else {
+            //console.log('defun');
             (highPrio? defuns1 : defuns2).push(b);
           }
         } else if (b.name === "stmt" &&
                    b.kids.length > 0 && (it = b.kids[0]) &&
                    (it.name === "data-expr" || it.name === "fun-expr")) {
+            //console.log('defun');
             (highPrio? defuns1 : defuns2).push(b);
         } else if (b.name === "app-expr" &&
                    b.kids.length > 0 && (it = b.kids[0]) && it.name === "expr" &&
@@ -6811,6 +6815,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
                    it.name === "NAME" && it.value === "_spyret_check_expect") {
           checkExpects.push(b);
         } else if (single) {
+          //console.log('other');
           otherExps.push(b);
         } else {
           otherExps.push(wrapPrint(b));
