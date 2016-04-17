@@ -6793,7 +6793,8 @@ define(["./wescheme-support.js", 'js/js-numbers'
         if (b.name === "let-expr" &&
                    b.kids.length > 1 && (it = b.kids[0]) && it.name === "let" &&
                    (it = b.kids[1]) && it.name === "toplevel-binding") {
-          if (b.kids.length >= 4 && (it = b.kids[3]) && it.name === "binop-expr") {
+          if (b.kids.length >= 4 && (it = b.kids[3]) &&
+             (it.name === "binop-expr" || it.name === "expr")) {
             defvars.push(b);
           } else {
             (highPrio? defuns1 : defuns2).push(b);
@@ -7696,8 +7697,6 @@ define(["./wescheme-support.js", 'js/js-numbers'
     lambdaExpr.prototype.toPyretAST = function() {
       var loc = this.location;
       return {
-        name: "expr",
-        kids: [{
           name: "lambda-expr",
           kids: [lamStx, {
             name: "fun-header",
@@ -7734,9 +7733,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
             pos: loc
           }],
           pos: this.location
-        }],
-        pos: loc
-      };
+        }
     };
 
     // Local becomes letrec
