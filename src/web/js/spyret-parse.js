@@ -6783,9 +6783,9 @@ define(["./wescheme-support.js", 'js/js-numbers'
 
     function convertToPyretAST(programs, pinfo, single) {
       _pinfo = pinfo;
-      var defuns1 = [];
-      var defuns2 = [];
-      var defvars = [];
+      var defstructs = [];
+      var defnonfuns = [];
+      var defuns = [];
       var otherExps = [];
       var checkExpects = [];
       var it;
@@ -6797,16 +6797,16 @@ define(["./wescheme-support.js", 'js/js-numbers'
           if (b.kids.length >= 4 && (it = b.kids[3]) &&
              (it.name === "binop-expr" || it.name === "expr" || it.name === "app-expr")) {
             //console.log('defvar');
-            defvars.push(b);
+            defnonfuns.push(b);
           } else {
             //console.log('defun');
-            (highPrio? defuns1 : defuns2).push(b);
+            (highPrio? defstructs : defnonfuns).push(b);
           }
         } else if (b.name === "stmt" &&
                    b.kids.length > 0 && (it = b.kids[0]) &&
                    (it.name === "data-expr" || it.name === "fun-expr")) {
             //console.log('defun');
-            (highPrio? defuns1 : defuns2).push(b);
+            (highPrio? defstructs : defuns).push(b);
         } else if (b.name === "app-expr" &&
                    b.kids.length > 0 && (it = b.kids[0]) && it.name === "expr" &&
                    it.kids.length > 0 && (it = it.kids[0]) && it.name === "expr" &&
@@ -6829,7 +6829,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
           helper(b);
         }
       }
-      var kiddos = defuns1.concat(defuns2,defvars,otherExps,checkExpects);
+      var kiddos = defstructs.concat(defnonfuns,defuns,otherExps,checkExpects);
       it = {
         name: "block",
         pos: programs.location,
