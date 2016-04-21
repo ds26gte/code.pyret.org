@@ -4973,7 +4973,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
           fields = that.stx[2],
           constructorId = "make-" + id,
           //predicateId = id + "?",
-          predictateId = id + "ƎQUESTION",
+          predicateId = id + "ƎQUESTION",
           selectorIds = fields.map(fieldToAccessor),
           //mutatorIds = fields.map(fieldToMutator),
           mutatorIds = [],
@@ -5719,7 +5719,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     }
 
     function makeResolvedName(name, loc, asis) {
-      var rname = name;
+      var rname = "" + name;
       var it;
       if (!asis && _module && (it = window.COLLECTIONS[_module]) && (it.locals.indexOf(name) >= 0)) {
         rname = name + it.suffix;
