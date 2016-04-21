@@ -5080,8 +5080,6 @@ define(["./wescheme-support.js", 'js/js-numbers'
                   return (module_provideds.indexOf(x) === -1);
                 });
                 //var objectCode = plt.compiler.compile(desugared, pinfo);
-                var pyretObjectCode = plt.compiler.toPyretAST(AST, pinfo,
-                                           "no_need_for_autoimports", moduleName);
               window.COLLECTIONS[moduleName] = {
                 'name': moduleName,
                 'suffix' : "-ƎTEMP-" + plt.compiler.pyretizeSymbol(moduleName),
