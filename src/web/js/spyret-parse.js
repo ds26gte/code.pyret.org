@@ -448,6 +448,11 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["vector-set!"] = "array-set-now";
     symbolMap["vector?"] = "is-array";
 
+    symbolMap["box?"] = "_spyret_boxp";
+    symbolMap["box"] = "_spyret_box";
+    symbolMap["unbox"] = "_spyret_unbox";
+    symbolMap["set-box!"] = "_spyret_set_box";
+
     symbolMap["above"] = "_spyret_above";
     symbolMap["above/align"] = "_spyret_above-align";
     symbolMap["angle?"] = "is-angle";
