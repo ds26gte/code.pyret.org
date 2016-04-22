@@ -15,7 +15,7 @@
 (define WIDTH  400)
 (define HEIGHT 200)
 
-(define source 
+(define source
   (open-image-url "http://www.wescheme.org/images/teachpacks/butterfly.png"))
 
 (define butterfly (put-pinhole source (/ (image-width source) 2) (/ (image-height source) 2)))
@@ -24,8 +24,8 @@
 ; each world has an x and y coordinate
 (define-struct world [x y])
 
-;; move: World Key -> Number 
-;; did the object move? 
+;; move: World Key -> Number
+;; did the object move?
 (define (move w key)
   (cond
     [(key=? key "left") (make-world (- (world-x w) 10) (world-y w))]
@@ -34,28 +34,26 @@
     [(key=? key "up") (make-world (world-x w) (+ (world-y w) 10))]
     [else w]))
 
-
 ;; ----------------------------------------------------------------------------
-;; draw-world: World -> Image 
-;; create an image that represents the world 
+;; draw-world: World -> Image
+;; create an image that represents the world
 (define (draw-world w)
   (let* ((draw-butterfly (lambda (w scene)
                            (place-image butterfly (world-x w) (- HEIGHT (world-y w)) scene)))
          (draw-text (lambda (w scene)
                       (place-image (text (string-append "x-coordinate: " (number->string (world-x w))
                                                         "   y-coordinate: " (number->string (world-y w)))
-                                         14 'black)
-                                   60 
-                                   0 
+                                         14 "black")
+                                   60
+                                   0
                                    scene))))
     (draw-butterfly w (draw-text w (empty-scene WIDTH HEIGHT)))))
 
-
 (define (start offscreen?)
-  (let* ((update (lambda (w k) 
-                   (cond 
+  (let* ((update (lambda (w k)
+                   (cond
                      [(char? k) w]
-                     [(offscreen? (world-x (move w k)) 
+                     [(offscreen? (world-x (move w k))
                                   (world-y (move w k))) w]
                      [else (move w k)]))))
     (js-big-bang (make-world 200 100)

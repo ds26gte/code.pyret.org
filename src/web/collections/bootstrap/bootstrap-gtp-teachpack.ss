@@ -9,12 +9,12 @@
            scheme/base
 	   (for-syntax scheme/base))
 
-(provide assert-equal 
+(provide assert-equal
 	 #;EXAMPLE
 	 #;(all-from-out lang/posn)
-	 #;(except-out (all-from-out htdp/image) 
+	 #;(except-out (all-from-out htdp/image)
 	    circle rectangle triangle star ellipse)
-	 #;(rename-out 
+	 #;(rename-out
 	    (safer-circle circle)
 	    (safer-triangle triangle)
 	    (safer-rectangle rectangle)
@@ -34,10 +34,9 @@
  ;; a `test' macro that is a synonym for `check-expect', catches expansion
  ;; errors and pretends that they come from `test'.
 
-
 (define *functions-complained-about* (box (make-hash)))
 
-(define (assert-equal expected-value observed-value 
+(define (assert-equal expected-value observed-value
 		      expected-expr observed-expr lineno)
   (if (equal? expected-value observed-value)
       (display "") ;; great
@@ -52,7 +51,7 @@
 	    observed-expr lineno
 	    expected-value
 	    observed-value)
-	   (format 
+	   (format
 	    (string-append
 	     "EXAMPLE CHECK FAILED: \n"
 	     "  For ~a at line ~a\n"
@@ -82,24 +81,23 @@
 			 [expected-expr (stx/pp (syntax answer))]
 			 [lineno (syntax-line stx)])
 			(syntax
-			 (assert-equal answer (fn arg ...) 
+			 (assert-equal answer (fn arg ...)
 				       expected-expr observed-expr lineno)))
-       
+
 	   ;; if the identifier is just not bound
 	   (syntax
 	    (let ((complained?
-		   (hash-ref (unbox *functions-complained-about*) 
+		   (hash-ref (unbox *functions-complained-about*)
 			     (quote fn) #f)))
 	      (display
 	       (if complained? ""
 		   (begin
-		     (hash-set! (unbox *functions-complained-about*) 
+		     (hash-set! (unbox *functions-complained-about*)
 				(quote fn) #t)
-		     (format (string-append 
+		     (format (string-append
 			      "Either the ~s function is not yet defined or "
 			      "an example is above the definition.\n")
 			     (quote fn))))))))]))
-
 
 ;; warn : any* -> SideEffect
 ;; display all arguments and return the last one.
@@ -123,7 +121,7 @@
 ;; string->image : String -> Image
 ;; convert the given string to an image.
 (define (string->image s)
-  (text s 14 'black))
+  (text s 14 "black"))
 
 ;; number->image : Number -> Image
 ;; convert the given number to an image.
@@ -168,7 +166,7 @@
     (raise (string-append "star: expected <positive real number less than 10000> as third argument, given: " (number->string inside)))]
    [else (star points outside inside fill color)]))
 
-;; SETTINGS 
+;; SETTINGS
 (define WIDTH 640)
 (define HEIGHT 480)
 (define EXPLOSION-COLOR "gray")
@@ -199,7 +197,7 @@
 ; place a being at their screen location, on the BG, in their costume
 (define (draw-being being background)
   (let ((screen-posn (posn->point (being-posn being))))
-    (place-image (being-costume being) 
+    (place-image (being-costume being)
                  (posn-x screen-posn) (posn-y screen-posn)
                  background)))
 
@@ -210,15 +208,15 @@
 				      (number->string (world-score w))))
          (player (if (> (world-timer w) 0)
                      (make-being (being-posn (world-player w))
-                                 (star 7 (* 1.5 (world-timer w)) 
-				       (* .25 (world-timer w)) 
+                                 (star 7 (* 1.5 (world-timer w))
+				       (* .25 (world-timer w))
 				       "solid" EXPLOSION-COLOR)
 				 (being-source (world-player w))
 				 )
                      (world-player w)))
          (all-beings
 	  (append (world-targets w) (world-dangers w) (list player))))
-    (place-image (text score-string 20 (unbox TITLE-COLOR)) 10 0 
+    (place-image (text score-string 20 (unbox TITLE-COLOR)) 10 0
                  (foldl draw-being (put-pinhole (unbox BACKGROUND) 0 0) all-beings))))
 
 (define (check-collision player beings collide?)
@@ -231,7 +229,7 @@
 
 ;; subset? : List List -> Boolean
 ;; return true if list a is a (proper or improper) subset of b
-(define (subset? a b) 
+(define (subset? a b)
   (andmap
    (lambda (ele) (member ele b))
    a))
@@ -244,34 +242,33 @@
 (define (wrap-update f sources)
   (cond
     [(and (= (procedure-arity f) 1) (in? sources (list "top" "bottom")))
-     (lambda (b) (make-being (make-posn (being-x b) (f (being-y b))) 
+     (lambda (b) (make-being (make-posn (being-x b) (f (being-y b)))
 			     (being-costume b) (being-source b)))]
     [(and (= (procedure-arity f) 1) (in? sources (list "left" "right")))
-     (lambda (b) (make-being (make-posn (f (being-x b)) (being-y b)) 
+     (lambda (b) (make-being (make-posn (f (being-x b)) (being-y b))
 			     (being-costume b) (being-source b)))]
     [(= (procedure-arity f) 2)
-     (lambda (b) (make-being (f (being-x b) (being-y b)) 
+     (lambda (b) (make-being (f (being-x b) (being-y b))
 			     (being-costume b) (being-source b)))]
     [(= (procedure-arity f) 3)
      (lambda (b) (make-being (f (being-x b) (being-y b) (being-source b))
 			     (being-costume b) (being-source b)))]))
 
-
 (define (random-posn source)
   (let ((s (spacing))
 	(p 1/3)) ;; spread
     (cond
-     [(string=? source "left") 
+     [(string=? source "left")
       (make-posn (* s -1) (random HEIGHT))]
-     [(string=? source "right") 
+     [(string=? source "right")
       (make-posn (+ s WIDTH) (random HEIGHT))]
-     [(string=? source "top") 
+     [(string=? source "top")
       (make-posn (random WIDTH) (+ s HEIGHT))]
-     [(string=? source "bottom") 
+     [(string=? source "bottom")
       (make-posn (random WIDTH) (* s -1))]
-     [(string=? source "bottom-left") 
-      (pick 
-       (list 
+     [(string=? source "bottom-left")
+      (pick
+       (list
 	(make-posn (- s)                         (random (floor (* p HEIGHT))))
 	(make-posn (random (floor (* p WIDTH)))  (- s))))]
      [(string=? source "bottom-right")
@@ -285,8 +282,8 @@
 	(make-posn (- s)                         (- HEIGHT (* p HEIGHT)))
 	(make-posn (random (floor (* p WIDTH)))  (+ HEIGHT s))))]
      [(string=? source "top-right")
-      (pick 
-       (list 
+      (pick
+       (list
 	(make-posn (- WIDTH (* p WIDTH))         (+ HEIGHT s))
 	(make-posn (+ WIDTH s)                   (- HEIGHT (* p HEIGHT)))))]
      [(string=? source "onscreen")
@@ -302,10 +299,10 @@
      )))
 
 ; reset : Being -> Being
-; returns a new being with the same costume, 
+; returns a new being with the same costume,
 ;   who is ready to enter from (being-source being)
 (define (reset being sources)
-   (cond 
+   (cond
     [(list? sources)
      (let ((source (pick sources)))
        (make-being (random-posn source) (being-costume being) source))]
@@ -316,10 +313,10 @@
 ; move-all : (Being list) (Number Number -> Being/Number) (Being->Boolean) -> (Being list)
 ; update every Being in a list according to a 'move' function
 (define (move-all beings move in-domain? sources)
-  (map (lambda (b) 
-	 (if (in-domain? (being-x b) (being-y b)) 
-	     (move b) 
-	     (reset b sources))) 
+  (map (lambda (b)
+	 (if (in-domain? (being-x b) (being-y b))
+	     (move b)
+	     (reset b sources)))
        beings))
 
 ; keypress : World Key (Player String -> Player) -> World
@@ -337,12 +334,12 @@
                  (world-title w)
                  (world-timer w))]))
 
-; animate/proc:String Image (Image list) (Image list) Image 
+; animate/proc:String Image (Image list) (Image list) Image
 ;              (Being -> Being) (Being -> Being) (Being -> Being)
 ;              (Being Being -> Boolean) (Being -> Boolean) -> Boolean
 ; takes in World components, updating functions and geometry functions and starts the universe
 (define (start title title-color
-                      background 
+                      background
 		      dangerImgs dangerSource
 		      targetImgs targetSource
 		      playerImg
@@ -351,7 +348,7 @@
   (begin
     (set-box! TITLE-COLOR title-color)
     (set-box! BACKGROUND background)
-    (let* ((player (make-being (make-posn (/ WIDTH 2) (/ HEIGHT 2)) 
+    (let* ((player (make-being (make-posn (/ WIDTH 2) (/ HEIGHT 2))
 			       playerImg "center"))
            (targetImgs (if (list? targetImgs) targetImgs (list targetImgs)))
            (dangerImgs (if (list? dangerImgs) dangerImgs (list dangerImgs)))
@@ -374,33 +371,33 @@
            (update-danger (wrap-update update-danger* dangerSource))
            (update-target (wrap-update update-target* targetSource))
            (update-player (cond
-                            [(and (= (procedure-arity update-player*) 2) 
+                            [(and (= (procedure-arity update-player*) 2)
 				  (member targetSource (list "left" "right"))
 				  (member dangerSource (list "left" "right")))
-                             (lambda (p k) 
-			       (make-being 
-				(make-posn (being-x p) 
+                             (lambda (p k)
+			       (make-being
+				(make-posn (being-x p)
 					   (update-player* (being-y p) k))
 				(being-costume p)
 				(being-source p)))]
-                            [(and (= (procedure-arity update-player*) 2) 
+                            [(and (= (procedure-arity update-player*) 2)
 				  (member targetSource (list "top" "bottom"))
 				  (member dangerSource (list "top" "bottom")))
-                             (lambda (p k) 
+                             (lambda (p k)
 			       (make-being
-				(make-posn (update-player* (being-x p) k) 
+				(make-posn (update-player* (being-x p) k)
 					   (being-y p))
 				(being-costume p)
 				(being-source p)))]
-                            [else (lambda (p k) 
-				    (make-being (update-player* (being-x p) 
+                            [else (lambda (p k)
+				    (make-being (update-player* (being-x p)
 								(being-y p) k)
 						(being-costume p)
 						(being-source p)))]))
-           (onscreen? (if (= (procedure-arity onscreen*?) 1) 
+           (onscreen? (if (= (procedure-arity onscreen*?) 1)
 			  (lambda (x y) (onscreen*? x)) onscreen*?))
-           (collide? (lambda (b1 b2) 
-		       (collide*? (being-x b1) (being-y b1) 
+           (collide? (lambda (b1 b2)
+		       (collide*? (being-x b1) (being-y b1)
 				  (being-x b2) (being-y b2))))
            (world (make-world dangers targets player
                               (put-pinhole background 0 0)
@@ -408,8 +405,8 @@
                               title
                               0))
            (keypress* (lambda (w k) (keypress w k update-player)))
-           (update-world (lambda (w) 
-                           (begin 
+           (update-world (lambda (w)
+                           (begin
 
 			     ;; export it so students can read and act on it:
                              (set-box! score (world-score w))
@@ -418,7 +415,7 @@
 				     (move-all (world-dangers w) update-danger
 					       onscreen? dangerSource))
                                     (targets
-				     (move-all (world-targets w) update-target 
+				     (move-all (world-targets w) update-target
 					       onscreen? targetSource))
                                     (score (world-score w))
                                     (player (world-player w))
@@ -427,26 +424,25 @@
                                     (timer (world-timer w)))
                                (cond
                                  [(> timer 0)
-                                  (make-world dangers targets player bg 
+                                  (make-world dangers targets player bg
 					      score title (- timer 10))]
                                  [(check-collision player dangers collide?)
                                   (begin
                                     #;(play-sound "hit.wav" true)
-                                    (make-world dangers targets player bg 
+                                    (make-world dangers targets player bg
 						(- score 50) title 100))]
                                  [(check-collision player targets collide?)
                                   (begin
                                     #;(play-sound "score.wav" true)
-                                    (make-world dangers targets player bg 
+                                    (make-world dangers targets player bg
 						(+ score 20) title 100))]
-                                 [else (make-world dangers targets player bg 
+                                 [else (make-world dangers targets player bg
 						   score title timer)]))
                              ))))
       (js-big-bang world
                 (on-tick update-world .1)
                 (on-redraw draw-world)
                 (on-key keypress*)))))
-
 
 ; sq : Number -> Number
 (define (sq x) (* x x))
