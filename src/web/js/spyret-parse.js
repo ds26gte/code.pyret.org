@@ -6982,7 +6982,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
           kids: [{
             name: "import-name",
             pos: blankLoc,
-            kids: [makeResolvedName(fileName, blankLoc)]
+            kids: [makeResolvedName(fileName, blankLoc, "asis")]
           }]
         }]
       }
