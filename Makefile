@@ -1,7 +1,6 @@
 # NOTE: Needs TWO blank lines here, dunno why
 define \n
 
-
 endef
 ifneq ($(findstring .exe,$(SHELL)),)
 	override SHELL:=$(COMSPEC)$(ComSpec)
@@ -32,7 +31,6 @@ selenium-test-local:
 .PHONY : selenium-test-sauce
 selenium-test-sauce:
 	TEST_LOC="sauce" node test/test.js test/browser/pyret
-
 
 OUT_HTML := $(patsubst src/web/%.template.html,build/web/views/%.html,$(wildcard src/web/*.template.html))
 
@@ -122,7 +120,6 @@ MISC_IMG = build/web/img/pyret-icon.png build/web/img/pyret-logo.png build/web/i
 build/web/img/%: node_modules/pyret-lang/img/%
 	cp $< $@
 
-
 WEB = build/web
 WEBV = build/web/views
 WEBJS = build/web/js
@@ -130,6 +127,7 @@ WEBCSS = build/web/css
 WEBIMG = build/web/img
 NEWCSS = build/web/neweditor/css
 NEWJS = build/web/neweditor/js
+WEBCOLL = build/web/collections
 
 $(WEBV):
 	@$(call MKDIR,$(WEBV))
@@ -152,7 +150,11 @@ $(NEWCSS):
 $(NEWJS):
 	@$(call MKDIR,$(NEWJS))
 
-web: $(WEB) $(WEBV) $(WEBJS) $(WEBCSS) $(WEBIMG) $(NEWCSS) $(NEWJS) $(OUT_HTML) $(COPY_HTML) $(OUT_CSS) $(COPY_CSS) $(COPY_JS) $(COPY_GIF)  build/web/js/pyret.js.gz $(MISC_JS) $(MISC_CSS) $(MISC_IMG) $(COPY_NEW_CSS) $(COPY_NEW_JS)
+$(WEBCOLL):
+	@$(call MKDIR,$(WEBCOLL))
+	cp -pr src/web/collections/* $@
+
+web: $(WEB) $(WEBV) $(WEBJS) $(WEBCSS) $(WEBIMG) $(NEWCSS) $(NEWJS) $(WEBCOLL) $(OUT_HTML) $(COPY_HTML) $(OUT_CSS) $(COPY_CSS) $(COPY_JS) $(COPY_GIF)  build/web/js/pyret.js.gz $(MISC_JS) $(MISC_CSS) $(MISC_IMG) $(COPY_NEW_CSS) $(COPY_NEW_JS)
 
 clean:
 	rm -rf build/
