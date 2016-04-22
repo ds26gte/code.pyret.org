@@ -12,8 +12,8 @@
          #;TEST
          #;(rename-out (on-key-event/new on-key-event))
          #;(rename-out (on-mouse-event/new on-mouse-event))
-         #;(except-out (all-from-out htdp/world) 
-                     on-key-event 
+         #;(except-out (all-from-out htdp/world)
+                     on-key-event
                      on-mouse-event))
 
 ;(define-higher-order-primitive on-key-event/new on-key-event/proc (key-handler))
@@ -21,39 +21,13 @@
 
 ;; char->string : char -> String
 (define (char->string c)
-  (cond
-    ((char=? c #\a) "a")
-    ((char=? c #\b) "b")
-    ((char=? c #\c) "c")
-    ((char=? c #\d) "d")
-    ((char=? c #\e) "e")
-    ((char=? c #\f) "f")
-    ((char=? c #\g) "g")
-    ((char=? c #\h) "h")
-    ((char=? c #\i) "i")
-    ((char=? c #\j) "j")
-    ((char=? c #\k) "k")
-    ((char=? c #\l) "l")
-    ((char=? c #\m) "m")
-    ((char=? c #\n) "n")
-    ((char=? c #\o) "o")
-    ((char=? c #\p) "p")
-    ((char=? c #\q) "q")
-    ((char=? c #\r) "r")
-    ((char=? c #\s) "s")
-    ((char=? c #\t) "t")
-    ((char=? c #\u) "u")
-    ((char=? c #\v) "v")
-    ((char=? c #\w) "w")
-    ((char=? c #\x) "x")
-    ((char=? c #\y) "y")
-    ((char=? c #\z) "z")
-    ((char=? c #\space) "space")))
+  (cond ((char=? c " ") "space")
+        (else c)))
 
 ;; on-key-event/proc : (World Key-event -> World) -> Boolean
 (define (on-key-event/proc key-handler)
   (on-key (lambda (w key)
-                  (let ((key-str (cond 
+                  (let ((key-str (cond
                                    ((symbol? key) (symbol->string key))
                                    ((char? key) (char->string key))
                                    (else key))))
