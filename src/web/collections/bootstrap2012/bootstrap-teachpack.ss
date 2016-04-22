@@ -2,10 +2,7 @@
 	 #;(all-from-out "bootstrap-common.rkt")
          #;(except-out (all-from-out 2htdp/universe) on-key on-mouse))
 
-
-
-
-;; SETTINGS 
+;; SETTINGS
 (define WIDTH 640)
 (define HEIGHT 480)
 (define EXPLOSION-COLOR "gray")
@@ -39,7 +36,7 @@
     (cond
       [(= (image-width an-image) (* (/ w h) (image-height an-image)))
        (scale (/ w (image-width an-image)) an-image)]
-      [(> (image-width an-image) (* (/ w h) (image-height an-image))) 
+      [(> (image-width an-image) (* (/ w h) (image-height an-image)))
        (scale (/ w (* (/ w h) (image-height an-image)))
               (crop 0 0 (* (/ w h) (image-height an-image)) (image-height an-image) an-image))]
       [(< (image-width an-image) (* (/ w h) (image-height an-image)))
@@ -53,13 +50,11 @@
   (filter (lambda (b) (and (> (being-x b) 0) (< (being-x b) WIDTH)
                            (> (being-y b) 0) (< (being-y b) HEIGHT))) beings))
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Game Structures
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; A being is a (make-being Posn Image)
 (define-struct being [posn costume])
-
 
 ; A World is a (make-world (Being list) (Being list) (Being list) Being Image Number String Integer)
 (define-struct world [dangers shots targets player bg score title timer])
@@ -89,7 +84,7 @@
         (let ((dx (- cx px))
               (dy (- cy py))
               (n->s (lambda (num) (number->string (inexact->exact (round num))))))
-          (place-image 
+          (place-image
            (text (n->s ((unbox *line-length*) cx px)) 12 color)
            (- cx (/ dx 2)) cy
            (place-image
@@ -108,7 +103,7 @@
                 (line dx dy color)
                 (- cx (/ dx 2)) (- cy (/ dy 2))
                 background))))))))))
-  
+
 ; draw-being : Being Image -> Image
 ; place a being at their screen location, on the BG, in their costume
 (define (draw-being being background)
@@ -120,7 +115,6 @@
                         (add-informative-triangle cx cy (unbox *distances-color*)
                                                   background))))
     (place-image (being-costume being) cx cy dbg-bkgnd)))
-  
 
 ; draw-world : World -> Image
 ; draw the world, using either a player's costume or an explosion for the player
@@ -141,10 +135,9 @@
       (set-box! *score* (world-score w))
       (if (<= (world-score w) 0)
           (bitmap/url "http://www.wescheme.org/images/teachpacks2012/gameover.png")
-          (place-image (text/font score-string 18 (unbox TITLE-COLOR) #f 'default 'italic 'bold '#t)
-                       (quotient (image-width (unbox BACKGROUND)) 2) 20 
+          (place-image (text/font score-string 18 (unbox TITLE-COLOR) #f "default" "italic" "bold" '#t)
+                       (quotient (image-width (unbox BACKGROUND)) 2) 20
                        (foldl draw-being (unbox BACKGROUND) all-beings))))))
-
 
 ; wrap-update : (Number->Number or Number Number -> Posn) (list String) -> (Being -> Being)
 ; wrap the update function to ensure that it takes and returns a Being
@@ -154,7 +147,6 @@
      (lambda (b) (make-being (make-posn (f (being-x b)) (being-y b)) (being-costume b)))]
     [(= (procedure-arity f) 2)
      (λ (b) (make-being (f (being-x b) (being-y b)) (being-costume b)))]))
-
 
 ; reset : Being (Being->Being) -> Being
 ; returns a new being with the same costume, entering from the correct direction
@@ -166,38 +158,34 @@
                           (if (< next-y 0)
                               (make-posn (random WIDTH) (+ (spacing) HEIGHT))
                               (make-posn (random WIDTH) (* (spacing) -1)))
-                          (if (< next-x 0) 
-                              (make-posn (+ (spacing) WIDTH) (random HEIGHT)) 
+                          (if (< next-x 0)
+                              (make-posn (+ (spacing) WIDTH) (random HEIGHT))
                               (make-posn (* (spacing) -1) (random HEIGHT))))))
     (make-being random-posn (being-costume being))))
 
-
-(define (make-game title title-color background 
-                   dangerImgs update-danger 
-                   targetImgs update-target 
-                   playerImg update-player 
-                   projectileImgs update-projectile 
-                   distances-color line-length distance 
+(define (make-game title title-color background
+                   dangerImgs update-danger
+                   targetImgs update-target
+                   playerImg update-player
+                   projectileImgs update-projectile
+                   distances-color line-length distance
                    collide onscreen)
-  (list title title-color background 
-        dangerImgs update-danger 
-        targetImgs update-target 
+  (list title title-color background
+        dangerImgs update-danger
+        targetImgs update-target
         playerImg update-player
-        projectileImgs update-projectile 
-        distances-color line-length distance 
+        projectileImgs update-projectile
+        distances-color line-length distance
         collide onscreen))
-
-
 
 (define (play game) (apply animate/proc game))
 
-         
-; animate/proc:String Image (Image list) (Image list) Image 
+; animate/proc:String Image (Image list) (Image list) Image
 ;              (Being -> Being) (Being -> Being) (Being -> Being)
 ;              (Being Being -> Boolean) (Being -> Boolean) -> Boolean
 ; takes in World components, updating functions and geometry functions and starts the universe
 (define (animate/proc title title-color
-                      background 
+                      background
 		      dangerImgs    update-danger*
 		      targetImgs    update-target*
 		      playerImg     update-player*
@@ -211,42 +199,42 @@
     (set-box! *distance* distance)
     (set-box! *distances-color* distances-color)
     (let* ((player (make-being (make-posn (/ WIDTH 2) (/ HEIGHT 2)) playerImg))
-           
+
            ; normalize all user functions to use Beings, not x/y coords
            (update-danger (wrap-update update-danger*))
            (update-target (wrap-update update-target*))
            (update-projectile (wrap-update update-projectile*))
-           (update-player 
-            (lambda (p k) (make-being               
-                           (if (= (procedure-arity update-player*) 2) 
+           (update-player
+            (lambda (p k) (make-being
+                           (if (= (procedure-arity update-player*) 2)
                                (make-posn (being-x p) (update-player* (being-y p) k))
                                (update-player* (being-x p) (being-y p) k))
                            (being-costume p))))
-           (onscreen? (if (= (procedure-arity onscreen*?) 1) 
+           (onscreen? (if (= (procedure-arity onscreen*?) 1)
                           (λ (b) (onscreen*? (being-x b)))
                           (λ (b) (onscreen*? (being-x b) (being-y b)))))
-           (collide? (λ (b1 b2) (collide*? (being-x b1) (being-y b1) 
+           (collide? (λ (b1 b2) (collide*? (being-x b1) (being-y b1)
                                            (being-x b2) (being-y b2))))
-           
+
            ; did a being collide with any of it's enemies?
            (hit-by? (λ (b enemies) (ormap (λ (e) (collide? b e)) enemies)))
-           
+
            ; reset if a character hit an enemy or went offscreen, update otherwise
            (reset-chars (λ (chars enemies update)
                         (map (λ (b) (if (and (onscreen? b) (not (hit-by? b enemies)))
                                         (update b) (reset b update)))
                              chars)))
-           
+
            ; initialize lists of shots, targets, and dangers using "reset"
            (targets (map (λ (img) (reset (make-being (make-posn 0 0) img) update-target))
                          (flatten (list targetImgs))))
            (dangers (map (λ (img) (reset (make-being (make-posn 0 0) img) update-danger))
                          (flatten (list dangerImgs))))
            (shots '())
-           
+
            ; initialize the world, using a starting score of 100 and the explosion set to 0
            (world (make-world dangers shots targets player background 100 title 0))
-           
+
            ; keypress : World String -> World
            (keypress (λ(w key)
                        (cond
@@ -269,9 +257,9 @@
                     [(< (- y RESTING-TOP-DOWN-ORIENTATION) -TOLERANCE) (keypress w "up")]
                     [else w])))
            (tap (lambda (w x y) (keypress w " ")))
-            
+
            ; update-world : World -> World
-           (update-world (λ (w) 
+           (update-world (λ (w)
                            (let* ((player (world-player w))
                                   (bg (world-bg w))
                                   (title (world-title w))
@@ -279,31 +267,31 @@
                                   ; dangers and targets can be shot, shots and the player can be hit
                                   (shootables (append (world-dangers w) (world-targets w)))
                                   (hitables (cons player (world-shots w)))
-                                  
+
                                   ; reset characters that've been hit or shot, update those that haven't,
                                   ; and cull projectiles that have gone offscreen
                                   (dangers (reset-chars (world-dangers w) hitables update-danger))
                                   (targets (reset-chars (world-targets w) hitables update-target))
                                   (projectiles (reset-chars (cull (world-shots w)) shootables update-projectile))
-                                  
+
                                   ; get points for shooting down dangers
                                   (score (+ (world-score w)
                                             (if (ormap (λ(s) (hit-by? s (world-dangers w))) (world-shots w))
                                                 *target-increment* 0))))
-                             
+
                              ; check for gameover, collisions with the *original* dangers / targets
                              (cond
                                [(<= (world-score w) LOSS-SCORE) w]
                                [(> (world-timer w) 0)
-                                (make-world dangers projectiles targets player bg 
+                                (make-world dangers projectiles targets player bg
                                             score title (- timer 10))]
                                [(hit-by? player (world-dangers w))
-                                (make-world dangers projectiles targets player bg 
+                                (make-world dangers projectiles targets player bg
                                             (+ score *danger-increment*) title 100)]
                                [(hit-by? player (world-targets w))
-                                (make-world dangers projectiles targets player bg 
+                                (make-world dangers projectiles targets player bg
                                             (+ score *target-increment*) title (world-timer w))]
-                               [else (make-world dangers projectiles targets player bg 
+                               [else (make-world dangers projectiles targets player bg
                                                  score title timer)]))
                            )))
 
@@ -314,20 +302,6 @@
                 (on-key keypress)
                 ;; (on-tilt tilt)
                 (on-tap tap)))))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 (provide  sq sine cosine tangent
           pick subset? in?
@@ -361,7 +335,6 @@
    [(struct? obj) "Structure"]
    [else "I don't know."]))
 
-
 ;;; color-object->color-struct Color% -> Color
                                         ;(define (color-object->color-struct c)
                                         ;  (if ((is-a?/c color%) c)
@@ -384,10 +357,8 @@
        (equal? (color-blue  a) (color-blue  b))
        (equal? (color-alpha a) (color-alpha b))))
 
-
-
 ;; find-color : String/Color -> Color
-;; If the given color is expressed as a string or a color% object, turn it 
+;; If the given color is expressed as a string or a color% object, turn it
 ;; into a color struct, otherwise use it as is.
                                         ;(define (find-color color-name)
                                         ;  (color-object->color-struct
@@ -401,7 +372,6 @@
     (name->color x)]
    [else
     x]))
-
 
 (define (imgvec-location x y w h)
   (+ (* y w) x))
@@ -431,9 +401,9 @@
                           (begin
                             (hash-set! seen it #t)
                             (set! good (cons it good))
-                            (set! queue 
+                            (set! queue
                                   (append queue
-                                          (filter (lambda (loc) 
+                                          (filter (lambda (loc)
                                                     (color-near? (vector-ref imgvec loc) start-color tolerance))
                                                   (imgvec-adjacent-points imgvec it width height))))))
                         (loop)))))])
@@ -444,7 +414,7 @@
   (let* ((v (list->vector (image->color-list img)))
          (width (image-width img))
          (height (image-height img))
-         (c (if source-color 
+         (c (if source-color
                 (find-color source-color)
                 (vector-ref v (imgvec-location start-x start-y width height))))
          (d (find-color destination-color)))
@@ -462,7 +432,7 @@
         (jaggies 0)
         (w-1 (- (image-width img) 1))
         (h-1 (- (image-height img) 1)))
-    (fill-from-point! 
+    (fill-from-point!
      (fill-from-point!
       (fill-from-point!
        (fill-from-point! img 0 0 start-color xprt tolerance jaggies)
@@ -471,7 +441,7 @@
      w-1 h-1 start-color xprt tolerance jaggies)))
 
 ;; replace-color : Image Color Color Number -> Image
-;; In the given image, replace the source color (with the given tolerance) 
+;; In the given image, replace the source color (with the given tolerance)
 ;; by the destination color
 (define (replace-color img source-color destination-color tolerance)
   (let ((src (find-color source-color))
@@ -498,9 +468,6 @@
 (define (save-clipart img path)
   (save-image img (string-append path ".png") (image-width img)))
 
-
-
-
 ;; boolean->string : Boolean -> String
 ;; convert the given boolean to a string.
 (define (boolean->string b)
@@ -511,21 +478,18 @@
 (define (boolean->image b)
   (string->image (boolean->string b)))
 
-
-
 ;; string->image : String -> Image
 ;; convert the given string to an image.
 (define (string->image s)
-  (text s 14 'black))
+  (text s 14 "black"))
 
 ;; number->image : Number -> Image
 ;; convert the given number to an image.
 (define (number->image n)
   (string->image (number->string n)))
 
-
 ;; overlay-at : Image Number Number Image -> Image
-;; Place the foreground on the background at x y 
+;; Place the foreground on the background at x y
 ;; (in positive-y point space) relative to the center
 (define (overlay-at background x y foreground)
   (overlay/xy background x (- 0 y) foreground))
@@ -533,12 +497,12 @@
 (define (sq x) (* x x))
 ;; sine : Degrees -> Number
 ;; For a right triangle with non-right angle x in degrees,
-;; find the ratio of the length of the opposite leg to the 
+;; find the ratio of the length of the opposite leg to the
 ;; length of the hypotenuse.      sin = opposite / hypotenuse
 (define (sine x) (sin (* x (/ pi 180))))
 ;; cosine : Degrees -> Number
 ;; For a right triangle with non-right angle x in degrees,
-;; find the ratio of the length of the adjacent leg to the 
+;; find the ratio of the length of the adjacent leg to the
 ;; length of the hypotenuse.      cos = adjacent / hypotenuse
 (define (cosine x) (cos (* x (/ pi 180))))
 ;; tangent : Degrees -> Number
@@ -554,7 +518,7 @@
 
 ;; subset? : List List -> Boolean
 ;; return true if list a is a (proper or improper) subset of b
-(define (subset? a b) 
+(define (subset? a b)
   (andmap
    (lambda (ele) (member ele b))
    a))
