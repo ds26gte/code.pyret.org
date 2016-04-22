@@ -365,6 +365,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["memv"] = "list-member";
     symbolMap["null?"] = "is-empty";
     symbolMap["ormap"] = "_spyret_ormap"; // any, but variadic
+    symbolMap["pair?"] = "is-link";
     symbolMap["remove"] = "_spyret_remove";
 
     symbolMap["eighth"] = "_spyret_eighth";
@@ -492,20 +493,24 @@ define(["./wescheme-support.js", 'js/js-numbers'
 
     symbolMap["key=?"] = "is-key-equal";
 
-    symbolMap["EXAMPLE"] = "_spyret_check_expect";
-    symbolMap["check-expect"] = "_spyret_check_expect";
-    symbolMap["check-within"] = "_spyret_check_within";
-    symbolMap["identity"] = "_spyret_identity";
-    symbolMap["procedure?"] = "is-function";
-    symbolMap["void"] = "_spyret_void";
-    symbolMap["null"] = "_spyret_null";
+    symbolMap["apply"] = "_spyret_apply";
+    symbolMap["compose"] = "_spyret_compose";
     symbolMap["empty"] = "_spyret_empty";
     symbolMap["format"] = "_spyret_format";
+    symbolMap["identity"] = "_spyret_identity";
+    symbolMap["null"] = "_spyret_null";
+    symbolMap["procedure-arity"] = "_spyret_procedure_arity";
+    symbolMap["procedure?"] = "is-function";
+    symbolMap["void"] = "_spyret_void";
 
     symbolMap["false"] = "_spyret_false";
     symbolMap["true"] = "_spyret_true";
     symbolMap["pi"] = "_spyret_pi";
     symbolMap["e"] = "_spyret_e";
+
+    symbolMap["EXAMPLE"] = "_spyret_check_expect";
+    symbolMap["check-expect"] = "_spyret_check_expect";
+    symbolMap["check-within"] = "_spyret_check_within";
 
     function pyretizeSymbol(str) {
       var str2
