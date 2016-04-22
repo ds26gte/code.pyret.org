@@ -1,7 +1,6 @@
 (provide play make-game *score* *player-x* *player-y*)
 
-
-;; SETTINGS 
+;; SETTINGS
 (define WIDTH 640)
 (define HEIGHT 480)
 (define EXPLOSION-COLOR "gray")
@@ -32,7 +31,7 @@
   (cond
     [(= (image-width an-image) (* (/ w h) (image-height an-image)))
      (scale (/ w (image-width an-image)) an-image)]
-    [(> (image-width an-image) (* (/ w h) (image-height an-image))) 
+    [(> (image-width an-image) (* (/ w h) (image-height an-image)))
      (scale (/ w (* (/ w h) (image-height an-image)))
             (crop 0 0 (* (/ w h) (image-height an-image)) (image-height an-image) an-image))]
     [(< (image-width an-image) (* (/ w h) (image-height an-image)))
@@ -79,7 +78,7 @@
         (let ((dx (- cx px))
               (dy (- cy py))
               (n->s (lambda (num) (number->string (inexact->exact (round num))))))
-          (place-image 
+          (place-image
            (text (n->s ((unbox *line-length*) cx px)) 12 color)
            (- cx (/ dx 2)) cy
            (place-image
@@ -129,7 +128,7 @@
       (set-box! *player-y* (posn-y (being-posn (world-player w))))
 
       (set-box! *score* (world-score w))
-      (overlay/align "middle" "top" (text/font score-string 18 (unbox TITLE-COLOR) #f 'default 'italic 'bold '#t) 
+      (overlay/align "middle" "top" (text/font score-string 18 (unbox TITLE-COLOR) #f "default" "italic" "bold" '#t)
                      (foldl draw-being (unbox BACKGROUND) all-beings)))))
 
 ; wrap-update : (Number->Number or Number Number -> Posn) (list String) -> (Being -> Being)
@@ -146,7 +145,7 @@
 
 ; reset : Being (Being->Being) -> Being
 ; returns a new being with the same costume, entering from the correct direction
-(define (reset being f)  
+(define (reset being f)
   (let* ((next-posn (being-posn (f (make-being (make-posn 1 1) #f))))
          (next-x (- (posn-x next-posn) 1))
          (next-y (- (posn-y next-posn) 1))
@@ -154,28 +153,27 @@
                           (if (< next-y 0)
                               (make-posn (random WIDTH) (+ (spacing) HEIGHT))
                               (make-posn (random WIDTH) (* (spacing) -1)))
-                          (if (< next-x 0) 
-                              (make-posn (+ (spacing) WIDTH) (random HEIGHT)) 
+                          (if (< next-x 0)
+                              (make-posn (+ (spacing) WIDTH) (random HEIGHT))
                               (make-posn (* (spacing) -1) (random HEIGHT))))))
     (make-being random-posn (being-costume being))))
 
-(define (make-game title title-color background 
-                   dangerImgs update-danger 
-                   targetImgs update-target 
-                   playerImg update-player 
-                   projectileImgs update-projectile 
-                   show-distances line-length distance 
+(define (make-game title title-color background
+                   dangerImgs update-danger
+                   targetImgs update-target
+                   playerImg update-player
+                   projectileImgs update-projectile
+                   show-distances line-length distance
                    collide onscreen)
-  (list title title-color background 
-        dangerImgs update-danger 
-        targetImgs update-target 
+  (list title title-color background
+        dangerImgs update-danger
+        targetImgs update-target
         playerImg update-player
-        projectileImgs update-projectile 
-        show-distances line-length distance 
+        projectileImgs update-projectile
+        show-distances line-length distance
         collide onscreen))
 
 (define (play game) (apply animate/proc game))
-
 
 (define (flatten x)
   (cond ((null? x) '())
@@ -183,12 +181,12 @@
         (else (append (flatten (car x))
                       (flatten (cdr x))))))
 
-; animate/proc:String Image (Image list) (Image list) Image 
+; animate/proc:String Image (Image list) (Image list) Image
 ;              (Being -> Being) (Being -> Being) (Being -> Being)
 ;              (Being Being -> Boolean) (Being -> Boolean) -> Boolean
 ; takes in World components, updating functions and geometry functions and starts the universe
 (define (animate/proc title title-color
-                      background 
+                      background
                       dangerImgs    update-danger*
                       targetImgs    update-target*
                       playerImg     update-player*
@@ -261,19 +259,19 @@
              (update-danger (wrap-update update-danger*))
              (update-target (wrap-update update-target*))
              (update-projectile (wrap-update update-projectile*))
-             (update-player 
-              (lambda (p k)(make-being               
-                       (if (= (procedure-arity update-player*) 2) 
+             (update-player
+              (lambda (p k)(make-being
+                       (if (= (procedure-arity update-player*) 2)
                            (make-posn (being-x p) (update-player* (being-y p) k))
                            (let ((new-posn (update-player* (being-x p) (being-y p) k)))
                              (if (posn? new-posn) new-posn
                                  (begin (error "update-player has been changed to accept an x- and y-coordinate, but is not returning a Posn.\n")
                                         new-posn))))
                        (being-costume p))))
-             (onscreen? (if (= (procedure-arity onscreen*?) 1) 
+             (onscreen? (if (= (procedure-arity onscreen*?) 1)
                             (lambda (b) (onscreen*? (being-x b)))
                             (lambda (b) (onscreen*? (being-x b) (being-y b)))))
-             (collide? (lambda (b1 b2) (collide*? (being-x b1) (being-y b1) 
+             (collide? (lambda (b1 b2) (collide*? (being-x b1) (being-y b1)
                                              (being-x b2) (being-y b2))))
 
              ; did a being collide with any of it's enemies?
@@ -310,7 +308,7 @@
                            [else (world-with-player w (update-player (world-player w) key))])))
 
              ; update-world : World -> World
-             (update-world (lambda (w) 
+             (update-world (lambda (w)
                               (let* ((player (world-player w))
                                      (bg (world-bg w))
                                      (title (world-title w))
@@ -334,15 +332,15 @@
                                 (cond
                                   [(<= (world-score w) LOSS-SCORE) w]
                                   [(> (world-timer w) 0)
-                                   (make-world dangers projectiles targets player bg 
+                                   (make-world dangers projectiles targets player bg
                                                score title (- timer 10))]
                                   [(hit-by? player (world-dangers w))
-                                   (make-world dangers projectiles targets player bg 
+                                   (make-world dangers projectiles targets player bg
                                                (+ score *danger-increment*) title 100)]
                                   [(hit-by? player (world-targets w))
-                                   (make-world dangers projectiles targets player bg 
+                                   (make-world dangers projectiles targets player bg
                                                (+ score *target-increment*) title (world-timer w))]
-                                  [else (make-world dangers projectiles targets player bg 
+                                  [else (make-world dangers projectiles targets player bg
                                                     score title timer)]))
                               ))
              ; tilt/tap -- only used in tilt teachpack
