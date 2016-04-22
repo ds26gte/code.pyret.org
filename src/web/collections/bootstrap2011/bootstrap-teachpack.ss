@@ -2,10 +2,7 @@
 	 #;(all-from-out "bootstrap-common.rkt")
          #;(except-out (all-from-out 2htdp/universe) on-key on-mouse))
 
-
-
-
-;; SETTINGS 
+;; SETTINGS
 (define WIDTH 640)
 (define HEIGHT 480)
 (define EXPLOSION-COLOR "gray")
@@ -24,7 +21,6 @@
 (define *line-length* (box (lambda(a b) 0)))
 (define *distance* (box (lambda(px cx py cy) 0)))
 (define *distances-color* (box ""))
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Game Structures
@@ -60,7 +56,7 @@
         (let ((dx (- cx px))
               (dy (- cy py))
               (n->s (lambda (num) (number->string (inexact->exact (round num))))))
-          (place-image 
+          (place-image
            (text (n->s ((unbox *line-length*) cx px)) 12 color)
            (- cx (/ dx 2)) cy
            (place-image
@@ -79,7 +75,7 @@
                 (line dx dy color)
                 (- cx (/ dx 2)) (- cy (/ dy 2))
                 background))))))))))
-  
+
 ; draw-being : Being Image -> Image
 ; place a being at their screen location, on the BG, in their costume
 (define (draw-being being background)
@@ -91,7 +87,7 @@
                         (add-informative-triangle cx cy (unbox *distances-color*)
                                                   background))))
     (place-image (being-costume being) cx cy dbg-bkgnd)))
-  
+
 ; (draw-being (make-being (make-posn 10 20) (circle 20 "solid" "red") "left") (rectangle 640 480 "solid" "yellow"))
 
 ; draw-world : World -> Image
@@ -111,8 +107,8 @@
     (begin
       (set-box! *player-x* (posn-x (being-posn (world-player w))))
       (set-box! *player-y* (posn-y (being-posn (world-player w))))
-      (place-image (text/font score-string 18 (unbox TITLE-COLOR) #f 'default 'italic 'bold '#t)
-         (quotient (image-width (unbox BACKGROUND)) 2) 20 
+      (place-image (text/font score-string 18 (unbox TITLE-COLOR) #f "default" "italic" "bold" '#t)
+         (quotient (image-width (unbox BACKGROUND)) 2) 20
          (foldl draw-being (unbox BACKGROUND) all-beings)))))
 
 (define example-world
@@ -126,7 +122,6 @@
    "I am a Title!"
    17)) ; timer (non-zero means draw it mid-explosion)
 ; (draw-world example-world)
-
 
 ; check-collision : Being (list Being) (lambda Being Being -> Boolean) -> Boolean
 (define (check-collision player beings collide?)
@@ -159,10 +154,10 @@
 (define (wrap-update f)
   (cond
     [(= (procedure-arity f) 1)
-     (lambda (b) (make-being (make-posn (f (being-x b)) (being-y b)) 
+     (lambda (b) (make-being (make-posn (f (being-x b)) (being-y b))
 			     (being-costume b) (being-source b)))]
     [(= (procedure-arity f) 2)
-     (lambda (b) (make-being (f (being-x b) (being-y b)) 
+     (lambda (b) (make-being (f (being-x b) (being-y b))
 			     (being-costume b) (being-source b)))]
     [(= (procedure-arity f) 3)
      (lambda (b) (make-being (f (being-x b) (being-y b) (being-source b))
@@ -172,17 +167,17 @@
   (let ((s (spacing))
 	(p 1/3)) ;; spread
     (cond
-     [(string=? source "left") 
+     [(string=? source "left")
       (make-posn (* s -1) (random HEIGHT))]
-     [(string=? source "right") 
+     [(string=? source "right")
       (make-posn (+ s WIDTH) (random HEIGHT))]
-     [(string=? source "top") 
+     [(string=? source "top")
       (make-posn (random WIDTH) (+ s HEIGHT))]
-     [(string=? source "bottom") 
+     [(string=? source "bottom")
       (make-posn (random WIDTH) (* s -1))]
-     [(string=? source "bottom-left") 
-      (pick 
-       (list 
+     [(string=? source "bottom-left")
+      (pick
+       (list
 	(make-posn (- s)                         (random (floor (* p HEIGHT))))
 	(make-posn (random (floor (* p WIDTH)))  (- s))))]
      [(string=? source "bottom-right")
@@ -196,8 +191,8 @@
 	(make-posn (- s)                         (- HEIGHT (* p HEIGHT)))
 	(make-posn (random (floor (* p WIDTH)))  (+ HEIGHT s))))]
      [(string=? source "top-right")
-      (pick 
-       (list 
+      (pick
+       (list
 	(make-posn (- WIDTH (* p WIDTH))         (+ HEIGHT s))
 	(make-posn (+ WIDTH s)                   (- HEIGHT (* p HEIGHT)))))]
      [(string=? source "onscreen")
@@ -224,11 +219,11 @@
             (if (< next-x 0) "right" "left")))))
 
 ; reset : Being -> Being
-; returns a new being with the same costume, 
+; returns a new being with the same costume,
 ;   who is ready to enter from (being-source being)
-(define (reset being srcspec)  
+(define (reset being srcspec)
   (let ((source
-         (cond 
+         (cond
            [(procedure? srcspec) (get-direction srcspec)]
            [(list? srcspec)      (pick srcspec)]
            [(string? srcspec)    srcspec]
@@ -238,10 +233,10 @@
 ; move-all : (Being list) (Number Number -> Being/Number) (Being->Boolean) -> (Being list)
 ; update every Being in a list according to a 'move' function
 (define (move-all beings move in-domain?)
-  (map (lambda (b) 
-	 (if (in-domain? b) 
-	     (move b) 
-	     (reset b move))) 
+  (map (lambda (b)
+	 (if (in-domain? b)
+	     (move b)
+	     (reset b move)))
        beings))
 
 ; keypress : World Key (Player String -> Player) -> World
@@ -251,7 +246,7 @@
   (cond
     [(string=? key "release") w]
     [(string=? key "escape") (world-with-timer w -1)]
-    [(string=? key " ") (world-with-shots w (append (make-shot) (world-shots w)))] 
+    [(string=? key " ") (world-with-shots w (append (make-shot) (world-shots w)))]
     [else (world-with-player w (update-player (world-player w) key))]))
 
 (define (make-game title title-color background dangerImgs update-danger targetImgs update-target playerImg update-player projectileImgs update-projectile distances-color line-length distance collide onscreen)
@@ -259,12 +254,12 @@
 (define (play game)
   (apply animate/proc game))
 
-; animate/proc:String Image (Image list) (Image list) Image 
+; animate/proc:String Image (Image list) (Image list) Image
 ;              (Being -> Being) (Being -> Being) (Being -> Being)
 ;              (Being Being -> Boolean) (Being -> Boolean) -> Boolean
 ; takes in World components, updating functions and geometry functions and starts the universe
 (define (animate/proc title title-color
-                      background 
+                      background
 		      dangerImgs    update-danger*
 		      targetImgs    update-target*
 		      playerImg     update-player*
@@ -277,7 +272,7 @@
     (set-box! *line-length* line-length)
     (set-box! *distance* distance)
     (set-box! *distances-color* distances-color)
-    (let* ((player (make-being (make-posn (/ WIDTH 2) (/ HEIGHT 2)) 
+    (let* ((player (make-being (make-posn (/ WIDTH 2) (/ HEIGHT 2))
 			       playerImg "center"))
            (targetImgs (if (list? targetImgs) targetImgs (list targetImgs)))
            (dangerImgs (if (list? dangerImgs) dangerImgs (list dangerImgs)))
@@ -300,43 +295,43 @@
                         (map (lambda (d) (reset d update-danger)) origDangers)))
            (projectiles '())
            (update-player (lambda (p k)
-                            (make-being               
-                             (if (= (procedure-arity update-player*) 2) 
+                            (make-being
+                             (if (= (procedure-arity update-player*) 2)
                                  (make-posn (being-x p) (update-player* (being-y p) k))
                                  (update-player* (being-x p) (being-y p) k))
                              (being-costume p)
                              (being-source p))))
-           (onscreen? (if (= (procedure-arity onscreen*?) 1) 
-			  (lambda (x y) (onscreen*? x)) 
+           (onscreen? (if (= (procedure-arity onscreen*?) 1)
+			  (lambda (x y) (onscreen*? x))
                           onscreen*?))
-           (collide? (lambda (b1 b2) 
-		       (collide*? (being-x b1) (being-y b1) 
+           (collide? (lambda (b1 b2)
+		       (collide*? (being-x b1) (being-y b1)
 				  (being-x b2) (being-y b2))))
            (world (make-world dangers projectiles targets player background
                               0 ; score
                               title
                               0 ; timeout
                               ))
-           (keypress* (lambda (w k) (keypress w k update-player 
+           (keypress* (lambda (w k) (keypress w k update-player
                                               (if (or (> (procedure-arity update-projectile*) 1)
                                                       (not (= (update-projectile* 100) 100)))
-                                                  (lambda () (list (make-being (make-posn (unbox *player-x*) (unbox *player-y*)) 
+                                                  (lambda () (list (make-being (make-posn (unbox *player-x*) (unbox *player-y*))
                                                                          projectileImg "player")))
                                                   (lambda() '())))))
-           (update-world (lambda (w) 
-                           (begin 
+           (update-world (lambda (w)
+                           (begin
                              (set-box! *score* (world-score w))
                              (let* ((dangers
-				     (move-all (world-dangers w) update-danger 
+				     (move-all (world-dangers w) update-danger
                                                (survival-checker onscreen? collide? (world-shots w))))
                                     (projectiles
-                                     (move-all (filter (survival-checker 
-                                                        onscreen? collide? 
-                                                        (append (world-dangers w) (world-targets w))) 
+                                     (move-all (filter (survival-checker
+                                                        onscreen? collide?
+                                                        (append (world-dangers w) (world-targets w)))
                                                        (world-shots w))
                                                update-projectile (lambda (b) true)))
                                     (targets
-				     (move-all (world-targets w) update-target 
+				     (move-all (world-targets w) update-target
                                                (survival-checker onscreen? collide? (world-shots w))))
                                     (score (+ (world-score w)
                                               (if (ormap (lambda (s) (check-collision s (world-dangers w) collide?)) (world-shots w))
@@ -350,19 +345,19 @@
                                     (timer (world-timer w)))
                                (cond
                                  [(> timer 0)
-                                  (make-world dangers projectiles targets player bg 
+                                  (make-world dangers projectiles targets player bg
 					      score title (- timer 10))]
                                  [(check-collision player dangers collide?)
                                   (begin
                                     #;(play-sound "hit.wav" true)
-                                    (make-world dangers projectiles targets player bg 
+                                    (make-world dangers projectiles targets player bg
 						(+ score *danger-increment*) title 100))]
                                  [(check-collision player targets collide?)
                                   (begin
                                     #;(play-sound "score.wav" true)
-                                    (make-world dangers projectiles targets player bg 
+                                    (make-world dangers projectiles targets player bg
 						(+ score *target-increment*) title 100))]
-                                 [else (make-world dangers projectiles targets player bg 
+                                 [else (make-world dangers projectiles targets player bg
 						   score title timer)]))
                              ))))
       (big-bang world
@@ -371,26 +366,10 @@
                 (on-redraw draw-world)
                 (on-key keypress*)))))
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 (provide   sq sine cosine tangent
            pick subset? in?
            type #;warn number->image string->image overlay-at)
-  
+
   ;; warn : any* -> any, and a side effect.
   ;; display all arguments and return the last one.
   #;(define (warn . args)
@@ -398,7 +377,7 @@
       (map display args)
       (newline)
       (last args)))
-  
+
   ;; type : any -> String
   (define (type obj)
     (cond
@@ -410,19 +389,19 @@
       [(posn? obj) "Position"]
       [(symbol? obj) "Symbol"]
       [else "I don't know."]))
-  
+
   ;; string->image : String -> Image
   ;; convert the given string to an image.
   (define (string->image s)
-    (text s 14 'black))
-  
+    (text s 14 "black"))
+
   ;; number->image : Number -> Image
   ;; convert the given number to an image.
   (define (number->image n)
     (string->image (number->string n)))
 
   ;; overlay-at : Image Number Number Image -> Image
-  ;; Place the foreground on the background at x y 
+  ;; Place the foreground on the background at x y
   ;; (in positive-y point space) relative to the center
   (define (overlay-at background x y foreground)
     (overlay/xy background x (- 0 y) foreground))
@@ -431,12 +410,12 @@
   (define (sq x) (* x x))
   ;; sine : Degrees -> Number
   ;; For a right triangle with non-right angle x in degrees,
-  ;; find the ratio of the length of the opposite leg to the 
+  ;; find the ratio of the length of the opposite leg to the
   ;; length of the hypotenuse.      sin = opposite / hypotenuse
   (define (sine x) (sin (* x (/ pi 180))))
   ;; cosine : Degrees -> Number
   ;; For a right triangle with non-right angle x in degrees,
-  ;; find the ratio of the length of the adjacent leg to the 
+  ;; find the ratio of the length of the adjacent leg to the
   ;; length of the hypotenuse.      cos = adjacent / hypotenuse
   (define (cosine x) (cos (* x (/ pi 180))))
   ;; tangent : Degrees -> Number
@@ -449,15 +428,13 @@
   ;; pick a random element from the list
   (define (pick lst)
     (list-ref lst (random (length lst))))
-  
+
   ;; subset? : List List -> Boolean
   ;; return true if list a is a (proper or improper) subset of b
-  (define (subset? a b) 
+  (define (subset? a b)
     (andmap
      (lambda (ele) (member ele b))
      a))
-  
+
   (define (in? a b)
     (if (list? a) (subset? a b) (member a b)))
-  
-
