@@ -32,6 +32,7 @@ define(["js/js-numbers","/js/share.js","trove/srcloc", "trove/error-display"], f
     replace(/ƎHASHPCT/g, '#%').
     replace(/ƎUNDERSCORE/g, '_').
     replace(/ƎEMPTY/g, '').
+    replace(/ƎMODULE.*$/, 'ᵐ').
     replace(/Ǝ(\d)/g, '$1');
   }
 
@@ -693,7 +694,7 @@ define(["js/js-numbers","/js/share.js","trove/srcloc", "trove/error-display"], f
     };
     renderers["render-data"] = function renderData(top) {
       var container = $("<span>").addClass("replToggle replOutput");
-      var name = $("<span>").text(top.extra.constructorName);
+      var name = $("<span>").text(unPyretizeSymbol(top.extra.constructorName));
       var openParen = $("<span>").addClass("collapsed").text("(");
       var closeParen = $("<span>").addClass("collapsed").text(")");
       var dl = $("<dl>");
