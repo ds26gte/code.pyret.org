@@ -948,8 +948,14 @@ define(["./wescheme-support.js", 'js/js-numbers'
         moduleName = parts.slice(1).join();
       return ((plt.compiler.knownCollections.indexOf(collectionName) > -1) && plt.compiler.defaultModuleResolver(path.toString())) || /^wescheme\/\w+$/.exec(path);
       */
-      //just return path directly, for now
-      return path;
+      var parts = path.toString().split("/");
+      var collectionName = parts[0];
+      if ((plt.compiler.knownCollections.indexOf(collectionName) > -1) ||
+        /^wescheme\/\w+$/.exec(path)) {
+        return path;
+      } else {
+        return false;
+      }
     }
 
     // pinfo (program-info) is the "world" structure for the compilers;
@@ -988,6 +994,12 @@ define(["./wescheme-support.js", 'js/js-numbers'
       this.currentModulePath = currentModulePath || defaultCurrentModulePath;
 
       this.declaredPermissions = declaredPermissions || []; // (listof (listof symbol any/c))
+
+      /////////////////////////////////////////////////
+      // used to create module-qualified ids
+      this.definedIds = [];
+      this.defstructIds = makeHash();
+      this.providedIds = [];
 
       /////////////////////////////////////////////////
       // functions for manipulating pinfo objects
@@ -4950,12 +4962,19 @@ define(["./wescheme-support.js", 'js/js-numbers'
         }
       });
 
+      if (pinfo.definedIds.indexOf(this.name.val) < 0) {
+        pinfo.definedIds.push(this.name.val);
+      }
+
       var binding = bf(this.name.val, false, this.args.length, false, this.name.location);
       return pinfo.accumulateDefinedBinding(binding, this.location);
     };
     defVar.prototype.collectDefinitions = function(pinfo) {
       var binding = (this.expr instanceof lambdaExpr) ?
         bf(this.name.val, false, this.expr.args.length, false, this.name.location) : new constantBinding(this.name.val, false, [], this.name.location);
+      if (pinfo.definedIds.indexOf(this.name.val) < 0) {
+        pinfo.definedIds.push(this.name.val);
+      }
       return pinfo.accumulateDefinedBinding(binding, this.location);
     };
     defVars.prototype.collectDefinitions = function(pinfo) {
@@ -4972,7 +4991,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         var id = that.stx[1].val,
           fields = that.stx[2],
           constructorId = "make-" + id,
-          //predicateId = id + "?",
+          //predicateId = "is-" + id,
           predicateId = id + "ƎQUESTION",
           selectorIds = fields.map(fieldToAccessor),
           //mutatorIds = fields.map(fieldToMutator),
@@ -4992,10 +5011,16 @@ define(["./wescheme-support.js", 'js/js-numbers'
           //        mutatorBindings    = mutatorIds.map(function(id){return bf(id, false, 2, false, that.location)}),
           // assemble all the bindings together
           bindings = [structureBinding, refBinding, constructorBinding, predicateBinding, mutatorBinding];
+        var accompanyingIds = [id, constructorId, predicateId, "is-" + id].concat(selectorIds);
+        pinfo.definedIds = pinfo.definedIds.concat(accompanyingIds);
+        pinfo.defstructIds.put(id, accompanyingIds);
         return pinfo.accumulateDefinedBindings(bindings, that.location);
       } else {
         return this.names.reduce(function(pinfo, id) {
           var binding = new constantBinding(id.val, false, [], id.location);
+          if (pinfo.definedIds.indexOf(id.val) < 0) {
+            pinfo.definedIds.push(id.val);
+          }
           return pinfo.accumulateDefinedBinding(binding, that.location);
         }, pinfo);
       }
@@ -5007,18 +5032,14 @@ define(["./wescheme-support.js", 'js/js-numbers'
     requireExpr.prototype.collectDefinitions = function(pinfo) {
       // if it's a literal, pull out the actual value. if it's a symbol use it as-is
       var moduleName = (this.spec instanceof literal) ? this.spec.val.toString() : this.spec.toString(),
-        resolvedModuleName = pinfo.modulePathResolver(moduleName, pinfo.currentModulePath),
+        //resolvedModuleName = pinfo.modulePathResolver(moduleName, pinfo.currentModulePath),
         that = this,
         newPinfo;
 
       // is this a shared WeScheme program?
       function getWeSchemeModule(name) {
-        /*
         var m = name.match(/^wescheme\/(\w+)$/);
         return m ? m[1] : false;
-        */
-        //only WeScheme modules for now
-        return true;
       }
 
       function throwModuleError(moduleName) {
@@ -5031,9 +5052,13 @@ define(["./wescheme-support.js", 'js/js-numbers'
       }
 
       // if it's an invalid moduleName, throw an error
+      // let's not restrict to knownCollections just yet, because we want to put arbitrary stuff
+      // in collections/ for debugging purposes
+      /*
       if (!(resolvedModuleName || getWeSchemeModule(moduleName))) {
         throwModuleError(moduleName);
       }
+      */
 
       // processModule : JS -> pinfo
       // assumes the module has been assigned to window.COLLECTIONS.
@@ -5056,17 +5081,23 @@ define(["./wescheme-support.js", 'js/js-numbers'
       //var url = window.location.protocol + "//" + window.location.host + (getWeSchemeModule(moduleName) ? "/loadProject?publicId=" + (getWeSchemeModule(moduleName)) : "/js/mzscheme-vm/collects/" + moduleName + ".js");
 
       //let url be just the filename for now
-      var url = moduleName;
+      var url;
+      if (getWeSchemeModule(moduleName)) {
+        console.log("wescheme-style modules not yet supported");
+        throwModuleError(moduleName);
+      } else {
+        url = "collections/" + moduleName;
+      }
 
       // if the module is already loaded, we can just process without loading
-      if (window.COLLECTIONS && window.COLLECTIONS[moduleName]) {
+      if (false && window.COLLECTIONS && window.COLLECTIONS[moduleName]) {
         processModule(moduleName);
       } else {
         jQuery.ajax({
           url: url,
           success: function(result) {
             // if it's not a native module, manually assign it to window.COLLECTIONS
-            if (getWeSchemeModule(moduleName)) {
+            if (true || getWeSchemeModule(moduleName)) {
               //var program = (0, eval)('(' + result + ')');
               var program = result;
               // Create the COLLECTIONS array, if it doesn't exist
@@ -5079,18 +5110,19 @@ define(["./wescheme-support.js", 'js/js-numbers'
               var AST = plt.compiler.parse(lexemes);
                 var desugared = plt.compiler.desugar(AST, undefined)[0]; // includes [AST, pinfo]
                 var pinfo = plt.compiler.analyze(desugared);
-                var module_provideds = pinfo.providedNames.keys();
-                var module_defineds = pinfo.definedNames.keys();
-                var module_locals = module_defineds.filter(function(x) {
-                  return (module_provideds.indexOf(x) === -1);
+                var module_providedIds = pinfo.providedIds;
+                var module_definedIds = pinfo.definedIds;
+                var module_localIds = module_definedIds.filter(function(x) {
+                  return (module_providedIds.indexOf(x) === -1);
                 });
                 //var objectCode = plt.compiler.compile(desugared, pinfo);
               window.COLLECTIONS[moduleName] = {
                 'name': moduleName,
-                'suffix' : "-ƎTEMP-" + plt.compiler.pyretizeSymbol(moduleName),
+                'suffix' : "ƎMODULE-" + plt.compiler.pyretizeSymbol(moduleName),
                 //'bytecode': (0, eval)('(' + objectCode.bytecode + ')'),
-                'locals': module_locals,
-                'provides': pinfo.providedNames.keys(),
+                'locals': module_localIds,
+                //'provides': pinfo.providedNames.keys(),
+                "provides": module_providedIds
                 //'provides': objectCode.provides
               };
                 var pyretObjectCode = plt.compiler.toPyretAST(AST, pinfo,
@@ -5141,8 +5173,15 @@ define(["./wescheme-support.js", 'js/js-numbers'
 
       // collectProvidesFromClause : pinfo clause -> pinfo
       function collectProvidesFromClause(pinfo, clause) {
+
         // if it's a symbol, make sure it's defined (otherwise error)
         if (clause instanceof symbolExpr) {
+          if (pinfo.defstructIds.containsKey(clause.val)) {
+            pinfo.providedIds = pinfo.providedIds.concat(pinfo.defstructIds.get(clause.val));
+          } else {
+            pinfo.providedIds.push(clause.val);
+          }
+
           if (pinfo.definedNames.containsKey(clause.val)) {
             addProvidedName(clause.val);
             return pinfo;
@@ -5155,6 +5194,11 @@ define(["./wescheme-support.js", 'js/js-numbers'
           // if it's an array, make sure the struct is defined (otherwise error)
           // NOTE: ONLY (struct-out id) IS SUPPORTED AT THIS TIME
         } else if (clause instanceof Array) {
+
+          if (pinfo.defstructIds.containsKey(clause[1].val)) {
+            pinfo.providedIds = pinfo.providedIds.concat(pinfo.defstructIds.get(clause[1].val));
+          }
+
           if (pinfo.definedNames.containsKey(clause[1].val) &&
             (pinfo.definedNames.get(clause[1].val) instanceof structBinding)) {
             // add the entire structBinding to the provided binding, so we
@@ -5644,20 +5688,22 @@ define(["./wescheme-support.js", 'js/js-numbers'
       var otherExps = [];
       var checkExpects = [];
       var it;
-      function helper(b, highPrio) {
-        if (b.name === "let-expr" &&
+      function helper(b, bubbleType) {
+        if (bubbleType === 2) {
+          otherExps.push(b);
+        } else if (b.name === "let-expr" &&
                    b.kids.length > 1 && (it = b.kids[0]) && it.name === "let" &&
                    (it = b.kids[1]) && it.name === "toplevel-binding") {
           if (b.kids.length >= 4 && (it = b.kids[3]) &&
              (it.name === "binop-expr" || it.name === "expr" || it.name === "app-expr")) {
             defnonfuns.push(b);
           } else {
-            (highPrio? defstructs : defnonfuns).push(b);
+            (bubbleType === 1? defstructs : defnonfuns).push(b);
           }
         } else if (b.name === "stmt" &&
                    b.kids.length > 0 && (it = b.kids[0]) &&
                    (it.name === "data-expr" || it.name === "fun-expr")) {
-            (highPrio? defstructs : defuns).push(b);
+            (bubbleType === 1? defstructs : defuns).push(b);
         } else if (b.name === "app-expr" &&
                    b.kids.length > 0 && (it = b.kids[0]) && it.name === "expr" &&
                    it.kids.length > 0 && (it = it.kids[0]) && it.name === "expr" &&
@@ -5674,9 +5720,9 @@ define(["./wescheme-support.js", 'js/js-numbers'
       for (var i = 0; i < programs.length; i++) {
         var b = programs[i].toPyretAST();
         if (b.name === "block") {
-          b.kids.forEach(function(b) { helper(b, true); });
+          b.kids.forEach(function(b) { helper(b, 1); });
         } else if (b.name === "require-block") {
-          b.kids.forEach(helper);
+          b.kids.forEach(function(b) { helper(b, 2); });
         } else {
           helper(b);
         }
@@ -5718,12 +5764,17 @@ define(["./wescheme-support.js", 'js/js-numbers'
       };
     }
 
-    function makeResolvedName(name, loc, asis) {
-      var rname = "" + name;
+    function moduleQualifiedId(id, asis) {
       var it;
-      if (!asis && _module && (it = window.COLLECTIONS[_module]) && (it.locals.indexOf(name) >= 0)) {
-        rname = name + it.suffix;
+      if (!asis && _module && (it = window.COLLECTIONS[_module]) && (it.locals.indexOf(id) >= 0)) {
+        return id + it.suffix;
+      } else {
+        return "" + id;
       }
+    }
+
+    function makeResolvedName(name, loc, asis) {
+      var rname = moduleQualifiedId(name, asis);
       return {
         name: "NAME",
         value: rname,
@@ -5733,7 +5784,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     }
 
     // given a symbol, make a binding (used for let-expr, fun-expr, lam-expr...)
-    function makeBindingFromSymbol(sym) {
+    function makeBindingFromSymbol(sym, asis) {
       var loc = sym.location;
       var psym = sym.val;
       //var psym = pyretizeSymbol(sym.val)
@@ -5745,7 +5796,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
           key: "'SHADOW:shadow",
           pos: loc
         },
-        makeResolvedName(psym, loc)],
+        makeResolvedName(psym, loc, asis)],
         pos: loc
       };
     }
@@ -6073,7 +6124,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         return {
           name: "variant-member",
           pos: field.location,
-          kids: [makeBindingFromSymbol(field)]
+          kids: [makeBindingFromSymbol(field, true)]
         }
       }
 
@@ -6097,13 +6148,17 @@ define(["./wescheme-support.js", 'js/js-numbers'
         }
       }
 
+      var foo_orig_name = this.name.val;
+
+      var foo_name = moduleQualifiedId(foo_orig_name);
+
       var foo_ = {
         name: "stmt",
         pos: this.location,
         kids: [{
           name: "data-expr",
           kids: [dataStx,
-            makeResolvedName(this.name + "_", this.stx[1].location), {
+            makeResolvedName(foo_name + "_", this.stx[1].location, true), {
               name: "ty-params",
               kids: [] // there are no parameters for racket datatypes
                 ,
@@ -6117,7 +6172,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
               name: "data-variant",
               kids: [barStx, {
                 name: "variant-constructor",
-                kids: [makeResolvedName(this.name, this.stx[1].location), {
+                kids: [makeResolvedName(foo_name, this.stx[1].location, true), {
                   name: "variant-members",
                   kids: [lParenStx].concat(foo_variant_members(this.fields), [rParenStx]),
                   pos: this.stx[2].location
@@ -6146,8 +6201,6 @@ define(["./wescheme-support.js", 'js/js-numbers'
         }]
       }
 
-      var foo_name = this.name
-
       function create_foo_a(field) {
         return {
           name: "stmt",
@@ -6156,7 +6209,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
             name: "fun-expr",
             kids: [
               funStx,
-              makeResolvedName(foo_name + "-" + field.val, field.location), {
+              makeResolvedName(foo_orig_name + "-" + field.val, field.location), {
                 name: "fun-header",
                 kids: [{
                   name: "ty-params",
@@ -6210,7 +6263,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
                             key: "'DOT:.",
                             pos: field.location
                           },
-                            makeResolvedName(field.val, field.location)],
+                            makeResolvedName(field.val, field.location, true)],
                           pos: field.location
                         }],
                         pos: field.location
@@ -6243,7 +6296,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         kids: [{
           name: "fun-expr",
           kids: [funStx,
-          makeResolvedName(this.name + "ƎQUESTION", this.location), {
+          makeResolvedName(foo_orig_name + "ƎQUESTION", this.location), {
             name: "fun-header",
             kids: [{
               name: "ty-params",
@@ -6283,7 +6336,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
                         name: "expr",
                         kids: [{
                           name: "id-expr",
-                          kids: [makeResolvedName("is-" + this.name, this.location)],
+                          kids: [makeResolvedName("is-" + foo_name, this.location, true)],
                           pos: this.location
                         }],
                         pos: this.location
@@ -6338,7 +6391,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
             kids: [{
               name: "id-expr",
               pos: field.location,
-              kids: [makeResolvedName(field.val, field.location)]
+              kids: [makeResolvedName(field.val, field.location, true)]
             }]
           }]
         }
@@ -6376,7 +6429,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
               value: "fun",
               key: "'FUN:fun"
             },
-            makeResolvedName("make-" + foo_name, this.location),  {
+            makeResolvedName("make-" + foo_orig_name, this.location),  {
               name: "fun-header",
               pos: this.location,
               kids: [{
@@ -6387,7 +6440,8 @@ define(["./wescheme-support.js", 'js/js-numbers'
                 name: "args",
                 pos: this.location,
                 // the first one is list-arg-elt(binding), the rest are just binding's
-                kids: [].concat([lParenStx], this.fields.map(makeBindingFromSymbol), [rParenStx])
+                kids: [].concat([lParenStx], this.fields.map(function(x) { return makeBindingFromSymbol(x,true); }),
+                                [rParenStx])
               }, {
                 name: "return-ann",
                 pos: this.location,
@@ -6422,7 +6476,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
                           kids: [{
                             name: "id-expr",
                             pos: this.location,
-                            kids: [makeResolvedName(foo_name, this.location)]
+                            kids: [makeResolvedName(foo_name, this.location, true)]
                           }]
                         },  {
                           name: "app-args",
