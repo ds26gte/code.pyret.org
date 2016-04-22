@@ -8,7 +8,6 @@
 ;;(provide (all-from-out "bootstrap-common.rkt"))
 ;;(provide-higher-order-primitive start (onscreen?))
 
-
 (provide start)
 
 (define WIDTH  640)
@@ -20,76 +19,58 @@
 ; each world has an x and y coordinate
 (define-struct world [x y])
 
-;; move: World Number -> Number 
-;; did the object move? 
+;; move: World Number -> Number
+;; did the object move?
 (define (move w key)
   (cond
     [(not (string? key)) w]
-    [(string=? key "left") 
+    [(string=? key "left")
      (make-world (- (world-x w) 10) (world-y w))]
-    [(string=? key "right") 
+    [(string=? key "right")
      (make-world (+ (world-x w) 10) (world-y w))]
-    [(string=? key "down") 
+    [(string=? key "down")
      (make-world (world-x w) (- (world-y w) 10))]
-    [(string=? key "up") 
+    [(string=? key "up")
      (make-world (world-x w) (+ (world-y w) 10))]
     [else w]))
 
-
 ;; ----------------------------------------------------------------------------
-;; draw-world: World -> Image 
-;; create an image that represents the world 
+;; draw-world: World -> Image
+;; create an image that represents the world
 (define (draw-world w)
-  (let* ((draw-butterfly 
+  (let* ((draw-butterfly
           (lambda (w scene)
-            (place-image butterfly 
-                         (world-x w) 
+            (place-image butterfly
+                         (world-x w)
                          (- HEIGHT (world-y w))
                          scene)))
-         (draw-text 
+         (draw-text
           (lambda (w scene)
             (place-image
-             (text 
-              (string-append "x-coordinate: " 
+             (text
+              (string-append "x-coordinate: "
                              (number->string (world-x w))
                              "   y-coordinate: "
                              (number->string (world-y w)))
-              14 'black)
+              14 "black")
 	     (quotient (image-width scene) 2)
 	     15
              scene))))
-    (draw-butterfly w 
+    (draw-butterfly w
                     (draw-text w (empty-scene WIDTH HEIGHT)))))
 
-
 (define (start onscreen?)
-  (let* ((onscreen?* (if (= (procedure-arity onscreen?) 2) 
+  (let* ((onscreen?* (if (= (procedure-arity onscreen?) 2)
                         onscreen?
                         (lambda (x y) (onscreen? x))))
-         (update (lambda (w k) 
-                   (if (onscreen?* (world-x (move w k)) 
-                                   (world-y (move w k))) 
+         (update (lambda (w k)
+                   (if (onscreen?* (world-x (move w k))
+                                   (world-y (move w k)))
                        (move w k)
                        w))))
     (big-bang (make-world (/ WIDTH 2) (/ HEIGHT 2))
               (on-redraw draw-world)
               (on-key update))))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 (provide  sq sine cosine tangent
           pick subset? in?
@@ -123,7 +104,6 @@
    [(struct? obj) "Structure"]
    [else "I don't know."]))
 
-
 ;;; color-object->color-struct Color% -> Color
                                         ;(define (color-object->color-struct c)
                                         ;  (if ((is-a?/c color%) c)
@@ -146,10 +126,8 @@
        (equal? (color-blue  a) (color-blue  b))
        (equal? (color-alpha a) (color-alpha b))))
 
-
-
 ;; find-color : String/Color -> Color
-;; If the given color is expressed as a string or a color% object, turn it 
+;; If the given color is expressed as a string or a color% object, turn it
 ;; into a color struct, otherwise use it as is.
                                         ;(define (find-color color-name)
                                         ;  (color-object->color-struct
@@ -163,7 +141,6 @@
     (name->color x)]
    [else
     x]))
-
 
 (define (imgvec-location x y w h)
   (+ (* y w) x))
@@ -193,9 +170,9 @@
                           (begin
                             (hash-set! seen it #t)
                             (set! good (cons it good))
-                            (set! queue 
+                            (set! queue
                                   (append queue
-                                          (filter (lambda (loc) 
+                                          (filter (lambda (loc)
                                                     (color-near? (vector-ref imgvec loc) start-color tolerance))
                                                   (imgvec-adjacent-points imgvec it width height))))))
                         (loop)))))])
@@ -206,7 +183,7 @@
   (let* ((v (list->vector (image->color-list img)))
          (width (image-width img))
          (height (image-height img))
-         (c (if source-color 
+         (c (if source-color
                 (find-color source-color)
                 (vector-ref v (imgvec-location start-x start-y width height))))
          (d (find-color destination-color)))
@@ -224,7 +201,7 @@
         (jaggies 0)
         (w-1 (- (image-width img) 1))
         (h-1 (- (image-height img) 1)))
-    (fill-from-point! 
+    (fill-from-point!
      (fill-from-point!
       (fill-from-point!
        (fill-from-point! img 0 0 start-color xprt tolerance jaggies)
@@ -233,7 +210,7 @@
      w-1 h-1 start-color xprt tolerance jaggies)))
 
 ;; replace-color : Image Color Color Number -> Image
-;; In the given image, replace the source color (with the given tolerance) 
+;; In the given image, replace the source color (with the given tolerance)
 ;; by the destination color
 (define (replace-color img source-color destination-color tolerance)
   (let ((src (find-color source-color))
@@ -260,9 +237,6 @@
 (define (save-clipart img path)
   (save-image img (string-append path ".png") (image-width img)))
 
-
-
-
 ;; boolean->string : Boolean -> String
 ;; convert the given boolean to a string.
 (define (boolean->string b)
@@ -273,21 +247,18 @@
 (define (boolean->image b)
   (string->image (boolean->string b)))
 
-
-
 ;; string->image : String -> Image
 ;; convert the given string to an image.
 (define (string->image s)
-  (text s 14 'black))
+  (text s 14 "black"))
 
 ;; number->image : Number -> Image
 ;; convert the given number to an image.
 (define (number->image n)
   (string->image (number->string n)))
 
-
 ;; overlay-at : Image Number Number Image -> Image
-;; Place the foreground on the background at x y 
+;; Place the foreground on the background at x y
 ;; (in positive-y point space) relative to the center
 (define (overlay-at background x y foreground)
   (overlay/xy background x (- 0 y) foreground))
@@ -296,12 +267,12 @@
 (define (sq x) (* x x))
 ;; sine : Degrees -> Number
 ;; For a right triangle with non-right angle x in degrees,
-;; find the ratio of the length of the opposite leg to the 
+;; find the ratio of the length of the opposite leg to the
 ;; length of the hypotenuse.      sin = opposite / hypotenuse
 (define (sine x) (sin (* x (/ pi 180))))
 ;; cosine : Degrees -> Number
 ;; For a right triangle with non-right angle x in degrees,
-;; find the ratio of the length of the adjacent leg to the 
+;; find the ratio of the length of the adjacent leg to the
 ;; length of the hypotenuse.      cos = adjacent / hypotenuse
 (define (cosine x) (cos (* x (/ pi 180))))
 ;; tangent : Degrees -> Number
@@ -317,7 +288,7 @@
 
 ;; subset? : List List -> Boolean
 ;; return true if list a is a (proper or improper) subset of b
-(define (subset? a b) 
+(define (subset? a b)
   (andmap
    (lambda (ele) (member ele b))
    a))
@@ -325,8 +296,5 @@
 (define (in? a b)
   (if (list? a) (subset? a b) (if (eq? (member a b) #f) #f #t)))
 
-
 (define (on-blue img)
   (overlay img (rectangle (image-width img) (image-height img) "solid" "blue")))
-
-
