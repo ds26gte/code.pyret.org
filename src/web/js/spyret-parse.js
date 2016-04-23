@@ -5135,6 +5135,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
               };
                 var pyretObjectCode = plt.compiler.toPyretAST(AST, pinfo,
                                            "no_need_for_autoimports", moduleName);
+                //console.log('rq_ast_j = ' + JSON.stringify(pyretObjectCode));
                 window.COLLECTIONS[moduleName].bytecode = pyretObjectCode;
               // otherwise, simply evaluate the raw JS
             } else {
@@ -5698,7 +5699,8 @@ define(["./wescheme-support.js", 'js/js-numbers'
       var it;
       function helper(b, bubbleType) {
         if (bubbleType === 2) {
-          otherExps.push(b);
+          defnonfuns.push(b);
+          //otherExps.push(b);
         } else if (b.name === "let-expr" &&
                    b.kids.length > 1 && (it = b.kids[0]) && it.name === "let" &&
                    (it = b.kids[1]) && it.name === "toplevel-binding") {
@@ -6962,6 +6964,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     }
 
     requireExpr.prototype.toPyretAST = function() {
+      console.log('doing requireExpr:toPyretAST ' + this.spec);
       //var moduleName = (this.spec instanceof literal) ? this.spec.val.toString() : this.spec.toString();
       var moduleName = this.spec;
       var it = window.COLLECTIONS[moduleName].bytecode;
