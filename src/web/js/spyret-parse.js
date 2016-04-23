@@ -549,6 +549,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     function symbolExpr(val, stx, verbatimP) {
       Program.call(this);
       this.val = verbatimP? val: pyretizeSymbol(val);
+      this.verbatimVal = val;
       this.stx = stx;
     };
     symbolExpr.prototype = heir(Program.prototype);
@@ -663,10 +664,11 @@ define(["./wescheme-support.js", 'js/js-numbers'
     // require expression
     function requireExpr(spec, stx) {
       Program.call(this);
-      this.spec = spec;
+      this.spec =
+      this.spec = spec instanceof symbolExpr? spec.verbatimVal : spec.val;
       this.stx = stx;
       this.toString = function() {
-        return "(require " + this.spec.toString() + ")";
+        return "(require " + spec + ")";
       };
     };
     requireExpr.prototype = heir(Program.prototype);
@@ -5036,9 +5038,10 @@ define(["./wescheme-support.js", 'js/js-numbers'
     // FIXME: we currently override moduleName, which SHOULD just give us the proper name
     requireExpr.prototype.collectDefinitions = function(pinfo) {
       // if it's a literal, pull out the actual value. if it's a symbol use it as-is
-      var moduleName = (this.spec instanceof literal) ? this.spec.val.toString() : this.spec.toString(),
+      var moduleName = this.spec;
+      //var moduleName = (this.spec instanceof literal) ? this.spec.val.toString() : this.spec.toString(),
         //resolvedModuleName = pinfo.modulePathResolver(moduleName, pinfo.currentModulePath),
-        that = this,
+        var that = this,
         newPinfo;
 
       // is this a shared WeScheme program?
@@ -5091,7 +5094,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
         console.log("wescheme-style modules not yet supported");
         throwModuleError(moduleName);
       } else {
-        url = "collections/" + moduleName;
+        url = "collections/" + moduleName + ".ss";
       }
 
       // if the module is already loaded, we can just process without loading
@@ -6959,7 +6962,8 @@ define(["./wescheme-support.js", 'js/js-numbers'
     }
 
     requireExpr.prototype.toPyretAST = function() {
-      var moduleName = (this.spec instanceof literal) ? this.spec.val.toString() : this.spec.toString();
+      //var moduleName = (this.spec instanceof literal) ? this.spec.val.toString() : this.spec.toString();
+      var moduleName = this.spec;
       var it = window.COLLECTIONS[moduleName].bytecode;
       return it;
     }
