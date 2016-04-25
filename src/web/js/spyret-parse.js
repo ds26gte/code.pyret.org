@@ -6996,7 +6996,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     }
 
     requireExpr.prototype.toPyretAST = function() {
-      console.log('doing requireExpr:toPyretAST ' + this.spec);
+      //console.log('doing requireExpr:toPyretAST ' + this.spec);
       //var moduleName = (this.spec instanceof literal) ? this.spec.val.toString() : this.spec.toString();
       var moduleName = this.spec;
       var it = window.COLLECTIONS[moduleName].bytecode;
