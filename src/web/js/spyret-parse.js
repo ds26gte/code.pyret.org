@@ -5697,29 +5697,59 @@ define(["./wescheme-support.js", 'js/js-numbers'
       var otherExps = [];
       var checkExpects = [];
       var it;
+
+      var localFunIds = [];
+      var i;
+
+      for (i = 0; i < programs.length; i++) {
+        var p = programs[i];
+        if (p instanceof defFunc) {
+          localFunIds.push(moduleQualifiedId(p.name.val));
+        }
+      }
+
+      //console.log('localFunIds = ' + localFunIds);
+
+      function refersToLocalFunId(b) {
+        if (b.name === "NAME" && b.value && localFunIds.indexOf(b.value) > -1) {
+          return true;
+        }
+        if (b.kids && b.kids.some(refersToLocalFunId)) {
+          return true;
+        }
+        return false;
+      }
+
       function helper(b, bubbleType) {
+        var it;
         if (bubbleType === 2) {
+          //required-module contents
           defnonfuns.push(b);
           //otherExps.push(b);
+        } else if (bubbleType === 1) {
+          //defstruct contents
+          defstructs.push(b);
         } else if (b.name === "let-expr" &&
-                   b.kids.length > 1 && (it = b.kids[0]) && it.name === "let" &&
-                   (it = b.kids[1]) && it.name === "toplevel-binding") {
-          if (b.kids.length >= 4 && (it = b.kids[3]) &&
-             (it.name === "binop-expr" || it.name === "expr" || it.name === "app-expr")) {
-            defnonfuns.push(b);
+          b.kids.length > 1 && (it = b.kids[0]) && it.name === "let" &&
+          (it = b.kids[1]) && it.name === "toplevel-binding") {
+          //console.log("checking " + it.kids[0].kids[1].value)
+          if (refersToLocalFunId(b)) {
+            //console.log('referred to local fun id');
+            otherExps.push(b);
           } else {
-            (bubbleType === 1? defstructs : defnonfuns).push(b);
+            //console.log('did not refer to local fun id');
+            defnonfuns.push(b);
           }
         } else if (b.name === "stmt" &&
-                   b.kids.length > 0 && (it = b.kids[0]) &&
-                   (it.name === "data-expr" || it.name === "fun-expr")) {
-            (bubbleType === 1? defstructs : defuns).push(b);
+          b.kids.length > 0 && (it = b.kids[0]) &&
+          (it.name === "data-expr" || it.name === "fun-expr")) {
+          defuns.push(b);
         } else if (b.name === "app-expr" &&
-                   b.kids.length > 0 && (it = b.kids[0]) && it.name === "expr" &&
-                   it.kids.length > 0 && (it = it.kids[0]) && it.name === "expr" &&
-                   it.kids.length > 0 && (it = it.kids[0]) && it.name === "id-expr" &&
-                   it.kids.length > 0 && (it = it.kids[0]) &&
-                   it.name === "NAME" && it.value === "_spyret_check_expect") {
+          b.kids.length > 0 && (it = b.kids[0]) && it.name === "expr" &&
+          it.kids.length > 0 && (it = it.kids[0]) && it.name === "expr" &&
+          it.kids.length > 0 && (it = it.kids[0]) && it.name === "id-expr" &&
+          it.kids.length > 0 && (it = it.kids[0]) &&
+          it.name === "NAME" && it.value === "_spyret_check_expect") {
           checkExpects.push(b);
         } else if (single) {
           otherExps.push(b);
@@ -5727,7 +5757,8 @@ define(["./wescheme-support.js", 'js/js-numbers'
           otherExps.push(wrapPrint(b));
         }
       }
-      for (var i = 0; i < programs.length; i++) {
+
+      for (i = 0; i < programs.length; i++) {
         var b = programs[i].toPyretAST();
         if (b.name === "block") {
           b.kids.forEach(function(b) { helper(b, 1); });
@@ -5737,6 +5768,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
           helper(b);
         }
       }
+
       var kiddos = defstructs.concat(defnonfuns,defuns,otherExps,checkExpects);
       it = {
         name: moduleName? "require-block" : "block",
