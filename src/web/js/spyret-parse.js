@@ -508,10 +508,11 @@ define(["./wescheme-support.js", 'js/js-numbers'
     symbolMap["pi"] = "_spyret_pi";
     symbolMap["e"] = "_spyret_e";
 
-    symbolMap["display"] = "_spyret_display";
     symbolMap["EXAMPLE"] = "_spyret_check_expect";
     symbolMap["check-expect"] = "_spyret_check_expect";
     symbolMap["check-within"] = "_spyret_check_within";
+    symbolMap["display"] = "_spyret_display";
+    symbolMap["error"] = "_spyret_error";
 
     function pyretizeSymbol(str) {
       var str2
