@@ -5654,25 +5654,104 @@ define(["./wescheme-support.js", 'js/js-numbers'
 
     function wrapPrint(b) {
       return {
-        name: "app-expr",
+        name: "user-block-expr",
         pos: blankLoc,
-        kids: [{
-          name: "expr",
+        kids: [blockStx, {
+          name: "block",
           pos: blankLoc,
           kids: [{
-            name: "expr",
+            name: "stmt",
             pos: blankLoc,
             kids: [{
-              name: "id-expr",
+              name: "let-expr",
               pos: blankLoc,
-              kids: [makeResolvedName("print", blankLoc)],
-            }],
-          }],
+              kids: [{
+                  name: "binding",
+                  pos: blankLoc,
+                  kids: [{
+                      name: "SHADOW",
+                      pos: blankLoc,
+                      value: "shadow",
+                      key: "'SHADOW:shadow",
+                    },
+                    makeResolvedName("_spyret_repl_item_value", blankLoc, true)
+                  ]
+                },
+                equalsStx,
+                b
+              ]
+            }]
+          }, {
+            name: "when-expr",
+            pos: blankLoc,
+            kids: [whenStx, {
+              name: "app-expr",
+              pos: blankLoc,
+              kids: [{
+                name: "id-expr",
+                pos: blankLoc,
+                kids: [makeResolvedName("_spyret_false_p", blankLoc, true)]
+              }, {
+                name: "app-args",
+                pos: blankLoc,
+                kids: [lParenStx, {
+                  name: "app-expr",
+                  pos: blankLoc,
+                  kids: [{
+                    name: "id-expr",
+                    pos: blankLoc,
+                    kids: [makeResolvedName("identical", blankLoc, true)]
+                  }, {
+                    name: "app-args",
+                    pos: blankLoc,
+                    kids: [lParenStx, {
+                      name: "id-expr",
+                      pos: blankLoc,
+                      kids: [makeResolvedName("_spyret_repl_item_value", blankLoc, true)]
+                    }, {
+                      name: "id-expr",
+                      pos: blankLoc,
+                      kids: [makeResolvedName("nothing", blankLoc, true)]
+                    }, rParenStx]
+                  }],
+                }, rParenStx]
+              }]
+            }, colonStx, {
+              name: "block",
+              pos: blankLoc,
+              kids: [{
+                name: "stmt",
+                pos: blankLoc,
+                kids: [{
+                  name: "app-expr",
+                  pos: blankLoc,
+                  kids: [{
+                    name: "id-expr",
+                    pos: blankLoc,
+                    kids: [makeResolvedName("_spyret_display", blankLoc, true)]
+                  }, {
+                    name: "app-args",
+                    pos: blankLoc,
+                    kids: [lParenStx, {
+                      name: "id-expr",
+                      pos: blankLoc,
+                      kids: [makeResolvedName("_spyret_repl_item_value", blankLoc, true)]
+                    }, rParenStx]
+                  }]
+                }]
+              }]
+            }, {
+              name: "end",
+              pos: blankLoc,
+              kids: [endStx]
+            }]
+          }]
         }, {
-          name: "app-args",
-          kids: [lParenStx, b, rParenStx],
-        }],
-      }
+          name: "end",
+          pos: blankLoc,
+          kids: [endStx]
+        }]
+      };
     }
 
     // pinfo that is reset for each translation
