@@ -5890,6 +5890,24 @@ define(["./wescheme-support.js", 'js/js-numbers'
       };
     }
 
+    function makeTopLevelBindingFromSymbol(sym, asis) {
+      var loc = sym.location;
+      return {
+        name: "toplevel-binding",
+        pos: sym.location,
+        kids: [makeBindingFromSymbol(sym, asis)]
+      };
+    }
+
+    function makeTopLetExprFromCouple(couple) {
+      var loc = couple.location;
+      return {
+          name: "let-expr",
+          pos: loc,
+          kids: [makeTopLevelBindingFromSymbol(couple.first), equalsStx, couple.second.toPyretAST()]
+        };
+    }
+
     function moduleQualifiedId(id, asis) {
       var it;
       if (!asis && _module && (it = window.COLLECTIONS[_module]) && (it.locals.indexOf(id) >= 0)) {
@@ -6846,13 +6864,13 @@ define(["./wescheme-support.js", 'js/js-numbers'
       function makeLetRecBindingExprFromCouple(couple) {
         return {
           name: "letrec-binding",
-          kids: [makeLetExprFromCouple(couple), commaStx],
+          kids: [makeTopLetExprFromCouple(couple), commaStx],
           pos: couple.location
         };
       }
       var loc = this.location,
         letrecBindings = this.bindings.slice(0, -1).map(makeLetRecBindingExprFromCouple),
-        finalLet = makeLetExprFromCouple(this.bindings[this.bindings.length - 1]).kids[0],
+        finalLet = makeTopLetExprFromCouple(this.bindings[this.bindings.length - 1]),
         bodyBlock = {
           name: "block",
           kids: [this.body.toPyretAST()],
@@ -6860,12 +6878,24 @@ define(["./wescheme-support.js", 'js/js-numbers'
         };
       return {
         name: "expr",
+        pos: loc,
         kids: [{
-          name: "letrec-expr",
-          kids: [letrecStx].concat(letrecBindings, [finalLet, colonStx, bodyBlock, endStx]),
-          pos: loc
-        }],
-        pos: loc
+          name: "user-block-expr",
+          pos: loc,
+          kids: [blockStx, {
+            name: "stmt",
+            pos: loc,
+            kids: [{
+              name: "letrec-expr",
+              pos: loc,
+              kids: [letrecStx].concat(letrecBindings, [finalLet, colonStx, bodyBlock, endStx])
+            }]
+          }, {
+            name: "end",
+            kids: [endStx],
+            pos: loc
+          }]
+        }]
       };
     };
 
