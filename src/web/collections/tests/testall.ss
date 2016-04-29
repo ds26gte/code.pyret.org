@@ -1,6 +1,0 @@
-(require tests/apply)
-(require tests/box)
-(require tests/cond)
-(require tests/deforder)
-(require tests/keypress)
-(require tests/require)
