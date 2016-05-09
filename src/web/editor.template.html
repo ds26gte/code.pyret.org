@@ -13,6 +13,12 @@
 <body>
 <div id="header">
   <a id="logo" href="http://www.pyret.org/"></a>
+  <h1>Patch :: </h1>
+  <h2><div id="docs"><a target="_blank" href="http://pyret.org/docs/{{{ CURRENT_PYRET_DOCS }}}/">Documentation</a></div></h2>
+  <h2><a href="#">Programs</a></h2>
+  <h2> <div id="logout"><a href="/logout">Logout</a></div></h2>
+</div>
+<div id="subheader">
   <button id="connectButton" class="logoutOnly blueButton">Connect to Google Drive</button>
   <div id="program-name-container" class="loginOnly">
     <input id="program-name" type="text" placeholder="Program Name"></input>
@@ -22,12 +28,10 @@
   <div id="menu"><button class="blueButton">More ▾</a></div>
   <div id="menuContents" style="display: none; z-index: 8990;">
     <div id="download"><a target="_blank" href="javascript:void(0)">Download this File</a></div>
-    <div id="docs"><a target="_blank" href="http://pyret.org/docs/{{{ CURRENT_PYRET_DOCS }}}/">Documentation</a></div>
     <div class="loginOnly" id="drive-view"><a target="_blank" href="javascript:void(0)">View Files in Drive</a></div>
     <div id="font"><div id="font-minus">-</div><div id="font-label">Font</div><div id="font-plus">+</div></div>
     <div id="issues"><a target="_blank" href="https://github.com/brownplt/pyret-lang/issues/new">Report an Issue</a></div>
     <div id="discuss"><a target="_blank" href="https://groups.google.com/forum/#!forum/pyret-discuss">Discuss Pyret</a></div>
-    <div id="logout"><a href="/logout">Log out</a></div>
   </div>
   <button id="breakButton" class="blueButton rhs">Stop</button>
   <div id="runPart" class="blueButton rhs">
