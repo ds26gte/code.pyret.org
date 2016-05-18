@@ -2,8 +2,9 @@
 var storageAPIDeferred = Q.defer();
 var storageAPI = storageAPIDeferred.promise;
 function handleClientLoad(clientId, apiKey) {
+  console.log('doing handleClientLoad ' + clientId + ', ' + apiKey);
   var api = createProgramCollectionAPI(clientId, apiKey, "code.pyret.org", true);
-  
+
   api.then(function(api) {
     storageAPIDeferred.resolve(api);
   });
@@ -25,4 +26,3 @@ function handleClientLoad(clientId, apiKey) {
     };
   });
 }
-
