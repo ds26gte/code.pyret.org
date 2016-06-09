@@ -340,6 +340,10 @@ $(function() {
             $("#run-dropdown-content").hide();
           });
 
+          $("#modeButton").change(function(e) {
+            editor.cm.changeMode(e.target.value);
+          });
+
           editor = replUI.makeEditor(codeContainer, runtime, {
               runButton: $("#runButton"),
               simpleEditor: false,

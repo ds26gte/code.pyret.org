@@ -810,6 +810,10 @@ span.rationalRepeat {
   height:auto;
 }
 
+#modeButton {
+  background: #336600;
+}
+
 #runButton, #breakButton {
   width: 150px;
   box-shadow: 0px -5px 5px 1px rgba(0,0,0,0.2);

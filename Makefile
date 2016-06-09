@@ -107,13 +107,33 @@ build/web/js/matchkw.js: src/web/js/codemirror/matchkw.js
 build/web/js/pyret-mode.js: src/web/js/codemirror/pyret-mode.js
 	cp $< $@
 
+build/web/js/CodeMirrorBlocks-all.js: src/web/js/codemirror-blocks-dist/CodeMirrorBlocks-all.js
+	cp $< $@
+
+build/web/js/CodeMirrorBlocks-all.min.js: src/web/js/codemirror-blocks-dist/CodeMirrorBlocks-all.min.js
+	cp $< $@
+
+build/web/js/CodeMirrorBlocks.min.js: src/web/js/codemirror-blocks-dist/CodeMirrorBlocks.min.js
+	cp $< $@
+
+build/web/js/WeschemeParser.js: src/web/js/codemirror-blocks-dist/WeschemeParser.js
+	cp $< $@
+
+build/web/js/WeschemeParser.min.js: src/web/js/codemirror-blocks-dist/WeschemeParser.min.js
+	cp $< $@
+
 MISC_JS = build/web/js/q.js build/web/js/url.js build/web/js/require.js \
           build/web/js/codemirror.js \
           build/web/js/pyret-mode.js build/web/js/s-expression-lib.js \
           build/web/js/seedrandom.js \
           build/web/js/pyret-fold.js \
           build/web/js/matchkw.js \
-	  build/web/js/runmode.js
+          build/web/js/runmode.js \
+          build/web/js/CodeMirrorBlocks-all.js \
+          build/web/js/CodeMirrorBlocks-all.min.js \
+          build/web/js/CodeMirrorBlocks.min.js \
+          build/web/js/WeschemeParser.js \
+          build/web/js/WeschemeParser.min.js
 
 MISC_IMG = build/web/img/pyret-icon.png build/web/img/pyret-logo.png build/web/img/pyret-spin.gif build/web/img/up-arrow.png build/web/img/down-arrow.png
 
