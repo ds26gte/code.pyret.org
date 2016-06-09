@@ -187,7 +187,7 @@ function createProgramCollectionAPI(clientId, apiKey, collectionName, immediate)
         save: function(contents, newRevision) {
           // NOTE(joe): newRevision: false will cause badRequest errors as of
           // April 30, 2014
-          if(newRevision) { 
+          if(newRevision) {
             var params = { 'newRevision': true };
           }
           else {
@@ -226,9 +226,9 @@ function createProgramCollectionAPI(clientId, apiKey, collectionName, immediate)
 
     // The primary purpose of this is to have some sort of fallback for
     // any situation in which the file object has somehow lost its info
-    function fileBuilder(googFileObject) { 
-      if ((googFileObject.mimeType === 'text/plain' && !googFileObject.fileExtension) 
-          || googFileObject.fileExtension === 'arr') { 
+    function fileBuilder(googFileObject) {
+      if ((googFileObject.mimeType === 'text/plain' && !googFileObject.fileExtension)
+          || googFileObject.fileExtension === 'arr') {
         return makeFile(googFileObject, 'text/plain', 'arr');
       } else {
         return makeFile(googFileObject, googFileObject.mimeType, googFileObject.fileExtension);
@@ -317,13 +317,19 @@ function createProgramCollectionAPI(clientId, apiKey, collectionName, immediate)
       api: api,
       collection: baseCollection,
       reinitialize: function() {
+        console.log('doing reinitialize');
         return Q.fcall(function() { return initialize(); });
       }
     }
   }
 
   function initialize() {
+    console.log('doing initialize');
     drive = gapi.client.drive;
+
+    if (typeof drive === 'undefined') {
+      return null;
+    }
 
     var list = gQ(drive.files.list({
       q: "trashed=false and title = '" + collectionName + "' and "+
@@ -380,6 +386,7 @@ function createProgramCollectionAPI(clientId, apiKey, collectionName, immediate)
   return initialAuth.then(function(_) {
     var d = Q.defer();
     gapi.client.load('drive', 'v2', function() {
+      console.log('gapi.client.load calling initialize');
       d.resolve(initialize())
     });
     return d.promise;
