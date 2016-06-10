@@ -340,10 +340,7 @@ $(function() {
             $("#run-dropdown-content").hide();
           });
 
-          $("#mode").change(function(e) {
-            //editor.refresh();
-            console.log('manipulated mode button');
-            console.log('code = ' + editor.cm.getValue());
+          $("#modeButton").change(function(e) {
             editor.cm.changeMode(e.target.value);
           });
 
