@@ -64,20 +64,15 @@ define(["js/ffi-helpers", "js/runtime-util", "trove/image-lib", "./check-ui.js",
 
     var CM = CodeMirror.fromTextArea(textarea[0], cmOptions);
 
-    console.log('CM old keys = ' + Object.keys(CM));
     var CMblocks;
 
     if (typeof CodeMirrorBlocks === 'undefined') {
-      //console.log('CodeMirrorBlocks not there!');
       CMblocks = undefined;
     } else {
-      //console.log('CodeMirrorBlocks is present!');
-      //console.log('CodeMirrorBlocks.parsers contains ' + Object.keys(CodeMirrorBlocks.parsers));
       CMblocks = new CodeMirrorBlocks(CM,
         new CodeMirrorBlocks.parsers.wescheme(),
         {
           willInsertNode: function(sourceNodeText, sourceNode, destination) {
-            console.log('doing willInsertNode');
             var line = CM.editor.getLine(destination.line);
             if (destination.ch > 0 && line[destination.ch - 1].match(/[\w\d]/)) {
               // previous character is a letter or number, so prefix a space
@@ -93,21 +88,20 @@ define(["js/ffi-helpers", "js/runtime-util", "trove/image-lib", "./check-ui.js",
         });
       CM.blocksEditor = CMblocks;
       CM.changeMode = function(mode) {
-        console.log('blocks: changing mode');
-        if (mode === "false") mode = false;
+        if (mode === "false") {
+          mode = false;
+        } else {
+          CMblocks.ast = null;
+        }
         this.blocksEditor.setBlockMode(mode);
       }
     }
-
-    console.log('III');
 
     if (useLineNumbers) {
       var upperWarning = jQuery("<div>").addClass("warning-upper");
       var upperArrow = jQuery("<img>").addClass("warning-upper-arrow").attr("src", "/img/up-arrow.png");
       upperWarning.append(upperArrow);
-      //console.log('calling wrapper');
       CM.display.wrapper.appendChild(upperWarning.get(0));
-      //console.log('wrapper returned');
       var lowerWarning = jQuery("<div>").addClass("warning-lower");
       var lowerArrow = jQuery("<img>").addClass("warning-lower-arrow").attr("src", "/img/down-arrow.png");
       lowerWarning.append(lowerArrow);
