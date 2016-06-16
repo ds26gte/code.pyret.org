@@ -116,6 +116,37 @@ CodeMirrorBlocks["parsers"]["WeschemeParser"] =
 	  return aria;
 	}
 
+        /*
+        function makeBlank(from) {
+          return new _ast.Blank({ line: from.line, ch: from.ch + 1 },
+          { line: from.line, ch: from.ch + 1 }, '...',
+          'blank', { 'aria-label': 'blank' });
+        }
+        */
+
+        function makeClause(exprs) {
+          var node = exprs[0];
+          var from = {
+            line: node.location.startRow - 1,
+            ch: node.location.startCol
+          };
+          var to = {
+            line: node.location.endRow - 1,
+            ch: node.location.endCol
+          };
+          var func = new _ast.Blank({
+            line: from.line,
+            ch: from.ch + 1
+          }, {
+            line: from.line,
+            ch: from.ch + 1
+          }, '...', 'blank', {
+            'aria-label': 'blank'
+          });
+          return new _ast.Expression(from, to, func, exprs.map(parseNode),
+          { 'aria-label': expressionAria('empty', exprs.length) });
+        }
+
 	function parseNode(node) {
 	  var from = {
 	    line: node.location.startRow - 1,
@@ -145,6 +176,30 @@ CodeMirrorBlocks["parsers"]["WeschemeParser"] =
 	    return new _ast.Expression(from, to, new _ast.Literal({ line: from.line, ch: from.ch + 1 }, { line: from.line, ch: from.ch + 3 }, "or", "symbol", { 'aria-label': 'or' }), node.exprs.map(parseNode).filter(function (item) {
 	      return item !== null;
 	    }), { 'aria-label': expressionAria('or', node.exprs.length) });
+	  } else if (node instanceof structures.ifExpr) {
+	    return new _ast.Expression(from, to,
+            new _ast.Literal({ line: from.line, ch: from.ch + 1 }, { line: from.line, ch: from.ch + 3 },
+            "if", "symbol", { 'aria-label': 'if' }),
+            [parseNode(node.predicate), parseNode(node.consequence), parseNode(node.alternative)],
+	    { 'aria-label': expressionAria('if', 3) });
+          } else if (node instanceof structures.letExpr) {
+            return new _ast.Expression(from, to,
+            new _ast.Literal({ line: from.line, ch: from.ch + 1 }, { line: from.line, ch: from.ch + 4 },
+            "let", "symbol", { 'aria-label': 'let' }),
+            node.bindings.map(function(b) { return makeClause([b.first, b.second]) }).concat(parseNode(node.body)),
+            { 'aria-label': expressionAria('let', 4) });
+          } else if (node instanceof structures.letStarExpr) {
+            return new _ast.Expression(from, to,
+            new _ast.Literal({ line: from.line, ch: from.ch + 1 }, { line: from.line, ch: from.ch + 5 },
+            "let*", "symbol", { 'aria-label': 'let*' }),
+            node.bindings.map(function(b) { return makeClause([b.first, b.second]) }).concat(parseNode(node.body)),
+            { 'aria-label': expressionAria('let*', 5) });
+          } else if (node instanceof structures.letrecExpr) {
+            return new _ast.Expression(from, to,
+            new _ast.Literal({ line: from.line, ch: from.ch + 1 }, { line: from.line, ch: from.ch + 7 },
+            "letrec", "symbol", { 'aria-label': 'letrec' }),
+            node.bindings.map(function(b) { return makeClause([b.first, b.second]) }).concat(parseNode(node.body)),
+            { 'aria-label': expressionAria('letrec', 7) });
 	  } else if (node instanceof structures.defVar) {
 	    return new _ast.VariableDefinition(from, to, parseNode(node.name), parseNode(node.expr));
 	  } else if (node instanceof structures.defStruct) {
