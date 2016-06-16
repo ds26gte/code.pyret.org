@@ -70,7 +70,7 @@ define(["js/ffi-helpers", "js/runtime-util", "trove/image-lib", "./check-ui.js",
       CMblocks = undefined;
     } else {
       CMblocks = new CodeMirrorBlocks(CM,
-        new CodeMirrorBlocks.parsers.wescheme(),
+        'wescheme',
         {
           willInsertNode: function(sourceNodeText, sourceNode, destination) {
             var line = CM.editor.getLine(destination.line);
@@ -93,7 +93,7 @@ define(["js/ffi-helpers", "js/runtime-util", "trove/image-lib", "./check-ui.js",
         } else {
           CMblocks.ast = null;
         }
-        this.blocksEditor.setBlockMode(mode);
+        CMblocks.setBlockMode(mode);
       }
     }
 
