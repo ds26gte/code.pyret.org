@@ -409,6 +409,8 @@ function createProgramCollectionAPI(clientId, apiKey, collectionName, immediate)
     var d = Q.defer();
     console.log('trying gapi.client.load');
     gapi.client.load('drive', 'v2', function() {
+      console.log('gapi.client.load calling initialize');
+      console.log('iii (shd wk but doesnt) typeof gapi.client.drive= ' + (typeof gapi.client.drive)); //this shouldnt fail
       d.resolve(initialize())
     });
     return d.promise;
