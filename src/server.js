@@ -364,7 +364,7 @@ function start(config, onServerReady) {
         client.setCredentials({
           access_token: newToken
         });
-        var drive = gapi.drive({ version: 'v2', auth: client });
+        var drive = gapi.drive({ version: 'v3', auth: client });
         var parsed = url.parse(req.url, true);
         var state = decodeURIComponent(parsed.query["state"]);
         var folderId = JSON.parse(state)["folderId"];
