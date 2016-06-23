@@ -1,18 +1,14 @@
 // assumes gapi bound to Google API
 
 function createProgramCollectionAPI(clientId, apiKey, collectionName, immediate) {
-  console.log('doing createProgramCollectionAPI clientId= ' + clientId + ' immediate= ' + immediate);
+  console.log('doing createProgramCollectionAPI ' + clientId);
 
   //gapi.client.setApiKey(apiKey);
   var drive;
   var SCOPE = "https://www.googleapis.com/auth/drive.file "
-    + "https://www.googleapis.com/auth/drive.install";
-  /*
-  var SCOPE = "https://www.googleapis.com/auth/drive.file "
     + "https://www.googleapis.com/auth/drive "
     + "https://spreadsheets.google.com/feeds "
     + "https://www.googleapis.com/auth/drive.install";
-  */
   var FOLDER_MIME = "application/vnd.google-apps.folder";
   var BACKREF_KEY = "originalProgram";
   var PUBLIC_LINK = "pubLink";
@@ -50,9 +46,6 @@ function createProgramCollectionAPI(clientId, apiKey, collectionName, immediate)
   }
 
   function gQ(request, skipAuth) {
-    if (skipAuth) {
-      console.log('gQ skipping auth');
-    }
     var oldAccess = gapi.auth.getToken();
     if(skipAuth) { gapi.auth.setToken({access_token: null}); }
     var ret = failCheck(authCheck(function() {
@@ -327,7 +320,6 @@ function createProgramCollectionAPI(clientId, apiKey, collectionName, immediate)
       api: api,
       collection: baseCollection,
       reinitialize: function() {
-        console.log('doing reinitialize');
         return Q.fcall(function() { return initialize(); });
       }
     }
@@ -336,13 +328,6 @@ function createProgramCollectionAPI(clientId, apiKey, collectionName, immediate)
   function initialize() {
     console.log('doing initialize');
     drive = gapi.client.drive;
-
-    if ((typeof drive) === 'undefined') {
-      console.log('drive undefined');
-      return {
-        fail: true
-      }
-    }
 
     var list = gQ(drive.files.list({
       q: "trashed=false and title = '" + collectionName + "' and "+
@@ -370,7 +355,7 @@ function createProgramCollectionAPI(clientId, apiKey, collectionName, immediate)
     return createAPI(baseCollection);
   }
 
-  var reauthObsolete = function(immediate) {
+  var reauth = function(immediate) {
     console.log('doing reauth ' + immediate);
     var d = Q.defer();
     /*
@@ -401,59 +386,21 @@ function createProgramCollectionAPI(clientId, apiKey, collectionName, immediate)
       gapi.auth.authorize({
         "client_id": clientId,
         "scope": SCOPE,
-        "immediate": true //true
+        "immediate": false
       }, function(authResult) {
         if (authResult && !authResult.error) {
           console.log('ds26gte auth successful');
-          console.log('i typeof gapi.client= ' + (typeof gapi.client));
-          console.log('i typeof gapi.client.load= ' + (typeof gapi.client.load));
-          console.log('i typeof gapi.client.drive= ' + (typeof gapi.client.drive));
-          d.resolve(reauth(true)); //why not just d.resolve(true)?
-          //d.resolve(true);
+          d.resolve(reauth(true));
         } else {
           console.log('ds26gte auth failed');
           d.resolve(null);
         }
       });
     } else {
-      console.log('empty reauth');
       d.resolve(true);
     }
     return d.promise;
   };
-
-  function loadDriveApi() {
-    console.log('doing loadDriveApi');
-    gapi.client.load('drive', 'v3', listFiles);
-  }
-
-  function listFiles() {
-    console.log('doing listFiles');
-  }
-
-  var reauth = function() {
-    console.log('doing reauth');
-    var d = Q.defer();
-    console.log('trying gapi.auth.authorize');
-    gapi.auth.authorize({
-      "client_id": clientId,
-      "scope": SCOPE,
-      "immediate": false
-    }, function(authResult) {
-      if (authResult && !authResult.error) {
-        console.log('ds26gte auth successful');
-        console.log('i typeof gapi.client= ' + (typeof gapi.client));
-        console.log('i typeof gapi.client.load= ' + (typeof gapi.client.load));
-        console.log('i typeof gapi.client.drive= ' + (typeof gapi.client.drive));
-        loadDriveApi();
-        d.resolve(true);
-      } else {
-        console.log('ds26gte auth failed');
-        d.resolve(null);
-      }
-    });
-    return d.promise;
-  }
 
   //var initialAuth = reauth(immediate);
   var initialAuth = reauth(false);
@@ -461,20 +408,10 @@ function createProgramCollectionAPI(clientId, apiKey, collectionName, immediate)
   return initialAuth.then(function(_) {
     var d = Q.defer();
     console.log('trying gapi.client.load');
-    console.log('ii typeof gapi.client= ' + (typeof gapi.client));
-    console.log('ii gapi.client= ' + JSON.stringify(gapi.client));
-    console.log('ii typeof gapi.client.load= ' + (typeof gapi.client.load));
-    console.log('ii typeof gapi.client.drive= ' + (typeof gapi.client.drive));
-    /*
-    gapi.client.load('drive', 'v3', function() {
-      console.log('gapi.client.load calling initialize');
-      console.log('iii (shd wk but doesnt) typeof gapi.client.drive= ' + (typeof gapi.client.drive)); //this shouldnt fail
-      d.resolve(initialize());
+    gapi.client.load('drive', 'v2', function() {
+      d.resolve(initialize())
     });
-    */
-    d.resolve({fail:true});
     return d.promise;
   });
-  //console.log('returning second return');
-  //return initialAuth;
+  return initialAuth;
 }
