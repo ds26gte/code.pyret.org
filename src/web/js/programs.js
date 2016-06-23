@@ -1,12 +1,18 @@
 // assumes gapi bound to Google API
 
 function createProgramCollectionAPI(clientId, apiKey, collectionName, immediate) {
+  console.log('doing createProgramCollectionAPI clientId= ' + clientId + ' immediate= ' + immediate);
 
-  gapi.client.setApiKey(apiKey);
+  //gapi.client.setApiKey(apiKey);
   var drive;
   var SCOPE = "https://www.googleapis.com/auth/drive.file "
+    + "https://www.googleapis.com/auth/drive.install";
+  /*
+  var SCOPE = "https://www.googleapis.com/auth/drive.file "
+    + "https://www.googleapis.com/auth/drive "
     + "https://spreadsheets.google.com/feeds "
     + "https://www.googleapis.com/auth/drive.install";
+  */
   var FOLDER_MIME = "application/vnd.google-apps.folder";
   var BACKREF_KEY = "originalProgram";
   var PUBLIC_LINK = "pubLink";
@@ -44,6 +50,9 @@ function createProgramCollectionAPI(clientId, apiKey, collectionName, immediate)
   }
 
   function gQ(request, skipAuth) {
+    if (skipAuth) {
+      console.log('gQ skipping auth');
+    }
     var oldAccess = gapi.auth.getToken();
     if(skipAuth) { gapi.auth.setToken({access_token: null}); }
     var ret = failCheck(authCheck(function() {
@@ -245,6 +254,7 @@ function createProgramCollectionAPI(clientId, apiKey, collectionName, immediate)
         return gQ(drive.files.get({fileId: id})).then(fileBuilder);
       },
       getFileByName: function(name) {
+        console.log('doing getFileByName ' + name);
         return this.getAllFiles().then(function(files) {
           return files.filter(function(f) { return f.getName() === name });
         });
@@ -327,15 +337,20 @@ function createProgramCollectionAPI(clientId, apiKey, collectionName, immediate)
     console.log('doing initialize');
     drive = gapi.client.drive;
 
-    if (typeof drive === 'undefined') {
-      return null;
+    if ((typeof drive) === 'undefined') {
+      console.log('drive undefined');
+      return {
+        fail: true
+      }
     }
 
     var list = gQ(drive.files.list({
       q: "trashed=false and title = '" + collectionName + "' and "+
          "mimeType = '" + FOLDER_MIME + "'"
     }));
+    console.log('ds26gte list = ' + list);
     var baseCollection = list.then(function(filesResult) {
+      console.log('filesResult = ' + filesResult);
       var foundCollection = filesResult.items && filesResult.items[0];
       var baseCollection;
       if(!foundCollection) {
@@ -355,8 +370,10 @@ function createProgramCollectionAPI(clientId, apiKey, collectionName, immediate)
     return createAPI(baseCollection);
   }
 
-  var reauth = function(immediate) {
+  var reauthObsolete = function(immediate) {
+    console.log('doing reauth ' + immediate);
     var d = Q.defer();
+    /*
     if(!immediate) {
       // Need to do a login to get a cookie for this user; do it in a popup
       var w = window.open("/login?redirect=" + encodeURIComponent("/close.html"));
@@ -378,18 +395,86 @@ function createProgramCollectionAPI(clientId, apiKey, collectionName, immediate)
       newToken.fail(function(t) {
         d.resolve(null);
       });
+    } */
+    if (!immediate) {
+      console.log('trying gapi.auth.authorize');
+      gapi.auth.authorize({
+        "client_id": clientId,
+        "scope": SCOPE,
+        "immediate": true //true
+      }, function(authResult) {
+        if (authResult && !authResult.error) {
+          console.log('ds26gte auth successful');
+          console.log('i typeof gapi.client= ' + (typeof gapi.client));
+          console.log('i typeof gapi.client.load= ' + (typeof gapi.client.load));
+          console.log('i typeof gapi.client.drive= ' + (typeof gapi.client.drive));
+          d.resolve(reauth(true)); //why not just d.resolve(true)?
+          //d.resolve(true);
+        } else {
+          console.log('ds26gte auth failed');
+          d.resolve(null);
+        }
+      });
+    } else {
+      console.log('empty reauth');
+      d.resolve(true);
     }
     return d.promise;
   };
 
-  var initialAuth = reauth(immediate);
-  return initialAuth.then(function(_) {
+  function loadDriveApi() {
+    console.log('doing loadDriveApi');
+    gapi.client.load('drive', 'v3', listFiles);
+  }
+
+  function listFiles() {
+    console.log('doing listFiles');
+  }
+
+  var reauth = function() {
+    console.log('doing reauth');
     var d = Q.defer();
-    gapi.client.load('drive', 'v2', function() {
-      console.log('gapi.client.load calling initialize');
-      d.resolve(initialize())
+    console.log('trying gapi.auth.authorize');
+    gapi.auth.authorize({
+      "client_id": clientId,
+      "scope": SCOPE,
+      "immediate": false
+    }, function(authResult) {
+      if (authResult && !authResult.error) {
+        console.log('ds26gte auth successful');
+        console.log('i typeof gapi.client= ' + (typeof gapi.client));
+        console.log('i typeof gapi.client.load= ' + (typeof gapi.client.load));
+        console.log('i typeof gapi.client.drive= ' + (typeof gapi.client.drive));
+        loadDriveApi();
+        d.resolve(true);
+      } else {
+        console.log('ds26gte auth failed');
+        d.resolve(null);
+      }
     });
     return d.promise;
+  }
+
+  //var initialAuth = reauth(immediate);
+  var initialAuth = reauth(false);
+  console.log('finishing createProgramCollectionAPI');
+  return initialAuth.then(function(_) {
+    var d = Q.defer();
+    console.log('trying gapi.client.load');
+    console.log('ii typeof gapi.client= ' + (typeof gapi.client));
+    console.log('ii gapi.client= ' + JSON.stringify(gapi.client));
+    console.log('ii typeof gapi.client.load= ' + (typeof gapi.client.load));
+    console.log('ii typeof gapi.client.drive= ' + (typeof gapi.client.drive));
+    /*
+    gapi.client.load('drive', 'v3', function() {
+      console.log('gapi.client.load calling initialize');
+      console.log('iii (shd wk but doesnt) typeof gapi.client.drive= ' + (typeof gapi.client.drive)); //this shouldnt fail
+      d.resolve(initialize());
+    });
+    */
+    d.resolve({fail:true});
+    return d.promise;
   });
-  return initialAuth;
+  //console.log('returning second return');
+  //return initialAuth;
 }
