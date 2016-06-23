@@ -3,7 +3,7 @@
 function createProgramCollectionAPI(clientId, apiKey, collectionName, immediate) {
   console.log('doing createProgramCollectionAPI ' + clientId);
 
-  //gapi.client.setApiKey(apiKey);
+  gapi.client.setApiKey(apiKey);
   var drive;
   var SCOPE = "https://www.googleapis.com/auth/drive.file "
     + "https://www.googleapis.com/auth/drive "
@@ -84,6 +84,7 @@ function createProgramCollectionAPI(clientId, apiKey, collectionName, immediate)
   }
 
   function createAPI(baseCollection) {
+    console.log('doing createAPI');
     function makeSharedFile(googFileObject) {
       return {
         shared: true,
@@ -329,6 +330,10 @@ function createProgramCollectionAPI(clientId, apiKey, collectionName, immediate)
     console.log('doing initialize');
     drive = gapi.client.drive;
 
+    if ((typeof drive) === 'undefined') {
+      console.log('alas! drive undefined!');
+    }
+
     var list = gQ(drive.files.list({
       q: "trashed=false and title = '" + collectionName + "' and "+
          "mimeType = '" + FOLDER_MIME + "'"
@@ -408,7 +413,7 @@ function createProgramCollectionAPI(clientId, apiKey, collectionName, immediate)
   return initialAuth.then(function(_) {
     var d = Q.defer();
     console.log('trying gapi.client.load');
-    gapi.client.load('drive', 'v2', function() {
+    gapi.client.load('drive', 'v3', function() {
       console.log('gapi.client.load calling initialize');
       console.log('iii (shd wk but doesnt) typeof gapi.client.drive= ' + (typeof gapi.client.drive)); //this shouldnt fail
       d.resolve(initialize())
