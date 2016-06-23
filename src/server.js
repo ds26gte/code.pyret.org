@@ -37,7 +37,6 @@ function start(config, onServerReady) {
 
   app = express();
 
-
   // From http://stackoverflow.com/questions/7185074/heroku-nodejs-http-to-https-ssl-forced-redirect
   /* At the top, with other redirect methods before other routes */
   app.get('*',function(req,res,next){
@@ -202,7 +201,7 @@ function start(config, onServerReady) {
         headers: headers
       }).on('response', function(res){
         var contentType = res.headers['content-type'];
-        // Likely to have multiple MIME types, so 
+        // Likely to have multiple MIME types, so
         // we need to check substrings
         if (hasMime(contentType, ['application/json', 'application/atom+xml'])) {
           res.headers['X-Pyret-Token'] = req.csrfToken();
@@ -220,7 +219,7 @@ function start(config, onServerReady) {
       req.pipe(request(googleUrl)).pipe(response);
     }
   });
-  
+
   app.get("/downloadGoogleFile", function(req, response) {
     var parsed = url.parse(req.url);
     var googleId = decodeURIComponent(parsed.query.slice(0));
@@ -268,10 +267,12 @@ function start(config, onServerReady) {
       else {
         var existingUser = db.getUserByGoogleId(data.googleId);
         existingUser.fail(function(err) {
+          console.log('error getting user');
           console.error("Error on getting user: ", err);
           res.send({type: "DB error", error: err});
         });
         var user = existingUser.then(function(user) {
+          console.log('user got = ' + user);
           if(user === null) {
             var newUser = db.createUser({
               google_id: data.googleId,
@@ -309,17 +310,31 @@ function start(config, onServerReady) {
   });
 
   app.get("/getAccessToken", function(req, res) {
+    console.log('doing /getAccessToken');
     function noAuth() {
       res.status(404).send("No account information found.");
     }
-    if(req.session && req.session["user_id"]) {
-      var maybeUser = db.getUserByGoogleId(req.session["user_id"]);
+    var reqSessionUserId = req.session && req.session["user_id"];
+    if(reqSessionUserId) {
+      console.log('req.session user_id = ' + reqSessionUserId);
+      var maybeUser = db.getUserByGoogleId(reqSessionUserId);
       maybeUser.then(function(u) {
+        console.log('maybeUser successfully found; ' + u);
+        /*
         if(u === null) {
           noAuth();
           return null;
         }
+        */
+        if (u === null) {
+          console.log('creating a user...');
+          u = db.createUser({
+            google_id: reqSessionUserId,
+            refresh_token: null
+          });
+        }
         return auth.refreshAccess(u.refresh_token, function(err, newToken) {
+          console.log('refreshing access');
           if(err) { res.send(err); res.end(); return; }
           else {
             res.send({ access_token: newToken });
@@ -328,6 +343,7 @@ function start(config, onServerReady) {
         });
       });
       maybeUser.fail(function(err) {
+        console.log('maybeUser not found :-(');
         console.error("Failed to get an access token: ", err);
         noAuth();
       });
@@ -425,4 +441,3 @@ function start(config, onServerReady) {
 module.exports = {
   start: start
 };
-
