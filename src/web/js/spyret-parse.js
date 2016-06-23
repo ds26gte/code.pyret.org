@@ -4951,7 +4951,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     // COLLECT DEFINITIONS ///////////////////////////////////////////////////////
 
     // extend the Program class to collect definitions
-    // Program.collectDefnitions: pinfo -> pinfo
+    // Program.collectDefinitions: pinfo -> pinfo
     Program.prototype.collectDefinitions = function(pinfo) {
       return pinfo;
     };
@@ -5035,128 +5035,6 @@ define(["./wescheme-support.js", 'js/js-numbers'
       }
     };
 
-    // When we hit a require, we have to extend our environment to include the list of module
-    // bindings provided by that module.
-    // FIXME: we currently override moduleName, which SHOULD just give us the proper name
-    requireExpr.prototype.collectDefinitions = function(pinfo) {
-      // if it's a literal, pull out the actual value. if it's a symbol use it as-is
-      var moduleName = this.spec;
-      //var moduleName = (this.spec instanceof literal) ? this.spec.val.toString() : this.spec.toString(),
-        //resolvedModuleName = pinfo.modulePathResolver(moduleName, pinfo.currentModulePath),
-        var that = this,
-        newPinfo;
-
-      // is this a shared WeScheme program?
-      function getWeSchemeModule(name) {
-        var m = name.match(/^wescheme\/(\w+)$/);
-        return m ? m[1] : false;
-      }
-
-      function throwModuleError(moduleName) {
-        var bestGuess = plt.compiler.moduleGuess(that.spec.toString());
-        throwError({
-          errMsg: "Found require of the module ,,, but this module is unknown." +
-         ((bestGuess.name === that.spec.toString()) ? "" : " Did you mean '" + bestGuess.name + "'?"),
-         errArgLocs: [[that.spec.toString(), that.spec.location]]
-        });
-      }
-
-      // if it's an invalid moduleName, throw an error
-      // let's not restrict to knownCollections just yet, because we want to put arbitrary stuff
-      // in collections/ for debugging purposes
-      /*
-      if (!(resolvedModuleName || getWeSchemeModule(moduleName))) {
-        throwModuleError(moduleName);
-      }
-      */
-
-      // processModule : JS -> pinfo
-      // assumes the module has been assigned to window.COLLECTIONS.
-      // pull out the bindings, and then add them to pinfo
-      function processModule(moduleName) {
-        // this function still needed?
-        var provides = window.COLLECTIONS[moduleName].provides;
-        var strToBinding = function(p) {
-            //var b = new constantBinding(p, new symbolExpr(moduleName), false);
-            var b = new constantBinding(p,  moduleName , false);
-            b.imported = true; // WTF: Moby treats imported bindings differently, so we need to identify them
-            return b;
-          },
-          provideBindings = provides.map(strToBinding),
-          modulebinding = new moduleBinding(moduleName, provideBindings);
-        newPinfo = pinfo.accumulateModule(modulebinding).accumulateModuleBindings(provideBindings);
-      }
-
-      // open a *synchronous* GET request -- FIXME to use callbacks?
-      //var url = window.location.protocol + "//" + window.location.host + (getWeSchemeModule(moduleName) ? "/loadProject?publicId=" + (getWeSchemeModule(moduleName)) : "/js/mzscheme-vm/collects/" + moduleName + ".js");
-
-      //let url be just the filename for now
-      var url;
-      if (getWeSchemeModule(moduleName)) {
-        console.log("wescheme-style modules not yet supported");
-        throwModuleError(moduleName);
-      } else {
-        url = "collections/" + moduleName + ".ss";
-      }
-
-      // if the module is already loaded, we can just process without loading
-      if (false && window.COLLECTIONS && window.COLLECTIONS[moduleName]) {
-        processModule(moduleName);
-      } else {
-        jQuery.ajax({
-          url: url,
-          success: function(result) {
-            // if it's not a native module, manually assign it to window.COLLECTIONS
-            if (true || getWeSchemeModule(moduleName)) {
-              //var program = (0, eval)('(' + result + ')');
-              var program = result;
-              // Create the COLLECTIONS array, if it doesn't exist
-              if (window.COLLECTIONS === undefined) {
-                window.COLLECTIONS = [];
-              }
-              // extract the sourcecode
-              //var lexemes = plt.compiler.lex(program.source.src, moduleName),
-              var lexemes = plt.compiler.lex(program, moduleName);
-              var AST = plt.compiler.parse(lexemes);
-                var desugared = plt.compiler.desugar(AST, undefined)[0]; // includes [AST, pinfo]
-                var pinfo = plt.compiler.analyze(desugared);
-                var module_providedIds = pinfo.providedIds;
-                var module_definedIds = pinfo.definedIds;
-                var module_localIds = module_definedIds.filter(function(x) {
-                  return (module_providedIds.indexOf(x) === -1);
-                });
-                //var objectCode = plt.compiler.compile(desugared, pinfo);
-              window.COLLECTIONS[moduleName] = {
-                'name': moduleName,
-                'suffix' : "ƎMODULE-" + plt.compiler.pyretizeSymbol(moduleName),
-                //'bytecode': (0, eval)('(' + objectCode.bytecode + ')'),
-                'locals': module_localIds,
-                //'provides': pinfo.providedNames.keys(),
-                "provides": module_providedIds
-                //'provides': objectCode.provides
-              };
-                var pyretObjectCode = plt.compiler.toPyretAST(AST, pinfo,
-                                           "no_need_for_autoimports", moduleName);
-                //console.log('rq_ast_j = ' + JSON.stringify(pyretObjectCode));
-                window.COLLECTIONS[moduleName].bytecode = pyretObjectCode;
-              // otherwise, simply evaluate the raw JS
-            } else {
-              eval(result);
-            }
-            if (result) {
-              processModule(moduleName);
-            } else {
-              throwModuleError(moduleName);
-            }
-          },
-          error: function(error) {
-            throwModuleError(moduleName);
-          },
-          async: false
-        });
-      }
-      return newPinfo;
-    };
     // BINDING STRUCTS ///////////////////////////////////////////////////////
     function provideBindingId(symbl) {
       this.symbl = symbl;
@@ -5764,14 +5642,16 @@ define(["./wescheme-support.js", 'js/js-numbers'
     // follows http://www.pyret.org/docs/latest/s_program.html
     // provide and import will never be used
 
-    function convertToPyretAST(programs, pinfo, single, moduleName) {
+    function convertToPyretAST(programs, pinfo, provenance, moduleName) {
       var old_module = _module;
-      if (!moduleName) {
+      if (provenance !== "module") {
         _pinfo = pinfo;
       } else {
         old_module = _module;
         _module = moduleName;
       }
+      console.log('doing convertToPyretAST ' + provenance + ' ' + moduleName);
+      var requirepreludes = [];
       var defstructs = [];
       var defnonfuns = [];
       var defuns = [];
@@ -5832,7 +5712,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
           it.kids.length > 0 && (it = it.kids[0]) &&
           it.name === "NAME" && it.value === "_spyret_check_expect") {
           checkExpects.push(b);
-        } else if (single) {
+        } else if (provenance === "repl") {
           otherExps.push(b);
         } else if (b.name === "id-expr" && (it = b.kids[0]) &&
           it.name === "NAME" && it.value === "nothing") {
@@ -5845,34 +5725,38 @@ define(["./wescheme-support.js", 'js/js-numbers'
       for (i = 0; i < programs.length; i++) {
         var b = programs[i].toPyretAST();
         if (b.name === "block") {
-          b.kids.forEach(function(b) { helper(b, 1); });
+          b.kids.forEach(function(b) {
+            helper(b, 1);
+          });
+        } else if (b.name === "import-stmt") {
+          requirepreludes.push(b);
         } else if (b.name === "require-block") {
-          b.kids.forEach(function(b) { helper(b, 2); });
+          b.kids.forEach(function(b) {
+            helper(b, 2);
+          });
         } else {
           helper(b);
         }
       }
 
-      var kiddos = defstructs.concat(defnonfuns,defuns,otherExps,checkExpects);
+      var kiddos = defstructs.concat(defnonfuns, defuns, otherExps, checkExpects);
       it = {
-        name: moduleName? "require-block" : "block",
+        name: "block",
         pos: programs.location,
         kids: kiddos
       };
 
-      if (moduleName) {
+      if (provenance === "module") {
         _module = old_module;
-        return it;
-      } else {
-        return {
-          name: "program",
-          pos: programs.location,
-          kids: [{
-            name: "prelude",
-            pos: blankLoc,
-            kids: []
-          }, it]
-        }
+      }
+      return {
+        name: "program",
+        pos: programs.location,
+        kids: [{
+          name: "prelude",
+          pos: blankLoc,
+          kids: requirepreludes
+        }, it]
       }
     }
 
@@ -7109,12 +6993,77 @@ define(["./wescheme-support.js", 'js/js-numbers'
       };
     }
 
+    /*
     requireExpr.prototype.toPyretAST = function() {
-      //console.log('doing requireExpr:toPyretAST ' + this.spec);
+      console.log('doing requireExpr:toPyretAST ' + this.spec);
       //var moduleName = (this.spec instanceof literal) ? this.spec.val.toString() : this.spec.toString();
       var moduleName = this.spec;
       var it = window.COLLECTIONS[moduleName].bytecode;
       return it;
+    }
+    */
+
+    //requireExpr.prototype.collectDefinitions remove
+    requireExpr.prototype.toPyretAST = function() {
+      console.log('doing requireExpr:toPyretAST ' + this.spec);
+      var moduleName = this.spec;
+
+      // is this a shared WeScheme program?
+      function getWeSchemeModule(name) {
+        var m = name.match(/^wescheme\/(\w+)$/);
+        return m ? m[1] : false;
+      }
+
+      function getWeSchemeGDriveModule(name) {
+        console.log('doing getWeSchemeGDriveModule ' + name);
+        var m = name.match(/^gdrive\/(\S+)$/);
+        return m ? m[1] : false;
+      }
+
+      var loc = this.location;
+      var fileName, protocol;
+
+      if (fileName = getWeSchemeModule(moduleName)) {
+        console.log('NOT YET');
+      } else if (fileName = getWeSchemeGDriveModule(moduleName)) {
+        protocol = "wescheme-mygdrive";
+        //console.log('NOT YET');
+      } else {
+        fileName = "collections/" + moduleName + ".ss";
+        protocol = "wescheme-collection";
+      }
+
+      var fileNameStr = types.toWrittenString(fileName);
+
+     // is the enclosing "import-stmt" needed? is the "import-special" enough?
+
+      return {
+        name: "import-stmt",
+        pos: loc,
+        kids: [{
+          name: "INCLUDE",
+          value: "include",
+          key: "'INCLUDE:include",
+          pos: loc
+        }, {
+          // (import-special NAME LPAREN STRING (COMMA STRING)* RPAREN)
+          // what is the exact signature of the "import-special" kids?
+          name: "import-special",
+          pos: loc,
+          kids: [{
+            name: "NAME",
+            value: protocol,
+            key: "'NAME:" + protocol,
+            pos: loc
+          }, lParenStx, {
+            name: "STRING",
+            value: fileNameStr,
+            key: "'STRING:" + fileNameStr,
+            pos: loc
+          }, rParenStx]
+        }]
+      }
+
     }
 
     provideStatement.prototype.toPyretAST = function() {
@@ -7153,22 +7102,42 @@ define(["./wescheme-support.js", 'js/js-numbers'
     plt.compiler.toPyretAST = convertToPyretAST;
   })();
 
-  function schemeToPyretAST(code, name, single) {
-    // single == true for code coming from repl
+  function schemeToPyretAST(code, name, provenance) {
+    console.log('doing schemeToPyretAST of ' + code);
     var debug = false;
     //var debug = true;
+    provenance = provenance || "definitions";
+    if (provenance === "module") {
+      if (window.COLLECTIONS === undefined) {
+        window.COLLECTIONS = [];
+      }
+    }
+    var module_providedIds, module_definedIds, module_localIds;
     var sexp = plt.compiler.lex(code, name, debug);
     var ast = plt.compiler.parse(sexp, debug);
-    if (true && single && ast.length > 1) {
+    if (true && provenance === "repl" && ast.length > 1) {
       var errmsg = "Well-formedness: more than one WeScheme expression on a line";
       console.log(errmsg)
-      //plt.compiler.throwError(new types.Message([errmsg]), new plt.compiler.Location(0,0,0,0))
+        //plt.compiler.throwError(new types.Message([errmsg]), new plt.compiler.Location(0,0,0,0))
     }
     var astAndPinfo = plt.compiler.desugar(ast, undefined, debug);
     var program = astAndPinfo[0];
     var pinfo = plt.compiler.analyze(program, debug);
-    var ws_ast = plt.compiler.toPyretAST(ast, pinfo, single);
-    if (!single) {
+    if (provenance === "module") {
+      module_providedIds = pinfo.providedIds;
+      module_definedIds = pinfo.definedIds;
+      module_localIds = module_definedIds.filter(function(id) {
+        return (module_providedIds.indexOf(id) === -1);
+      });
+      window.COLLECTIONS[name] = {
+        name: name,
+        suffix: 'ƎMODULE-' + plt.compiler.pyretizeSymbol(name),
+        locals: module_localIds,
+        provides: module_providedIds
+      };
+    }
+    var ws_ast = plt.compiler.toPyretAST(ast, pinfo, provenance, name);
+    if (provenance === "definitions") {
       var preimports = [
         plt.compiler.makeImportSnippet('image'),
         plt.compiler.makeImportSnippet('world')
@@ -7180,7 +7149,7 @@ define(["./wescheme-support.js", 'js/js-numbers'
     var ws_ast_j = JSON.stringify(ws_ast);
 
     //debug
-    //console.log('ws_ast_j = ' + ws_ast_j);
+    console.log('ws_ast_j = ' + ws_ast_j);
 
     return ws_ast_j;
   }
