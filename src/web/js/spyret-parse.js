@@ -5594,6 +5594,14 @@ define(["cpo/wescheme-support", "pyret-base/js/js-numbers"
         pos: blankLoc
       };
 
+    function wrapStmt(b) {
+      return {
+        name: 'stmt',
+        pos: blankLoc,
+        kids: [b]
+      };
+    }
+
     function wrapCheckTest(b) {
       return {
         name: "stmt",
@@ -5817,7 +5825,7 @@ define(["cpo/wescheme-support", "pyret-base/js/js-numbers"
         } else if (b.name === "app-expr" || b.name === "expr") {
           otherExps.push(wrapCheckTest(b));
         } else if (b.name === "check-expr") {
-          otherExps.push(wrapCheckTest(b));
+          otherExps.push(wrapStmt(b));
         } else if (provenance === "repl" || provenance === "module") {
           otherExps.push(b);
         } else if (b.name === "id-expr" && (it = b.kids[0]) &&
@@ -7022,6 +7030,42 @@ define(["cpo/wescheme-support", "pyret-base/js/js-numbers"
             kids: [{
               name: 'check-test',
               pos: loc,
+              kids: [this.lhs.toPyretAST(), {
+                name: 'check-op',
+                pos: loc,
+                kids: [{
+                  name: 'IS',
+                  pos: blankLoc,
+                  value: 'is',
+                  key: "'IS:is"
+                }]
+              }, 
+                this.rhs.toPyretAST()]
+            }]
+          }]
+        }, {
+          name: 'end',
+          pos: blankLoc,
+          kids: [endStx]
+        }]
+      };
+    };
+
+    /*
+    checkExpectExpr.prototype.toPyretAST = function() {
+      var loc = this.location;
+      return {
+        name: 'check-expr',
+        pos: this.location,
+        kids: [ checkColonStx, {
+          name: 'block',
+          pos: loc,
+          kids: [{
+            name: 'stmt',
+            pos: loc,
+            kids: [{
+              name: 'check-test',
+              pos: loc,
               kids: [{
                 name: 'binop-expr',
                 pos: loc,
@@ -7049,6 +7093,7 @@ define(["cpo/wescheme-support", "pyret-base/js/js-numbers"
         }]
       };
     };
+    */
 
     // letrec becomes letrec
     // the last binding becomes a let-expr,
@@ -7383,22 +7428,26 @@ define(["cpo/wescheme-support", "pyret-base/js/js-numbers"
           key: "'INCLUDE:include",
           pos: loc
         }, {
-          // (import-special NAME LPAREN STRING (COMMA STRING)* RPAREN)
-          // what is the exact signature of the "import-special" kids?
-          name: "import-special",
+          name: 'import-source',
           pos: loc,
           kids: [{
-            name: "NAME",
-            value: protocol,
-            key: "'NAME:" + protocol,
-            pos: loc
-          }, lParenStx, {
-            name: "STRING",
-            value: fileNameStr,
-            key: "'STRING:" + fileNameStr,
-            pos: loc
-          }, rParenStx]
-        }]
+            // (import-special NAME LPAREN STRING (COMMA STRING)* RPAREN)
+            // what is the exact signature of the "import-special" kids?
+            name: "import-special",
+            pos: loc,
+            kids: [{
+              name: "NAME",
+              value: protocol,
+              key: "'NAME:" + protocol,
+              pos: loc
+            }, lParenStx, {
+              name: "STRING",
+              value: fileNameStr,
+              key: "'STRING:" + fileNameStr,
+              pos: loc
+            }, rParenStx]
+          }]
+        }
       }
 
       return importStx;
