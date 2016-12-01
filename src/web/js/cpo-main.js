@@ -42,15 +42,14 @@
     "cpo/guess-gas",
     "cpo/cpo-builtin-modules",
     "cpo/modal-prompt",
-    "pyret-base/js/runtime",
-    "cpo/spyret-parse"
+    "pyret-base/js/runtime"
   ],
   provides: {},
   theModule: function(runtime, namespace, uri,
                       compileLib, compileStructs, pyRepl, cpo, replUI,
                       parsePyret, runtimeLib, loadLib, builtinModules, cpoBuiltins,
                       gdriveLocators, http, guessGas, cpoModules, modalPrompt,
-                      rtLib, spyretParse) {
+                      rtLib) {
 
     var replContainer = $("<div>").addClass("repl");
     $("#REPL").append(replContainer);
@@ -90,7 +89,7 @@
     var gmf = function(m, f) { return gf(gf(m, "values"), f); };
     var gtf = function(m, f) { return gf(m, "types")[f]; };
 
-    var constructors = gdriveLocators.makeLocatorConstructors(storageAPI, runtime, compileLib, compileStructs, parsePyret, builtinModules, pyRepl, spyretParse, cpo);
+    var constructors = gdriveLocators.makeLocatorConstructors(storageAPI, runtime, compileLib, compileStructs, parsePyret, builtinModules, pyRepl, cpo);
 
     // NOTE(joe): In order to yield control quickly, this doesn't pause the
     // stack in order to save.  It simply sends the save requests and
@@ -258,8 +257,8 @@
 
     var getDefsForPyret = runtime.makeFunction(function() {
         var ws_str = CPO.editor.cm.getValue();
-        var ws_str_j = spyretParse.schemeToPyretAST(ws_str, "definitions");
-        return ws_str_j;
+        //var ws_str_j = spyretParse.schemeToPyretAST(ws_str, "definitions");
+        return ws_str;
       });
     var replGlobals = gmf(compileStructs, "standard-globals");
 
@@ -287,7 +286,7 @@
                 return runtime.safeCall(
                   function() {
                     return gf(repl,
-                    "make-spyret-definitions-locator").app(getDefsForPyret, replGlobals);
+                    "make-definitions-locator").app(getDefsForPyret, replGlobals);
                   },
                   function(locator) {
                     return gf(repl, "restart-interactions").app(locator, pyOptions);
@@ -305,10 +304,11 @@
                 return runtime.safeCall(
                   function() {
                     return gf(repl,
-                    "make-spyret-interaction-locator").app(
+                    "make-interaction-locator").app(
                       runtime.makeFunction(function() {
-                        var ws_str_j = spyretParse.schemeToPyretAST(str, name, "repl");
-                        return ws_str_j;
+                        return str;
+                        //var ws_str_j = spyretParse.schemeToPyretAST(str, name, "repl");
+                        //return ws_str_j;
                         }))
                   },
                   function(locator) {
@@ -316,7 +316,7 @@
                   });
               }, function(result) {
                 ret.resolve(result);
-              }, "make-spyret-interaction-locator");
+              }, "make-interaction-locator");
             }, 0);
             return ret.promise;
           },

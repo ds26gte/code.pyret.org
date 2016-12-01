@@ -25,7 +25,7 @@
     // version or something else?
     var shareAPI = makeShareAPI("");
 
-    var dialect = 'spyret'
+    var dialect = 'pyret'
 
     function unPyretizeSymbol(str) {
       if (!/Ǝ/.test(str)) {
