@@ -58,20 +58,20 @@
 
     var logDetailedOption = $("#detailed-logging");
 
-    if(localStorage.getItem('log-detailed') !== null) {
+    if(localSettings.getItem('log-detailed') !== null) {
       logDetailedOption.prop("checked",
-        localStorage.getItem('log-detailed') == 'true');
+        localSettings.getItem('log-detailed') == 'true');
     } else {
-      localStorage.setItem('log-detailed', false);
+      localSettings.setItem('log-detailed', false);
     }
 
     logDetailedOption.on('change', function () {
-      localStorage.setItem('log-detailed', this.checked);
+      localSettings.setItem('log-detailed', this.checked);
     });
 
-    setInterval(function() {
-      logDetailedOption[0].checked = localStorage.getItem('log-detailed') == 'true';
-    }, 100);
+    localSettings.change("log-detailed", function(_, newValue) {
+      logDetailedOption[0].checked = newValue == 'true';
+    });
 
     runtime.setParam("imgUrlProxy", function(s) {
       var a = document.createElement("a");
@@ -179,19 +179,6 @@
                 else {
                   return gmf(cpo, "make-builtin-js-locator").app(name, raw);
                 }
-                /*
-                if (cpoBuiltin.knownCpoModule(name)) {
-                  return cpoBuiltin.cpoBuiltinLocator(runtime, compileLib, compileStructs, name);
-                }
-                else if(okImports.indexOf(name) === -1) {
-                  throw runtime.throwMessageException("Unknown module: " + name);
-                } else {
-                  return gmf(compileLib, "located").app(
-                    gmf(builtin, "make-builtin-locator").app(name),
-                    runtime.nothing
-                  );
-                }
-                */
               },
               dependency: function(protocol, args) {
                 var arr = runtime.ffi.toArray(args);
@@ -264,6 +251,7 @@
         }
         return ws_str;
       });
+    };
     var replGlobals = gmf(compileStructs, "standard-globals");
 
     var defaultOptions = gmf(compileStructs, "default-compile-options");
@@ -278,7 +266,7 @@
       }, function(repl) {
         var jsRepl = {
           runtime: runtime.getField(pyRuntime, "runtime").val,
-          restartInteractions: function(ignoredStr, options) {
+          restartInteractions: function(source, options) {
             var pyOptions = defaultOptions.extendWith({
               "type-check": options.typeCheck,
               "check-all": options.checkAll,
