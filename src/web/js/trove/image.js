@@ -16,6 +16,16 @@
       "is-side-count": "tany",
       "is-step-count": "tany",
       "is-image": "tany",
+      "is-posn": "tany",
+      "make-posn": "tany",
+      "posn-x": "tany",
+      "posn-y": "tany",
+      "is-color": "tany",
+      "make-color": "tany",
+      "color-red": "tany",
+      "color-green": "tany",
+      "color-blue": "tany",
+      "color-alpha": "tany",
       "bitmap-url": "tany",
       "open-image-url": "tany",
       "image-url": "tany",
@@ -24,15 +34,23 @@
       "text": "tany",
       "text-font": "tany",
       "overlay": "tany",
+      "_spyret_overlay": "tany",
       "overlay-xy": "tany",
       "overlay-align": "tany",
+      "_spyret_overlay-align": "tany",
       "underlay": "tany",
+      "_spyret_underlay": "tany",
       "underlay-xy": "tany",
       "underlay-align": "tany",
+      "_spyret_underlay-align": "tany",
       "beside": "tany",
+      "_spyret_beside": "tany",
       "beside-align": "tany",
+      "_spyret_beside-align": "tany",
       "above": "tany",
+      "_spyret_above": "tany",
       "above-align": "tany",
+      "_spyret_above-align": "tany",
       "empty-scene": "tany",
       "put-image": "tany",
       "place-image": "tany",
@@ -51,6 +69,7 @@
       "rectangle": "tany",
       "regular-polygon": "tany",
       "ellipse": "tany",
+      "polygon": "tany",
       "triangle": "tany",
       "triangle-sas": "tany",
       "triangle-sss": "tany",
@@ -187,6 +206,7 @@
       return runtime.isNumber(val) && jsnums.isReal(val) && jsnums.greaterThanOrEqual(val, 0);
     }, "Non-negative Real Number");
 
+    var checkPosn = p(image.isPosn, "Position");
 
     var _checkColor = p(image.isColorOrColorString, "Color");
 
@@ -238,10 +258,19 @@
     var annPlaceY = ann("Y Place (\"top\", \"bottom\", \"center\", \"baseline\", or \"middle\")", isPlaceY);
     var checkPlaceY = p(isPlaceY, "Y Place");
 
-
     var annAngle = ann("Angle (a number 'x' where 0 <= x < 360)", image.isAngle);
     var checkAngle = p(image.isAngle, "Angle");
 
+    var canonicalizeAngle = function(angle) {
+      angle = checkReal(angle);
+      while (jsnums.lessThan(angle, 0)) {
+        angle += 360;
+      }
+      while (jsnums.greaterThanOrEqual(angle, 360)) {
+        angle -= 360;
+      }
+      return angle;
+    };
 
     var annListColor = ann("List<Color>", function(val) {
       return runtime.ffi.isList(val);
@@ -249,7 +278,6 @@
     var checkListofColor = p(function(val) {
       return ffi.makeList(ffi.toArray(val).map(checkColor));
     }, "List<Color>");
-
 
     var checkMode = p(isMode, "Mode");
     var annMode = ann("Mode (\"outline\" or \"solid\")", isMode);
@@ -349,12 +377,69 @@
     });
     f("is-image", function(maybeImage) {
       checkArity(1, arguments, "is-image");
-      runtime.confirm(maybeImage, runtime.isOpaque);
-      return runtime.wrap(image.isImage(maybeImage.val));
+      //runtime.confirm(maybeImage, runtime.isOpaque);
+      return runtime.wrap(runtime.isOpaque(maybeImage) && image.isImage(maybeImage.val));
     });
-    f("bitmap-url", bitmapURL),
-    f("open-image-url", bitmapURL),
-    f("image-url", bitmapURL),
+
+    f("is-posn", function(maybePosn) {
+      checkArity(1, arguments, "is-posn");
+      return runtime.wrap(image.isPosn(maybePosn));
+    });
+    f("make-posn", function(maybeX, maybeY) {
+      checkArity(2, arguments, "make-posn");
+      var x = checkReal(maybeX);
+      var y = checkReal(maybeY);
+      return runtime.wrap(image.makePosn(
+        jsnums.toFixnum(x), jsnums.toFixnum(y)));
+    });
+    f("posn-x", function(maybePosn) {
+      checkArity(1, arguments, "posn-x");
+      var p = checkPosn(maybePosn);
+      return runtime.wrap(image.posnX(p));
+    });
+    f("posn-y", function(maybePosn) {
+      checkArity(1, arguments, "posn-y");
+      var p = checkPosn(maybePosn);
+      return runtime.wrap(image.posnY(p));
+    });
+    f("is-color", function(maybeColor) {
+      checkArity(1, arguments, "is-color");
+      return runtime.wrap(image.isColor(maybeColor));
+    });
+    f("make-color", function(maybeRed,maybeGreen,maybeBlue,maybeAlpha) {
+      checkArity(arguments.length <= 3? 3: 4, arguments, "make-color");
+      var red = checkByte(maybeRed);
+      var green = checkByte(maybeGreen);
+      var blue = checkByte(maybeBlue);
+      var alpha = maybeAlpha? checkByte(maybeAlpha): 255;
+      return runtime.wrap(image.makeColor(
+      jsnums.toFixnum(red),jsnums.toFixnum(green),jsnums.toFixnum(blue),
+      jsnums.toFixnum(alpha)));
+    });
+    f("color-red", function(maybeColor) {
+      checkArity(1, arguments, "color-red");
+      var c = checkColor(maybeColor);
+      return runtime.wrap(image.colorRed(c));
+    });
+    f("color-green", function(maybeColor) {
+      checkArity(1, arguments, "color-green");
+      var c = checkColor(maybeColor);
+      return runtime.wrap(image.colorGreen(c));
+    });
+    f("color-blue", function(maybeColor) {
+      checkArity(1, arguments, "color-blue");
+      var c = checkColor(maybeColor);
+      return runtime.wrap(image.colorBlue(c));
+    });
+    f("color-alpha", function(maybeColor) {
+      checkArity(1, arguments, "color-alpha");
+      var c = checkColor(maybeColor);
+      return runtime.wrap(image.colorAlpha(c));
+    });
+
+    f("bitmap-url", bitmapURL);
+    f("open-image-url", bitmapURL);
+    f("image-url", bitmapURL);
     f("images-difference", function(maybeImage1, maybeImage2) {
       checkArity(2, arguments, "image");
       c("images-difference", [maybeImage1, maybeImage2], [annImage, annImage]);
@@ -382,7 +467,8 @@
     f("text-font", function(maybeString, maybeSize, maybeColor, maybeFace,
                             maybeFamily, maybeStyle, maybeWeight, maybeUnderline) {
       checkArity(8, arguments);
-      c("text", [
+                              /*
+      c("text-font", [
           maybeString,
           maybeSize,
           maybeColor,
@@ -400,7 +486,7 @@
           annFontStyle,
           annFontWeight,
           runtime.Boolean
-        ]);
+        ]); */
       var string = checkString(maybeString);
       var size = checkByte(maybeSize);
       var color = checkColor(maybeColor);
@@ -422,6 +508,17 @@
       var img2 = checkImage(maybeImg2);
       return makeImage(image.makeOverlayImage(img1, img2, "middle", "middle"));
     });
+
+    f("_spyret_overlay", function(maybeImg1) {
+      if (arguments.length < 2) {
+        throw runtime.ffi.throwArityErrorC(["overlay"], 2, [maybeImg1]);
+      }
+      var cumulImage = checkImage(maybeImg1);
+      for (var i = 1; i < arguments.length; i++) {
+        cumulImage = image.makeOverlayImage(cumulImage, checkImage(arguments[i]), "middle", "middle");
+      }
+      return makeImage(cumulImage);
+    }),
 
     f("overlay-xy", function(maybeImg1, maybeDx, maybeDy, maybeImg2) {
       checkArity(4, arguments, "overlay-xy");
@@ -448,6 +545,19 @@
       return makeImage(image.makeOverlayImage(img1, img2, String(placeX), String(placeY)));
     });
 
+    f("_spyret_overlay-align", function(maybePlaceX, maybePlaceY, maybeImg1) {
+      if (arguments.length < 4) {
+        throw runtime.ffi.throwArityErrorC(["overlay-align"], 4, [maybePlaceX, maybePlaceY, maybeImg1]);
+      }
+      var placeX = String(checkPlaceX(maybePlaceX));
+      var placeY = String(checkPlaceY(maybePlaceY));
+      var cumulImage = checkImage(maybeImg1);
+      for (var i = 3; i < arguments.length; i++) {
+        cumulImage = image.makeOverlayImage(cumulImage, checkImage(arguments[i]), placeX, placeY);
+      }
+      return makeImage(cumulImage);
+    }),
+
     f("underlay", function(maybeImg1, maybeImg2) {
       checkArity(2, arguments, "underlay");
       c("underlay", [maybeImg1, maybeImg2], [annImage, annImage]);
@@ -455,6 +565,17 @@
       var img2 = checkImage(maybeImg2);
       return makeImage(image.makeOverlayImage(img2, img1, "middle", "middle"));
     });
+
+    f("_spyret_underlay", function(maybeImg1) {
+      if (arguments.length < 2) {
+        throw runtime.ffi.throwArityErrorC(["underlay"], 2, [maybeImg1]);
+      }
+      var cumulImage = checkImage(maybeImg1);
+      for (var i = 1; i < arguments.length; i++) {
+        cumulImage = image.makeOverlayImage(checkImage(arguments[i]), cumulImage, "middle", "middle");
+      }
+      return makeImage(cumulImage);
+    }),
 
     f("underlay-xy", function(maybeImg1, maybeDx, maybeDy, maybeImg2) {
       checkArity(4, arguments, "underlay-xy");
@@ -481,6 +602,19 @@
       return makeImage(image.makeOverlayImage(img2, img1, String(placeX), String(placeY)));
     });
 
+    f("_spyret_underlay-align", function(maybePlaceX, maybePlaceY, maybeImg1) {
+      if (arguments.length < 4) {
+        throw runtime.ffi.throwArityErrorC(["underlay-align"], 4, [maybePlaceX, maybePlaceY, maybeImg1]);
+      }
+      var placeX = String(checkPlaceX(maybePlaceX));
+      var placeY = String(checkPlaceY(maybePlaceY));
+      var cumulImage = checkImage(maybeImg1);
+      for (var i = 3; i < arguments.length; i++) {
+        cumulImage = image.makeOverlayImage(checkImage(arguments[i]), cumulImage, placeX, placeY);
+      }
+      return makeImage(cumulImage);
+    }),
+
     f("beside", function(maybeImg1, maybeImg2) {
       checkArity(2, arguments, "beside");
       c("beside", [maybeImg1, maybeImg2], [annImage, annImage]);
@@ -488,6 +622,17 @@
       var img2 = checkImage(maybeImg2);
       return makeImage(image.makeOverlayImage(img1, img2, "beside", "middle"));
     });
+
+    f("_spyret_beside", function(maybeImg1) {
+      if (arguments.length < 2) {
+        throw runtime.ffi.throwArityErrorC(["overlay"], 2, [maybeImg1]);
+      }
+      var cumulImage = checkImage(maybeImg1);
+      for (var i = 1; i < arguments.length; i++) {
+        cumulImage = image.makeOverlayImage(cumulImage, checkImage(arguments[i]), "beside", "middle");
+      }
+      return makeImage(cumulImage);
+    }),
 
     f("beside-align", function(maybePlaceY, maybeImg1, maybeImg2) {
       checkArity(3, arguments, "beside-align");
@@ -500,6 +645,18 @@
       return makeImage(image.makeOverlayImage(img1, img2, "beside", String(placeY)));
     });
 
+    f("_spyret_beside-align", function(maybePlaceY, maybeImg1) {
+      if (arguments.length < 3) {
+        throw runtime.ffi.throwArityErrorC(["beside-align"], 3, [maybePlaceY, maybeImg1]);
+      }
+      var placeY = String(checkPlaceY(maybePlaceY));
+      var cumulImage = checkImage(maybeImg1);
+      for (var i = 2; i < arguments.length; i++) {
+        cumulImage = image.makeOverlayImage(cumulImage, checkImage(arguments[i]),  "beside", placeY);
+      }
+      return makeImage(cumulImage);
+    }),
+
     f("above", function(maybeImg1, maybeImg2) {
       checkArity(2, arguments, "above");
       c("beside", [maybeImg1, maybeImg2], [annImage, annImage]);
@@ -507,6 +664,17 @@
       var img2 = checkImage(maybeImg2);
       return makeImage(image.makeOverlayImage(img1, img2, "middle", "above"));
     });
+
+    f("_spyret_above", function(maybeImg1) {
+      if (arguments.length < 2) {
+        throw runtime.ffi.throwArityErrorC(["above"], 2, [maybeImg1]);
+      }
+      var cumulImage = checkImage(maybeImg1);
+      for (var i = 1; i < arguments.length; i++) {
+        cumulImage = image.makeOverlayImage(cumulImage, checkImage(arguments[i]), "middle", "above");
+      }
+      return makeImage(cumulImage);
+    }),
 
     f("above-align", function(maybePlaceX, maybeImg1, maybeImg2) {
       checkArity(3, arguments, "above-align");
@@ -519,13 +687,32 @@
       return makeImage(image.makeOverlayImage(img1, img2, String(placeX), "above"));
     });
 
+    f("_spyret_above-align", function(maybePlaceX, maybeImg1) {
+      if (arguments.length < 3) {
+        throw runtime.ffi.throwArityErrorC(["above-align"], 3, [maybePlaceX, maybeImg1]);
+      }
+      var placeX = String(checkPlaceX(maybePlaceX));
+      var cumulImage = checkImage(maybeImg1);
+      for (var i = 2; i < arguments.length; i++) {
+        cumulImage = image.makeOverlayImage(cumulImage, checkImage(arguments[i]), placeX, "above");
+      }
+      return makeImage(cumulImage);
+    }),
+
     f("empty-scene", function(maybeWidth, maybeHeight) {
-      checkArity(2, arguments, "empty-scene");
-      c("empty-scene", [maybeWidth, maybeHeight], [annNumNonNegative, annNumNonNegative]);
+      //checkArity(2, arguments, "empty-scene");
+      //c("empty-scene", [maybeWidth, maybeHeight], [annNumNonNegative, annNumNonNegative]);
+      if (arguments.length < 2 || arguments.length > 3) {
+        throw runtime.ffi.throwArityErrorC(["empty-scene"], 2, [maybeWidth, maybeHeight]);
+        }
       var width = checkNonNegativeReal(maybeWidth);
       var height = checkNonNegativeReal(maybeHeight);
+      var color = false;
+      if (arguments.length === 3) {
+        color = checkColor(arguments[2]);
+      }
       return makeImage(
-        image.makeSceneImage(jsnums.toFixnum(width), jsnums.toFixnum(height), [], true));
+        image.makeSceneImage(jsnums.toFixnum(width), jsnums.toFixnum(height), [], true, color));
     });
     f("put-image", function(maybePicture, maybeX, maybeY, maybeBackground) {
       checkArity(4, arguments, "put-image");
@@ -594,8 +781,8 @@
 
     f("rotate", function(maybeAngle, maybeImg) {
       checkArity(2, arguments, "rotate");
-      c("rotate", [maybeAngle, maybeImg], [annAngle, annImage]);
-      var angle = checkAngle(maybeAngle);
+      c("rotate", [maybeAngle, maybeImg], [annNumber, annImage]);
+      var angle = canonicalizeAngle(maybeAngle);
       var img = checkImage(maybeImg);
       return makeImage(image.makeRotateImage(jsnums.toFixnum(-angle), img));
     });
@@ -742,6 +929,15 @@
       var color = checkColor(maybeColor);
       return makeImage(
         image.makePolygonImage(jsnums.toFixnum(length), jsnums.toFixnum(count), jsnums.toFixnum(1), String(mode), color));
+    });
+
+    f("polygon", function(maybeList, maybeMode, maybeColor) {
+      checkArity(3, arguments, "polygon");
+      var lop = checkListofPosn(maybeList);
+      var mode = checkMode(maybeMode);
+      var color = checkColor(maybeColor);
+      return makeImage(
+        image.makePosnImage(lop, String(mode), color));
     });
 
     f("ellipse", function(maybeWidth, maybeHeight, maybeMode, maybeColor) {
