@@ -42,17 +42,17 @@
     "cpo/guess-gas",
     "cpo/cpo-builtin-modules",
     "cpo/modal-prompt",
-    "pyret-base/js/runtime"
+    "pyret-base/js/runtime",
+    "cpo/spyret-parse"
   ],
   provides: {},
   theModule: function(runtime, namespace, uri,
                       compileLib, compileStructs, pyRepl, cpo, replUI,
                       parsePyret, runtimeLib, loadLib, builtinModules, cpoBuiltins,
                       gdriveLocators, http, guessGas, cpoModules, modalPrompt,
-                      rtLib) {
+                      rtLib, spyretParse) {
 
-
-
+    var dialect = "pyret";
 
     var replContainer = $("<div>").addClass("repl");
     $("#REPL").append(replContainer);
@@ -92,7 +92,7 @@
     var gmf = function(m, f) { return gf(gf(m, "values"), f); };
     var gtf = function(m, f) { return gf(m, "types")[f]; };
 
-    var constructors = gdriveLocators.makeLocatorConstructors(storageAPI, runtime, compileLib, compileStructs, parsePyret, builtinModules, cpo);
+    var constructors = gdriveLocators.makeLocatorConstructors(storageAPI, runtime, compileLib, compileStructs, parsePyret, builtinModules, pyRepl, spyretParse, cpo);
 
     // NOTE(joe): In order to yield control quickly, this doesn't pause the
     // stack in order to save.  It simply sends the save requests and
@@ -131,7 +131,19 @@
           },
           dependency: function(protocol, args) {
             var arr = runtime.ffi.toArray(args);
-            if (protocol === "my-gdrive") {
+            if (protocol === "wescheme-collection") {
+              return "wescheme-collection://" + arr[0];
+            }
+            else if (protocol === "wescheme-legacy") {
+              return "wescheme-legacy://" + arr[0];
+            }
+            else if (protocol === "wescheme-my-gdrive") {
+              return "wescheme-gdrive://" + arr[0];
+            }
+            else if (protocol == "wescheme-shared-gdrive") {
+              return "wescheme-shared-gdrive://" + arr[0] + ":" + arr[1];
+            }
+            else if (protocol === "my-gdrive") {
               return "my-gdrive://" + arr[0];
             }
             else if (protocol === "shared-gdrive") {
@@ -171,7 +183,19 @@
               },
               dependency: function(protocol, args) {
                 var arr = runtime.ffi.toArray(args);
-                if (protocol === "my-gdrive") {
+                if (protocol === "wescheme-collection") {
+                  return constructors.makeWeSchemeCollectionLocator(arr[0]);
+                }
+                else if (protocol === "wescheme-legacy") {
+                  return constructors.makeWeSchemeLegacyLocator(arr[0]);
+                }
+                else if (protocol === "wescheme-my-gdrive") {
+                  return constructors.makeWeSchemeMyGDriveLocator(arr[0]);
+                }
+                else if (protocol == "wescheme-shared-gdrive") {
+                  return constructors.makeWeSchemeSharedGDriveLocator(arr[0]);
+                }
+                else if (protocol === "my-gdrive") {
                   return constructors.makeMyGDriveLocator(arr[0]);
                 }
                 else if (protocol === "shared-gdrive") {
@@ -210,7 +234,6 @@
       }));
     var pyRealm = gf(loadLib, "internal").makeRealm(cpoModules.getRealm());
 
-
     var builtins = [];
     Object.keys(runtime.getParam("staticModules")).forEach(function(k) {
       if(k.indexOf("builtin://") === 0) {
@@ -224,7 +247,11 @@
 
     var getDefsForPyret = function(source) {
       return runtime.makeFunction(function() {
-        return source;
+        var ws_str = source;
+        if (dialect === 'spyret') {
+          ws_str = spyretParse.schemeToPyretAST(ws_str, 'definitions', 'definitions');
+        }
+        return ws_str;
       });
     };
     var replGlobals = gmf(compileStructs, "standard-globals");
@@ -253,7 +280,9 @@
                 return runtime.safeCall(
                   function() {
                     return gf(repl,
-                    "make-definitions-locator").app(getDefsForPyret(source), replGlobals);
+                    (dialect === 'spyret'? 'make-spyret-definitions-locator'
+                        : "make-definitions-locator")
+                    ).app(getDefsForPyret(source), replGlobals);
                   },
                   function(locator) {
                     return gf(repl, "restart-interactions").app(locator, pyOptions);
@@ -271,15 +300,24 @@
                 return runtime.safeCall(
                   function() {
                     return gf(repl,
-                    "make-interaction-locator").app(
-                      runtime.makeFunction(function() { return str; }))
+                    (dialect === 'spyret'? 'make-spyret-interaction-locator'
+                      : "make-interaction-locator")
+                    ).app(
+                      runtime.makeFunction(function() {
+                        var ws_str = str;
+                        if (dialect === 'spyret') {
+                          ws_str = spyretParse.schemeToPyretAST(str, name, 'repl');
+                        }
+                        return str;
+                      }))
                   },
                   function(locator) {
                     return gf(repl, "run-interaction").app(locator);
                   });
               }, function(result) {
                 ret.resolve(result);
-              }, "make-interaction-locator");
+              }, (dialect === 'spyret'? 'make-spyret-interaction-locator'
+                : "make-interaction-locator"));
             }, 0);
             return ret.promise;
           },
@@ -316,7 +354,7 @@
       var codeContainer = $("<div>").addClass("replMain");
       $("#main").prepend(codeContainer);
 
-      var replWidget = 
+      var replWidget =
           replUI.makeRepl(replContainer, repl, runtime, {
             breakButton: $("#breakButton"),
             runButton: runButton
@@ -718,7 +756,6 @@
         onError: flashError,
         onInternalError: stickError
       });
-
 
       return runtime.makeModuleReturn({}, {});
     }
