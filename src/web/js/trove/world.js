@@ -15,6 +15,8 @@
     values: {
       "reactor": ["forall", ["a"], ["arrow", [["tid", "a"], ["List", "WCOofA"]], "Any"]],
       "big-bang": ["forall", ["a"], ["arrow", [["tid", "a"], ["List", "WCOofA"]], ["tid", "a"]]],
+      "_spyret_big-bang": "tany",
+      "animate": "tany",
       "on-tick": ["forall", ["a"],
           ["arrow",
              [["arrow", [ ["tid", "a"] ], ["tid", "a"]]],
@@ -23,9 +25,18 @@
           ["arrow",
              [["arrow", [ ["tid", "a"], "Number" ], ["tid", "a"]]],
              "WCOofA"]],
+      "_spyret_on-tick": "tany",
       "on-mouse": ["forall", ["a"],
           ["arrow",
              [["arrow", [ ["tid", "a"], "Number", "Number", "String" ], ["tid", "a"]]],
+             "WCOofA"]],
+      "on-tap": ["forall", ["a"],
+          ["arrow",
+             [["arrow", [ ["tid", "a"], "String" ], ["tid", "a"]]],
+             "WCOofA"]],
+      "on-tilt": ["forall", ["a"],
+          ["arrow",
+             [["arrow", [ ["tid", "a"], "Number", "Number" ], ["tid", "a"]]],
              "WCOofA"]],
       "on-key": ["forall", ["a"],
           ["arrow",
@@ -35,6 +46,7 @@
           ["arrow",
              [["arrow", [ ["tid", "a"] ], "Image"]],
              "WCOofA"]],
+      "on-redraw": "tany",
       "stop-when": ["forall", ["a"],
           ["arrow",
              [["arrow", [ ["tid", "a"] ], "Boolean"]],
@@ -44,7 +56,8 @@
              ["Boolean"],
              "WCOofA"]],
       "is-world-config": ["arrow", [ "Any" ], "Boolean"],
-      "is-key-equal": ["arrow", [ "String", "String" ], "Boolean"]
+      "is-key-equal": ["arrow", [ "String", "String" ], "Boolean"],
+      "is-mouse-equal": ["arrow", [ "String", "String" ], "Boolean"]
     },
     aliases: {},
     datatypes: {
@@ -219,7 +232,6 @@
         configs.push(new DefaultDrawingOutput().toRawHandler(toplevelNode));
       }
 
-
       runtime.pauseStack(function(restarter) {
         rawJsworld.bigBang(
             toplevelNode,
@@ -240,10 +252,6 @@
       });
     };
 
-
-
-
-
     //////////////////////////////////////////////////////////////////////
 
     // Every world configuration function (on-tick, stop-when, ...)
@@ -255,7 +263,6 @@
     WorldConfigOption.prototype.configure = function(config) {
       throw new Error('unimplemented WorldConfigOption');
     };
-
 
     WorldConfigOption.prototype.toDomNode = function(params) {
       var span = document.createElement('span');
@@ -275,9 +282,6 @@
 
     //////////////////////////////////////////////////////////////////////
 
-
-
-
     // adaptWorldFunction: Racket-function -> World-CPS
     // Takes a pyret function and converts it to the CPS-style function
     // that our world implementation expects.
@@ -291,6 +295,7 @@
         // NOTE(joe): don't move this line down, it's *these* args, not
         // any other nested function's args
         var pyretArgs = [].slice.call(arguments, 0, arguments.length - 1);
+        //console.log('pyretArgs length = ' + pyretArgs.length);
         runtime.run(function(_, _) {
           // NOTE(joe): adding safecall here to get some meaningful caller frame
           // so error messages know where the call is coming from
@@ -329,7 +334,6 @@
       return rawJsworld.on_tick(this.delay, worldFunction);
     };
 
-
     //////////////////////////////////////////////////////////////////////
     var OnKey = function(handler) {
       WorldConfigOption.call(this, 'on-key');
@@ -346,7 +350,6 @@
           worldFunction(w, getKeyCodeName(e), success);
         });
     };
-
 
     var getKeyCodeName = function(e) {
       var code = e.charCode || e.keyCode;
@@ -402,10 +405,6 @@
     }
     //////////////////////////////////////////////////////////////////////
 
-
-
-
-
     var OnMouse = function(handler) {
       WorldConfigOption.call(this, 'on-mouse');
       this.handler = handler;
@@ -422,12 +421,41 @@
         });
     };
 
+    /////
 
+    var OnTap = function(handler) {
+      WorldConfigOption.call(this, 'on-tap');
+      this.handler = handler;
+    }
 
+    OnTap.prototype = Object.create(WorldConfigOption.prototype);
 
+    OnTap.prototype.toRawHandler = function(toplevelNode) {
+      var that = this;
+      var worldFunction = adaptWorldFunction(that.handler);
+      return rawJsworld.on_tap(
+        function(w, e, success) {
+          worldFunction(w, e, success);
+        });
+    };
 
+    /////
 
+    var OnTilt = function(handler) {
+      WorldConfigOption.call(this, 'on-tilt');
+      this.handler = handler;
+    }
 
+    OnTilt.prototype = Object.create(WorldConfigOption.prototype);
+
+    OnTilt.prototype.toRawHandler = function(toplevelNode) {
+      var that = this;
+      var worldFunction = adaptWorldFunction(that.handler);
+      return rawJsworld.on_tilt(
+        function(w, lr, td, success) {
+          worldFunction(w, lr, td, success);
+        });
+    };
 
     var OutputConfig = function() {}
     OutputConfig.prototype = Object.create(WorldConfigOption.prototype);
@@ -435,10 +463,6 @@
     var isOpaqueOutputConfig = function(v) {
       return runtime.isOpaque(v) && isOutputConfig(v.val);
     }
-
-
-
-
 
     // // ToDraw
 
@@ -512,12 +536,6 @@
       return rawJsworld.on_draw(worldFunction, cssFunction);
     };
 
-
-
-
-
-
-
     var DefaultDrawingOutput = function() {
       WorldConfigOption.call(this, 'to-draw');
     };
@@ -539,9 +557,6 @@
       var cssFunction = function(w, success) { success([]); }
       return rawJsworld.on_draw(worldFunction, cssFunction);
     };
-
-
-
 
     //////////////////////////////////////////////////////////////////////
 
@@ -573,7 +588,6 @@
     var checkHandler = runtime.makeCheckType(isOpaqueWorldConfigOption, "WorldConfigOption");
     //////////////////////////////////////////////////////////////////////
 
-
     // The default tick delay is 28 times a second.
     var DEFAULT_TICK_DELAY = 1/28;
 
@@ -592,6 +606,31 @@
           bigBang(initialWorldValue, arr, null, 'big-bang');
           runtime.ffi.throwMessageException("Internal error in bigBang: stack not properly paused and stored.");
         }, "big-bang"),
+
+        "_spyret_big-bang": makeFunction(function(init) {
+          runtime.checkArityAtLeast(2, arguments, "_spyret_big-bang");
+          //runtime.ffi.checkArity(1, arguments, "_spyret_big-bang");
+          var arr = [], h;
+          for (var i = 1; i < arguments.length; i++) {
+            h = arguments[i];
+            checkHandler(h);
+            arr.push(h);
+          }
+          bigBang(init, arr);
+          runtime.ffi.throwMessageException("Internal error in bigBang: stack not properly paused and stored.");
+        }),
+
+        "animate": makeFunction(function(f) {
+          runtime.ffi.checkArity(1, arguments, "animate");
+          runtime.checkFunction(f);
+          var arr = [];
+          arr.push(runtime.makeOpaque(new ToDraw(f)));
+          arr.push(runtime.makeOpaque(new OnTick(makeFunction(function(n) { return n+1; }),
+            Math.floor(DEFAULT_TICK_DELAY * 1000))));
+          bigBang(1, arr);
+          runtime.ffi.throwMessageException("Internal error in bigBang: stack not properly paused and stored.");
+        }, "animate"),
+
         "on-tick": makeFunction(function(handler) {
           runtime.ffi.checkArity(1, arguments, "on-tick");
           runtime.checkFunction(handler);
@@ -604,8 +643,27 @@
           var fixN = typeof n === "number" ? n : n.toFixnum();
           return runtime.makeOpaque(new OnTick(handler, fixN * 1000));
         }),
+
+        "_spyret_on-tick": makeFunction(function(handler, n) {
+          runtime.ffi.checkArity(arguments.length <= 1? 1: 2, arguments, "_spyret_on-tick");
+          runtime.checkFunction(handler);
+          var fixN;
+          if (arguments.length >= 2) {
+            fixN = typeof n === "number"? n: n.toFixnum();
+          } else {
+            fixN = DEFAULT_TICK_DELAY;
+          }
+          return runtime.makeOpaque(new OnTick(handler, fixN * 1000));
+        }),
+
         "to-draw": makeFunction(function(drawer) {
           runtime.ffi.checkArity(1, arguments, "to-draw");
+          runtime.checkFunction(drawer);
+          return runtime.makeOpaque(new ToDraw(drawer));
+        }),
+        "on-redraw": makeFunction(function(drawer) {
+          // spyret alias for to-draw
+          runtime.ffi.checkArity(1, arguments, "on-redraw");
           runtime.checkFunction(drawer);
           return runtime.makeOpaque(new ToDraw(drawer));
         }),
@@ -629,6 +687,16 @@
           runtime.checkFunction(onMouse);
           return runtime.makeOpaque(new OnMouse(onMouse));
         }),
+        "on-tap": makeFunction(function(onTap) {
+          runtime.ffi.checkArity(1, arguments, "on-tap");
+          runtime.checkFunction(onTap);
+          return runtime.makeOpaque(new OnTap(onTap));
+        }),
+        "on-tilt": makeFunction(function(onTilt) {
+          runtime.ffi.checkArity(1, arguments, "on-tilt");
+          runtime.checkFunction(onMouse);
+          return runtime.makeOpaque(new OnTilt(onTilt));
+        }),
         "is-world-config": makeFunction(function(v) {
           runtime.ffi.checkArity(1, arguments, "is-world-config");
           if(!runtime.isOpaque(v)) { return runtime.pyretFalse; }
@@ -639,6 +707,12 @@
           runtime.checkString(key1);
           runtime.checkString(key2);
           return key1.toString().toLowerCase() === key2.toString().toLowerCase();
+        }),
+        "is-mouse-equal": makeFunction(function(mouse1, mouse2) {
+          runtime.ffi.checkArity(2, arguments, "is-mouse-equal");
+          runtime.checkString(mouse1);
+          runtime.checkString(mouse2);
+          return mouse1.toString().toLowerCase() === mouse2.toString().toLowerCase();
         })
       },
       {},
