@@ -79,6 +79,11 @@ COPY_JS := $(patsubst src/web/js/%.js,build/web/js/%.js,$(wildcard src/web/js/*.
 build/web/js/%.js: src/web/js/%.js
 	cp $< $@
 
+COPY_BLOCKS_JS := $(patsubst src/web/js/codemirror-blocks-dist/%.js,build/web/js/%.js,$(wildcard src/web/js/codemirror-blocks-dist/*.js))
+
+build/web/js/%.js: src/web/js/codemirror-blocks-dist/%.js
+	cp $< $@
+
 COPY_GOOGLE_JS := $(patsubst src/web/js/google-apis/%.js,build/web/js/google-apis/%.js,$(wildcard src/web/js/google-apis/*.js))
 
 build/web/js/google-apis/%.js: src/web/js/google-apis/%.js
@@ -173,6 +178,7 @@ WEBCSS = build/web/css
 WEBFONTS = $(WEBCSS)/fonts
 WEBIMG = build/web/img
 WEBARR = build/web/arr
+WEBCOLL = build/web/collections
 
 $(WEBV):
 	@$(call MKDIR,$(WEBV))
@@ -198,9 +204,13 @@ $(WEBIMG):
 $(WEBARR):
 	@$(call MKDIR,$(WEBARR))
 
-web-local: $(WEB) $(WEBV) $(WEBJS) $(WEBJSGOOG) $(WEBCSS) $(WEBFONTS) $(WEBIMG) $(WEBARR) $(OUT_HTML) $(COPY_HTML) $(OUT_CSS) $(COPY_CSS) $(COPY_FONTS) $(COPY_JS) $(COPY_ARR) $(COPY_GIF) $(MISC_JS) $(MISC_CSS) $(MISC_IMG) $(COPY_NEW_CSS) $(COPY_NEW_JS) $(COPY_GOOGLE_JS) $(CPOMAIN) $(CPOGZ) $(CPOIDEHOOKS)
+$(WEBCOLL):
+	@$(call MKDIR,$(WEBCOLL))
+	cp -pr src/web/collections/* $@
 
-web: $(WEB) $(WEBV) $(WEBJS) $(WEBJSGOOG) $(WEBCSS) $(WEBFONTS) $(WEBIMG) $(WEBARR) $(OUT_HTML) $(COPY_HTML) $(OUT_CSS) $(COPY_CSS) $(COPY_FONTS) $(COPY_JS) $(COPY_ARR) $(COPY_GIF) $(MISC_JS) $(MISC_CSS) $(MISC_IMG) $(COPY_NEW_CSS) $(COPY_NEW_JS) $(COPY_GOOGLE_JS)
+web-local: $(WEB) $(WEBV) $(WEBJS) $(WEBJSGOOG) $(WEBCSS) $(WEBFONTS) $(WEBIMG) $(WEBARR) $(WEBCOLL) $(OUT_HTML) $(COPY_HTML) $(OUT_CSS) $(COPY_CSS) $(COPY_FONTS) $(COPY_JS) $(COPY_BLOCKS_JS) $(COPY_ARR) $(COPY_GIF) $(MISC_JS) $(MISC_CSS) $(MISC_IMG) $(COPY_NEW_CSS) $(COPY_NEW_JS) $(COPY_GOOGLE_JS) $(CPOMAIN) $(CPOGZ) $(CPOIDEHOOKS)
+
+web: $(WEB) $(WEBV) $(WEBJS) $(WEBJSGOOG) $(WEBCSS) $(WEBFONTS) $(WEBIMG) $(WEBARR) $(WEBCOLL) $(OUT_HTML) $(COPY_HTML) $(OUT_CSS) $(COPY_CSS) $(COPY_FONTS) $(COPY_JS) $(COPY_BLOCKS_JS) $(COPY_ARR) $(COPY_GIF) $(MISC_JS) $(MISC_CSS) $(MISC_IMG) $(COPY_NEW_CSS) $(COPY_NEW_JS) $(COPY_GOOGLE_JS)
 
 link-pyret:
 	ln -s node_modules/pyret-lang pyret;
