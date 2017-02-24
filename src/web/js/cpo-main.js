@@ -52,7 +52,7 @@
                       gdriveLocators, http, guessGas, cpoModules, modalPrompt,
                       rtLib, spyretParse) {
 
-    var dialect = "pyret";
+    var dialect = "spyret";
 
     var replContainer = $("<div>").addClass("repl");
     $("#REPL").append(replContainer);
@@ -248,7 +248,7 @@
     var getDefsForPyret = function(source) {
       return runtime.makeFunction(function() {
         var ws_str = source;
-        if (dialect === 'spyret') {
+        if (dialect === 'spyret' && ws_str) {
           ws_str = spyretParse.schemeToPyretAST(ws_str, 'definitions', 'definitions');
         }
         return ws_str;
@@ -308,7 +308,7 @@
                         if (dialect === 'spyret') {
                           ws_str = spyretParse.schemeToPyretAST(str, name, 'repl');
                         }
-                        return str;
+                        return ws_str;
                       }))
                   },
                   function(locator) {
