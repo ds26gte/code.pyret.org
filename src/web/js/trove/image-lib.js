@@ -10,11 +10,26 @@
     var image = gf(imageImp, "values");
     var color = gf(image, "color");
     var colorPred = gf(image, "is-Color");
+    var posn = gf(image, "posn");
+    var posnPred = gf(image, "is-Posn");
     var isNum = function(n) { return typeof n === "number"; }
     var unwrap = RUNTIME.unwrap;
 
     var hasOwnProperty = {}.hasOwnProperty;
 
+    //////////////////////////////////////////////////////////////////////
+    var makePosn = function(x,y) {
+      if (!(isNum(x) && isNum(y))) {
+        throw new Error("Internal error: non-number in makePosn argList ", [x,y]);
+      }
+      return posn.app(
+        RUNTIME.wrap(x),
+        RUNTIME.wrap(y)
+        );
+    };
+    var isPosn = function(p) { return unwrap(posnPred.app(p)); };
+    var posnX = function(p) { return unwrap(gf(p, "x")); };
+    var posnY = function(p) { return unwrap(gf(p, "y")); };
 
     //////////////////////////////////////////////////////////////////////
     var makeColor = function(r,g,b,a) {
@@ -319,6 +334,7 @@
     colorDb.put("DIM GRAY", makeColor(105, 105, 105));
     colorDb.put("DIMGRAY", makeColor(105, 105, 105));
     colorDb.put("BLACK", makeColor(0, 0, 0));
+    colorDb.put("TRANSPARENT", makeColor(0, 0, 0, 0));
 
     // clone: object -> object
     // Copies an object.  The new object should respond like the old
@@ -444,7 +460,6 @@
       return style + " " + match.toLowerCase();
     }
 
-
     var isSideCount = function(x) {
       return jsnums.isInteger(x) && jsnums.greaterThanOrEqual(x, 3);
     };
@@ -506,7 +521,6 @@
         })
     }
 
-
     // Base class for all images.
     var BaseImage = function() {};
 
@@ -552,7 +566,7 @@
 
       // we care about the stroke because drawing to a canvas is *different* for
       // fill v. stroke! If it's outline, we can draw on the pixel boundaries and
-      // stroke within them. If it's stroke, we need to draw _inside_ those 
+      // stroke within them. If it's stroke, we need to draw _inside_ those
       // boundaries, adjusting by a half-pixel towards the center.
       var isSolid = this.style.toString().toLowerCase() !== "outline";
 
@@ -746,12 +760,13 @@
 
     //////////////////////////////////////////////////////////////////////
     // SceneImage: primitive-number primitive-number (listof image) -> Scene
-    var SceneImage = function(width, height, children, withBorder) {
+    var SceneImage = function(width, height, children, withBorder, color) {
       BaseImage.call(this);
       this.width    = width;
       this.height   = height;
       this.children = children; // arrayof [image, number, number]
       this.withBorder = withBorder;
+      this.color = color;
       this.ariaText = " scene that is "+width+" by "+height+". children are: ";
       this.ariaText += children.map(function(c,i){
         return "child "+(i+1)+": "+c[0].ariaText+", positioned at "+c[1]+","+c[2]+" ";
@@ -766,7 +781,8 @@
                             this.children.concat([[anImage,
                                                    x - anImage.getWidth()/2,
                                                    y - anImage.getHeight()/2]]),
-                            this.withBorder);
+                            this.withBorder,
+                            this.color);
     };
 
     // render: 2d-context primitive-number primitive-number -> void
@@ -774,7 +790,8 @@
       var childImage, childX, childY;
       // create a clipping region around the boundaries of the Scene
       ctx.save();
-      ctx.fillStyle = "rgba(0,0,0,0)";
+      //ctx.fillStyle = "rgba(0,0,0,0)";
+      ctx.fillStyle = this.color? colorString(this.color) : 'transparent';
       ctx.fillRect(x, y, this.width, this.height);
       ctx.restore();
       // save the context, reset the path, and clip to the path around the scene edge
@@ -783,7 +800,7 @@
       ctx.rect(x, y, this.width, this.height);
       ctx.clip();
       // Ask every object to render itself inside the region
-        this.children.forEach(function(child) { 
+        this.children.forEach(function(child) {
             // then, render the child images
             childImage = child[0];
             childX = child[1];
@@ -803,7 +820,7 @@
         return (other instanceof SceneImage     &&
                 this.width    == other.width    &&
                 this.height   == other.height   &&
-                this.children.length == other.children.length && 
+                this.children.length == other.children.length &&
                 this.children.every(function(child1, i) {
                     var child2 = other.children[i];
                     return (child1[1] == child2[1] &&
@@ -987,14 +1004,14 @@
         x1 = 0;
         x2 = 0;
       } else if (placeX === "right") {
-        x1 = Math.max(img1.getWidth(), img2.getWidth()) - img1.getWidth();
-        x2 = Math.max(img1.getWidth(), img2.getWidth()) - img2.getWidth();
+        x1 = Math.max(img1.width, img2.width) - img1.width;
+        x2 = Math.max(img1.width, img2.width) - img2.width;
       } else if (placeX === "beside") {
         x1 = 0;
-        x2 = img1.getWidth();
+        x2 = img1.width;
       } else if (placeX === "middle" || placeX === "center") {
-        x1 = Math.max(img1.getWidth(), img2.getWidth())/2 - img1.getWidth()/2;
-        x2 = Math.max(img1.getWidth(), img2.getWidth())/2 - img2.getWidth()/2;
+        x1 = Math.max(img1.width, img2.width)/2 - img1.width/2;
+        x2 = Math.max(img1.width, img2.width)/2 - img2.width/2;
       } else {
         x1 = Math.max(placeX, 0) - placeX;
         x2 = Math.max(placeX, 0);
@@ -1004,17 +1021,17 @@
         y1 = 0;
         y2 = 0;
       } else if (placeY === "bottom") {
-        y1 = Math.max(img1.getHeight(), img2.getHeight()) - img1.getHeight();
-        y2 = Math.max(img1.getHeight(), img2.getHeight()) - img2.getHeight();
+        y1 = Math.max(img1.height, img2.height) - img1.height;
+        y2 = Math.max(img1.height, img2.height) - img2.height;
       } else if (placeY === "above") {
         y1 = 0;
-        y2 = img1.getHeight();
+        y2 = img1.height;
       } else if (placeY === "baseline") {
         y1 = Math.max(img1.getBaseline(), img2.getBaseline()) - img1.getBaseline();
         y2 = Math.max(img1.getBaseline(), img2.getBaseline()) - img2.getBaseline();
       } else if (placeY === "middle" || placeY === "center") {
-        y1 = Math.max(img1.getHeight(), img2.getHeight())/2 - img1.getHeight()/2;
-        y2 = Math.max(img1.getHeight(), img2.getHeight())/2 - img2.getHeight()/2;
+        y1 = Math.max(img1.height, img2.height)/2 - img1.height/2;
+        y2 = Math.max(img1.height, img2.height)/2 - img2.height/2;
       } else {
         y1 = Math.max(placeY, 0) - placeY;
         y2 = Math.max(placeY, 0);
@@ -1024,7 +1041,7 @@
       var i, v1 = img1.getVertices(), v2 = img2.getVertices(), xs = [], ys = [];
       v1 = v1.map(function(v){ return {x: v.x + x1, y: v.y + y1}; });
       v2 = v2.map(function(v){ return {x: v.x + x2, y: v.y + y2}; });
-        
+
       // store the vertices as something private, so this.getVertices() will still return undefined
       this._vertices = v1.concat(v2);
 
@@ -1223,8 +1240,9 @@
     var FrameImage = function(img) {
       BaseImage.call(this);
       this.img        = img;
-      this.width      = img.getWidth();
-      this.height     = img.getHeight();
+      this.width      = img.width;
+      this.height     = img.height;
+      this.ariaText = " Framed image: "+img.ariaText;
     };
 
     FrameImage.prototype = heir(BaseImage.prototype);
@@ -1282,7 +1300,7 @@
               this.width     === other.width     &&
               this.height    === other.height    &&
               this.direction === other.direction &&
-              imageEquals(this.img, other.img) ) 
+              imageEquals(this.img, other.img) )
             || BaseImage.prototype.equals.call(this, other);
     };
 
@@ -1353,13 +1371,14 @@
     var textContainer, textParent;
     //////////////////////////////////////////////////////////////////////
     // TextImage: String Number Color String String String String any/c -> Image
-    var TextImage = function(str, size, color, face, family, style, weight, underline) {
+    var TextImage = function(str, size, color, face, family, style, weight, underline, outline) {
       BaseImage.call(this);
       this.str        = str;
       this.size       = size;   // 18
       this.color      = color;  // red
       this.face       = face;   // Gill Sans
       this.family     = family; // 'swiss
+      this.outline    = outline || false;
       this.style      = (style === "slant")? "oblique" : style;  // Racket's "slant" -> CSS's "oblique"
       this.weight     = (weight=== "light")? "lighter" : weight; // Racket's "light" -> CSS's "lighter"
       this.underline  = underline;
@@ -1628,8 +1647,8 @@
       return makeImageDataImage(imageData);
     };
 
-    var makeSceneImage = function(width, height, children, withBorder) {
-      return new SceneImage(width, height, children, withBorder);
+    var makeSceneImage = function(width, height, children, withBorder, color) {
+      return new SceneImage(width, height, children, withBorder, color);
     };
     var makeCircleImage = function(radius, style, color) {
       return new EllipseImage(2*radius, 2*radius, style, color);
@@ -1676,8 +1695,8 @@
     var makeFlipImage = function(img, direction) {
       return new FlipImage(img, direction);
     };
-    var makeTextImage = function(str, size, color, face, family, style, weight, underline) {
-      return new TextImage(str, size, color, face, family, style, weight, underline);
+    var makeTextImage = function(str, size, color, face, family, style, weight, underline, outline) {
+      return new TextImage(str, size, color, face, family, style, weight, underline, outline);
     };
     var makeImageDataImage = function(imageData) {
       return new ImageDataImage(imageData);
@@ -1795,6 +1814,11 @@
       isTextImage: isTextImage,
       isFileImage: isFileImage,
       isFileVideo: isFileVideo,
+
+      makePosn: makePosn,
+      isPosn: isPosn,
+      posnX: posnX,
+      posnY: posnY,
 
       makeColor: makeColor,
       isColor: isColor,
