@@ -293,7 +293,7 @@
             }, 0);
             return ret.promise;
           },
-          run: function(str, name) {
+          run: function(str, name, lineNo) {
             var ret = Q.defer();
             setTimeout(function() {
               runtime.runThunk(function() {
@@ -306,7 +306,7 @@
                       runtime.makeFunction(function() {
                         var ws_str = str;
                         if (dialect === 'spyret') {
-                          ws_str = spyretParse.schemeToPyretAST(str, name, 'repl');
+                          ws_str = spyretParse.schemeToPyretAST(str, name, 'repl', lineNo);
                         }
                         return ws_str;
                       }))
