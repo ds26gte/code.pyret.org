@@ -83,6 +83,7 @@
       var rr = resultRuntime;
 
       function renderAndDisplayError(runtime, error, stack, click) {
+        //console.log('doing renderAndDisplayError', error);
         var error_to_html = errorUI.error_to_html;
         return runtime.pauseStack(function (restarter) {
           return error_to_html(runtime, CPO.documents, error, stack).
@@ -104,6 +105,7 @@
         callingRuntime.runThunk(function() {
           console.log("Full time including compile/load:", JSON.stringify(result.stats));
           if(callingRuntime.isFailureResult(result)) {
+            //console.log('ds26gte was failure result', result);
             didError = true;
             var thisExn = undefined;
             // Parse Errors
@@ -160,6 +162,7 @@
                 return callingRuntime.safeCall(
                   function() {
                     return callingRuntime.eachLoop(runtime.makeFunction(function(i) {
+                      //console.log('calling renderAndDisplayError Ia');
                       return renderAndDisplayError(callingRuntime, errors[i]);
                     }), 0, errors.length);
                   }, function () {});
@@ -184,6 +187,7 @@
                       }, "rr.drawCheckResults");
                     } else {
                       didError = true;
+                      //console.log('calling renderAndDisplayError II', runResult.exn.exn)
                       return renderAndDisplayError(resultRuntime, runResult.exn.exn, runResult.exn.pyretStack, true);
                     }
                   }, function(_) {
@@ -197,6 +201,7 @@
             doneDisplay.reject("Error displaying output");
             console.error("Bad result: ", result);
             didError = true;
+            //console.log('calling renderAndDisplayError III');
             return renderAndDisplayError(callingRuntime, CPO.documents,
               ffi.throwInternalError("Got something other than a Pyret result when running the program.",
                 ffi.makeList(result)));
@@ -445,7 +450,7 @@
           if (name.indexOf("interactions://") === 0)
             CPO.documents.delete(name);
         });
-        
+
         CPO.documents.set("definitions://", uiOptions.cm.getDoc());
 
         interactionsCount = 0;
