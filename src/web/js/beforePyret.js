@@ -1,6 +1,7 @@
 /* global $ jQuery CPO CodeMirror storageAPI Q createProgramCollectionAPI makeShareAPI */
 
-var shareAPI = makeShareAPI(process.env.CURRENT_PYRET_RELEASE);
+//var shareAPI = makeShareAPI(process.env.CURRENT_PYRET_RELEASE);
+var shareAPI = makeShareAPI(env_CURRENT_PYRET_RELEASE);
 
 var url = require('url.js');
 
