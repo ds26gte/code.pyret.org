@@ -8,7 +8,7 @@
   border-bottom: none;
 }
 .repl .CodeMirror {
-  background-color: hsl(0,0%,95%);
+  background-color: hsla(0,0%,95%,0.0);
   border: none;
   padding: 0;
   margin: 0;
@@ -433,10 +433,10 @@ body {
   z-index: 8500;
   left: 0;
   width: 50%;
-  top:0;
+  top:0; 
   height: 100%;
   max-height: 100%;
-  padding-top: 40px;
+  padding-top: 97px; /* 49 + 26 +  22 */
   padding-bottom: 5px;
   box-sizing: border-box;
   -moz-box-sizing: border-box;
@@ -449,21 +449,41 @@ body {
   left: 50%;
   right: 0;
   width: 50%;
-  top:0;
+  top:0; 
+  bottom:0;
   height: 100%;
   max-height: 100%;
-  padding-top: 40px;
+  padding-top: 97px;
   padding-bottom: 5px;
   box-sizing: border-box;
   -moz-box-sizing: border-box;
   margin:0;
 }
 
+.replContainer {
+  background: transparent url("/img/spyret-blank.gif") no-repeat right 90%;
+}
+
+.replContainer .repl:hover {
+  background: transparent url("/img/spyret-interactions.png") no-repeat right 90%;
+}
+
+#main .replMain .CodeMirror {
+  z-index: 19500;
+  background: transparent url("/img/spyret-fadeIcon.png") no-repeat right 90%;
+}
+
+#main .replMain .CodeMirror:hover {
+  background: transparent url("/img/spyret-fadeWords.png") no-repeat right 90%;
+}
+
+
 #main {
   width: 100%;
   z-index: 5000;
   height: 100%;
-  padding-top: 40px;
+  top: 0;
+  padding-top: 97px;
   padding-bottom: 0px;
   box-sizing: border-box;
   -moz-box-sizing: border-box;
@@ -480,14 +500,13 @@ body {
 
 #program-name-container input {
   display: inline-block;
-  height: 40px;
-  padding: 5px;
-  vertical-align:top;
-  border:none;
-  font-size: 18px;
+  height: 19px;
+  margin: 1px 5px;
+  border: 1px inset;
+  font-size: 13px;
   background: #FEFEFE;
-  float:left;
-  height: 100%;
+  float: left;
+  width: 200px;
   box-sizing: border-box;
 }
 
@@ -495,7 +514,39 @@ body {
   display: inline-block;
 }
 
+#runButton, #breakButton, #saveButton, #openFile, #undoButton, #redoButton {
+  background-repeat: no-repeat;
+  background-position: 35px 5px;
+  background-color: transparent;
+  width: 125px;
+}
+
+#runButton{
+   background-image: url("/img/spyret-run.png") ;
+}
+
+#breakButton{
+  background-image: url("/img/spyret-break.png") ;
+}
+
 #saveButton {
+  background-image: url("/img/spyret-save.png") ;
+}
+
+#openFile {
+  background-image: url("/img/googledrive.png") ;
+}
+
+#undoButton {
+  background-image: url("/img/spyret-undo.png") ;
+}
+
+#redoButton {
+  background-image: url("/img/spyret-redo.png") ;
+}
+
+#undoButton, #redoButton {
+  background-size: 13px;
 }
 
 #shareContainer {
@@ -574,7 +625,7 @@ body {
 #docs *,
 #issues *,
 #discuss *,
-#logout * {
+#logoutObsolete * {
   color: #000;
   font-family: sans-serif;
   text-decoration: none;
@@ -734,7 +785,8 @@ input.highlight-setting-visibility-toggle:checked:before {
    float: left;
 }
 .replOutput > dl > dd:not(:last-of-type):after {
-   content: ",";
+   /* content: ","; Scheme doesn't use comma separators */
+  content: "";
    padding-right: 0.5em;
 }
 
@@ -766,7 +818,8 @@ ul.inlineCollection > li {
   display: inline;
 }
 ul.inlineCollection > li:not(:last-of-type):after {
-  content: ", ";
+  /* content: ", "; Scheme doesn't use comma separators */
+  content: " ";
 }
 ul.inlineCollection > li, ul.inlineCollection ul > li { display: inline; }
 ul.inlineCollection > li > span.label {
@@ -1174,34 +1227,40 @@ code div {
   height:auto;
 }
 
-#runButton, #breakButton {
-  width: 150px;
-  box-shadow: 0px -5px 5px 1px rgba(0,0,0,0.2);
+#modeButton {
+  background: #336600;
 }
 
-#runButton{
-  background: #317BCF;
+#runButton, #breakButton, #saveButton, #openFile, #undoButton, #redoButton {
+  text-align: left;
+  padding-left: 55px;
+  width: 125px;
 }
 
-#runButton:hover{
-  background:#0060CE;
+/*
+#runButton:hover, #breakButton:hover, #saveButton:hover, #openFile:hover, #modeButton:hover {
+  background: #75328a;
 }
+*/
 
-#breakButton{
-  background:#CF3B31;
-}
-
+/*
 #breakButton:hover{
-  background:#B30C00;
+  background: #75328a;
+}
+*/
+
+#runPart:hover,
+#breakPart:hover,
+#savePart:hover,
+#openPart:hover,
+#modePart:hover {
+  background: #75328a;
+/*  box-shadow: 0px -5px 10px 5px rgba(0, 0, 0, 0.2); */
 }
 
-#runButton:hover,
-#breakButton:hover{
-  box-shadow: 0px -5px 10px 5px rgba(0, 0, 0, 0.2);
-}
-
+/*
 #runButton:disabled, #breakButton:disabled{
-  width: 150px;
+   width: 150px;
   background: none;
   box-shadow: none;
 }
@@ -1211,9 +1270,10 @@ code div {
   background: none;
   box-shadow: none;
 }
+*/
 
-#runPart {
-  background: #317BCF;
+#runPart, #runStylePart, #breakPart, #savePart, #openPart, #modePart {
+  /* background: #317BCF; */
   padding: 0;
   margin: 0;
 }
@@ -1229,19 +1289,22 @@ code div {
 }
 
 #run-dropdown-content {
+  /*
   position: absolute;
   right: 153px;
   top: 40px;
   margin: 0;
   width: 172px;
+  */
   display: none;
+  z-index: 9100;
 }
 
 #run-dropdown-content li {
   color: #eeeeee;
   font-family: sans-serif;
   font-size: 15px;
-  height: 23px;
+  /* height: 23px; */
   background: #317BCF;
   padding: 5px;
   box-shadow: 0px -2px 5px 2px rgba(0, 0, 0, 0.1);
@@ -1362,7 +1425,7 @@ code div {
   display: block;
   min-height: 3em;
   min-width: 3em;
-  background-image: url(/img/pyret-spin.gif);
+  background-image: url(/img/spyret-treadmill-run.gif);
   background-size: contain;
   background-repeat: no-repeat;
   flex: 1;

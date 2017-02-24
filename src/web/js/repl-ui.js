@@ -370,8 +370,8 @@
       container.append(output).append(promptContainer);
 
       var img = $("<img>").attr({
-        "src": "/img/pyret-spin.gif",
-        "width": "25px",
+        "src": "/img/spyret-treadmill-run.gif",
+        "width": "18px",
       }).css({
         "vertical-align": "middle"
       });
@@ -488,7 +488,7 @@
         var thisName = 'interactions://' + interactionsCount;
         CPO.documents.set(thisName, echoCM.getDoc());
         logger.log('run', { name: thisName });
-        var replResult = repl.run(code, thisName);
+        var replResult = repl.run(code, thisName, interactionsCount);
 //        replResult.then(afterRun(CM));
         var startRendering = replResult.then(function(r) {
           maybeShowOutputPending();
