@@ -48,7 +48,7 @@
     "mustache-express": "^1.2.1",
     "node-static": "^0.7.3",
     "node-uuid": "^1.4.1",
-    "pyret-codemirror-mode": "git://github.com/brownplt/pyret-codemirror-mode#master",
+    "pyret-codemirror-mode": "git://github.com/ds26gte/pyret-codemirror-mode#patch",
     "pyret-ide": "git://github.com/pcardune/pyret-ide#master",
     "pyret-lang": "git://github.com/ds26gte/pyret-lang.git#patch",
     "q": "~1.4.1",
