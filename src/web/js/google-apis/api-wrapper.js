@@ -7,14 +7,17 @@
  * The most recently authenticated version of the
  * wrapped Google API
  */
+
 var gwrap = window.gwrap = {
   // Initialize to a dummy method which loads the wrapper
   load: function(params) {
+    //console.log('doing gwrap.load');
     if (!params || !params.reauth || (params.reauth.immediate === undefined)) {
       throw new Error("Google API Wrapper not yet initialized");
     }
     var ret = Q.defer();
-    loadAPIWrapper(params.reauth.immediate)
+    console.log('gwrap calling loadAPIWrapper');
+    loadAPIWrapper(params.reauth.immediate) // arg negated? --ds26gte
       .then(function(gw) {
         // Shallow copy
         var copy = $.extend({}, params);
@@ -44,6 +47,8 @@ var _GWRAP_APIS = {};
  */
 function loadAPIWrapper(immediate) {
 
+  console.log('doing loadAPIWrapper', immediate);
+
   // Sanity check: Make sure aforementioned things are
   //               actually defined.
 
@@ -61,6 +66,7 @@ function loadAPIWrapper(immediate) {
   assertDefined('gapi');
   assertDefined('apiKey');
   assertDefined('Q');
+
   // Sanity check passed.
 
   // Custom error type definitions
@@ -126,8 +132,11 @@ function loadAPIWrapper(immediate) {
    * @returns A promise which will resolve following the re-authentication.
    */
   function reauth(immediate) {
+    console.log('DOING REAUTH', immediate);
     var d = Q.defer();
+
     if (!immediate) {
+      //console.log('need to do login');
       // Need to do a login to get a cookie for this user; do it in a popup
       var w = window.open("/login?redirect=" + encodeURIComponent("/close.html"));
       window.addEventListener('message', function(e) {
@@ -139,17 +148,21 @@ function loadAPIWrapper(immediate) {
         }
       });
     } else {
+      console.log('user logged in, but we need access_token');
       // The user is logged in, but needs an access token from our server
       var newToken = $.ajax("/getAccessToken", { method: "get", datatype: "json" });
       newToken.then(function(t) {
+        console.log('access_token got', t.access_token);
         gapi.auth.setToken({ access_token: t.access_token });
         logger.log('login', {user_id: t.user_id});
         d.resolve({ access_token: t.access_token });
       });
       newToken.fail(function(t) {
+        console.log('!! access_token not got');
         d.resolve(null);
       });
     }
+
     return d.promise;
   }
 
@@ -173,6 +186,7 @@ function loadAPIWrapper(immediate) {
    * @returns The given promise plus any needed re-authentication
    */
   function authCheck(f) {
+    console.log('doing authCheck');
     function isAuthFailure(result) {
       return result
         && ((result.error && result.error.code && result.error.code === 401)
@@ -206,6 +220,7 @@ function loadAPIWrapper(immediate) {
    * @returns {Promise} The wrapped promise
    */
   function failCheck(p) {
+    //console.log('doing failCheck');
     return p.then(function(result) {
       // Network error
       if (result && (typeof result.code === "number") && (result.code >= 400)) {
@@ -228,6 +243,7 @@ function loadAPIWrapper(immediate) {
    * @returns {Promise} A promise which resolves to the result of the Google query
    */
   function gQ(request, skipAuth) {
+    console.log('doing gQ', request, skipAuth);
     var oldAccess = gapi.auth.getToken();
     if (skipAuth) { gapi.auth.setToken({ access_token: null }); }
     var ret = failCheck(authCheck(function() {
@@ -256,6 +272,7 @@ function loadAPIWrapper(immediate) {
    *          which resolves to the loaded API/APIs.
    */
   function loadAPI(params) {
+    //console.log('doing loadAPI');
     if (!params) {
       throw new GoogleAPIError("Missing API loading parameters");
     }
@@ -265,6 +282,7 @@ function loadAPIWrapper(immediate) {
                                  + "params.reauth.immediate");
       }
       var reloaded = Q.defer();
+      console.log('loadAPI calling loadAPIWrapper');
       loadAPIWrapper(params.reauth.immediate)
         .then(function(gw) {
           // Shallow copy
@@ -356,7 +374,7 @@ function loadAPIWrapper(immediate) {
     }
   }
 
-  var initialAuth = reauth(immediate);
+  var initialAuth = reauth(immediate); // arg negated? --ds26gte
   return initialAuth.then(function(_) {
     /**
      * Creates the API Wrapping module to export
