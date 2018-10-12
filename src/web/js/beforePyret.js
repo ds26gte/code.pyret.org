@@ -201,6 +201,43 @@ $(function() {
 
     var CM = CodeMirror.fromTextArea(textarea[0], cmOptions);
 
+    var CMblocks;
+
+    if (typeof CodeMirrorBlocks === 'undefined') {
+      console.log('CodeMirrorBlocks not found');
+      CMblocks = undefined;
+    } else {
+      console.log('CodeMirrorBlocks IS found')
+      CMblocks = new CodeMirrorBlocks(CM,
+        'pyret',
+        {
+          willInsertNode: function(sourceNodeText, sourceNode, destination) {
+            var line = CM.editor.getLine(destination.line);
+            if (destination.ch > 0 && line[destination.ch - 1].match(/[\w\d]/)) {
+              // previous character is a letter or number, so prefix a space
+              sourceNodeText = ' ' + sourceNodeText;
+            }
+
+            if (destination.ch < line.length && line[destination.ch].match(/[\w\d]/)) {
+              // next character is a letter or a number, so append a space
+              sourceNodeText += ' ';
+            }
+            return sourceNodeText;
+          }
+        });
+      CM.blocksEditor = CMblocks;
+      CM.changeMode = function(mode) {
+        console.log('changing mode to', mode)
+        if (mode === "false") {
+          mode = false;
+        } else {
+          CMblocks.ast = null;
+        }
+        CMblocks.setBlockMode(mode);
+      }
+    }
+
+
     if (useLineNumbers) {
       CM.display.wrapper.appendChild(mkWarningUpper()[0]);
       CM.display.wrapper.appendChild(mkWarningLower()[0]);

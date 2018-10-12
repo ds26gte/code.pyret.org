@@ -6,6 +6,7 @@
   <link rel="stylesheet" href="/css/reset.css" />
   <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css" />
   <link rel="stylesheet" href="/css/codemirror.css" />
+  <link rel="stylesheet" href="/css/blocks.css" />
   <link rel="stylesheet" href="/css/foldgutter.css" />
   <link rel="stylesheet" href="/css/shared.css" />
   <link rel="stylesheet" href="/css/editor.css" />
@@ -264,6 +265,40 @@
               class="focusable blueButton"  tabindex="-1">Stop</button>
           </div>
         </li>
+
+        <li role="presentation" class="topTier" disabled id="blocksli">
+          <div class="menu menuitemtitle">
+            <button role="menuitem"
+              id="modeButton"
+              class="focusable blueButton"
+              aria-label="Mode"
+              aria-haspopup="true"
+              aria-expanded="false"
+              aria-describedby="mhelp-menus mhelp-open-submenu mhelp-activate mhelp-escape"
+              tabindex="-1">
+              Text
+            </button>
+          </div>
+          <ul id="mode-dropdown-content" class="submenu" role="menu" aria-hidden="true"
+            aria-label="Blocks Options">
+            <li id="select-text-mode-old">
+              <div id="select-text-mode">
+                <a class="focusable" role="menuitem" aria-label="Text"
+                  aria-setsize="2" aria-posinset="1"
+                  aria-describedby="mhelp-submenu mhelp-activate mhelp-escape-submenu"
+                  tabindex="-1" href="javascript:void(0)">Text</a>
+              </div>
+            </li>
+            <li id="select-blocks-mode-old">
+              <div id="select-blocks-mode">
+                <a class="focusable" role="menuitem" aria-label="Blocks"
+                  aria-setsize="2" aria-posinset="2"
+                  aria-describedby="mhelp-submenu mhelp-activate mhelp-escape-submenu"
+                  tabindex="-1" href="javascript:void(0)">Blocks</a>
+              </div>
+            </li>
+          </ul>
+        </li>
       </ul>
       </div>
     </nav>
@@ -372,6 +407,7 @@ function handleGoogLoad() {
 <script type="text/javascript" src="https://www.google.com/jsapi"></script>
 <!-- GAPI Client -->
 <script type="text/javascript" src="https://apis.google.com/js/client.js?onload=handleGoogLoad"></script>
+<script src="/js/CodeMirrorBlocks-pyret.js"></script>
 <script>console.log(window.performance.now())</script>
 <script src="js/beforePyret.js"></script>
 <script>

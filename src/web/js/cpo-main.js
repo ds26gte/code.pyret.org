@@ -308,6 +308,7 @@
 
     function withRepl(repl) {
       var runButton = $("#runButton");
+      var modeButton = $("#modeButton");
 
       var docmain = document.getElementById('main');
       var docreplMain = docmain.getElementsByClassName('replMain');
@@ -358,6 +359,17 @@
         $('#runDropdown').attr('aria-expanded', 'false');
         $("#run-dropdown-content").attr('aria-hidden', 'true').hide();
       });
+
+      $("#select-text-mode").click(function() {
+        modeButton.text("Text");
+        editor.cm.changeMode("false");
+      });
+
+      $("#select-blocks-mode").click(function() {
+        modeButton.text("Blocks");
+        editor.cm.changeMode("blocks");
+      });
+
       /*
       $("#select-scsh").click(function() {
         highlightMode = "scsh"; $("#run-dropdown-content").hide();});

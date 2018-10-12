@@ -1274,6 +1274,11 @@ code div {
   background: #C8C8C8;
 }
 
+#modeButton {
+  width: 75px;
+  background: #006600;
+}
+
 #runPart {
   background: #317BCF;
   padding: 0;
@@ -1322,6 +1327,15 @@ code div {
   text-decoration: none;
 }
 
+#select-text-mode a {
+  color: #eeeeee;
+  text-decoration: none;
+}
+
+#select-blocks-mode a {
+  color: #eeeeee;
+  text-decoration: none;
+}
 
 #run-dropdown-content {
   width: 163px;
@@ -1339,6 +1353,23 @@ code div {
   text-align: center;
 }
 
+#mode-dropdown-content {
+  width: 100%;
+}
+
+#mode-dropdown-content > li {
+  color: #eeeeee;
+  font-family: sans-serif;
+  font-size: 15px;
+  height: 23px;
+  /* width: 100%; */
+  background: #006633;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  box-shadow: 0px -2px 5px 2px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
 #run-dropdown-content > li > div {
   height: 100%;
   width: 100%;
@@ -1351,8 +1382,26 @@ code div {
   padding: 0;
 }
 
+#mode-dropdown-content > li > div {
+  height: 100%;
+  width: 100%;
+  padding: 0;
+}
+
+#mode-dropdown-content > li > div > a {
+  height: 100%;
+  width: 100%;
+  padding: 0;
+}
+
 #run-dropdown-content li:hover {
   background:#0060CE;
+  box-shadow: 0px -5px 10px 5px rgba(0, 0, 0, 0.2);
+  cursor:pointer;
+}
+
+#mode-dropdown-content li:hover {
+  background:#008844;
   box-shadow: 0px -5px 10px 5px rgba(0, 0, 0, 0.2);
   cursor:pointer;
 }
